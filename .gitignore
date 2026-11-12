@@ -1,0 +1,20 @@
+# Build output
+bin/
+*.prg
+*.iq
+*.prg.debug.xml
+gen/
+mir/
+internal-mir/
+
+# Developer key: never commit
+developer_key*
+*.der
+*.pem
+
+# OS / editor
+.DS_Store
+.vscode/
+
+# Design handoff bundle: duplicate of the extracted design/claude-design/
+design/*.zip

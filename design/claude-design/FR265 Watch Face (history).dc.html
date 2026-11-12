@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Big+Shoulders+Display:wght@800&family=Saira+Condensed:wght@700&family=Space+Grotesk:wght@700&family=Manrope:wght@600;700;800&family=Sora:wght@700&family=Lexend:wght@700&family=Red+Hat+Display:wght@800&display=swap" rel="stylesheet">
+<style>
+html{background:#141414}body{margin:0;background:#141414;color:#E6E6E6;font-family:"Barlow Semi Condensed",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#8EE3B8}a:hover{color:#B9F0D3}
+</style>
+</helmet>
+<section style="padding:72px 80px 40px;display:flex;flex-direction:column;gap:48px;border-bottom:1px solid #2A2A2A">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1200px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8C8C8C;letter-spacing:1px">LƯỢT 8 · TỪ <a href="#7a">7a</a> · CẢI TIẾN THIẾT KẾ</div>
+    <div style="font-size:40px;font-weight:700;color:#FFFFFF">Một tâm điểm, ít mint hơn</div>
+    <div style="font-size:18px;color:#A8A8A8;text-wrap:pretty">Dải giờ mỏng lại (cao 64 px, chữ cao 46 px) với font rộng hơn. Pin thành dải 10 đoạn mảnh, dài 72°. Body Battery to hơn (r 60), thành tâm điểm của mặt; viên số bước tách riêng bên dưới. Icon chuyển xám, mint chỉ còn ở dải giờ và các phần tiến độ. Số trong ô tròn tự thu nhỏ theo số ký tự, độ cao bỏ chữ “m” và dấu chấm nghìn để luôn nằm trong vòng. Font giờ đổi trong Tweaks; 4 khung cuối so sánh các font.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:120px;align-items:flex-start">
+    <sc-for list="{{ options8 }}" as="o" hint-placeholder-count="2">
+      <div id="{{ o.id }}" style="display:flex;flex-direction:column;gap:40px;width:1856px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:#8EE3B8;color:#000000;padding:4px 10px;border-radius:999px">{{ o.id }}</div>
+          <div style="font-size:30px;font-weight:700;color:#FFFFFF">{{ o.title }}</div>
+          <div style="font-size:17px;color:#8C8C8C">{{ o.desc }}</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;column-gap:48px;row-gap:56px">
+          <sc-for list="{{ o.frames }}" as="f" hint-placeholder-count="16">
+            <div style="display:flex;flex-direction:column;gap:18px;width:416px">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:19px;font-weight:600;color:#FFFFFF">{{ f.label }}</div>
+                <div style="font-size:15px;color:#8C8C8C;min-height:38px;text-wrap:pretty">{{ f.sub }}</div>
+              </div>
+              <div style="position:relative;width:416px;height:416px;border-radius:50%;outline:1px solid #2C2C2C;outline-offset:8px">
+                {{ f.el }}
+                <sc-if value="{{ f.stat }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:-6px;right:-14px;background:#1E1E1E;border:1px solid #3A3A3A;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:12px;color:#8C8C8C;letter-spacing:0.5px">ĐIỂM ẢNH SÁNG</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;color:#8EE3B8">{{ f.stat }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C8C8C">{{ f.statDetail }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:48px;align-items:flex-start;background:#1A1A1A;border-radius:16px;padding:32px">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">FONT GIỜ · GLYPH CẦN XUẤT · 1:1</div>
+            {{ o.fontStrip }}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:0">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">THÔNG SỐ FONT</div>
+            <sc-for list="{{ o.fontSpec }}" as="k" hint-placeholder-count="8">
+              <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;font-size:16px;border-bottom:1px solid #262626;padding-bottom:8px">
+                <div style="color:#8C8C8C">{{ k.k }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#E6E6E6">{{ k.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;background:#1A1A1A;border-radius:16px;padding:12px 32px 24px">
+          <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:16px 0 12px;font-size:13px;color:#8C8C8C;letter-spacing:1px;border-bottom:1px solid #333333">
+            <div>THÀNH PHẦN</div><div>X</div><div>Y</div><div>RỘNG</div><div>CAO</div><div>FONT · CỠ / CÁCH VẼ</div><div>MÀU</div><div>DỮ LIỆU</div><div>ĐỔI MÀU CẢNH BÁO</div>
+          </div>
+          <sc-for list="{{ o.spec }}" as="r" hint-placeholder-count="14">
+            <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:12px 0;border-bottom:1px solid #262626;font-size:15px;align-items:start">
+              <div style="font-weight:600;color:#FFFFFF">{{ r.name }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.x }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.y }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.w }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.h }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.font }}</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ r.colors }}" as="c" hint-placeholder-count="1">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="width:14px;height:14px;border-radius:4px;background:{{ c.hex }};outline:1px solid #3A3A3A"></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#E6E6E6">{{ c.hex }}</div>
+                    <div style="font-size:13px;color:#8C8C8C">{{ c.role }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.data }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.warn }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section style="padding:72px 80px 40px;display:flex;flex-direction:column;gap:48px;border-bottom:1px solid #2A2A2A">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1200px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8C8C8C;letter-spacing:1px">LƯỢT 7 · TỪ <a href="#6a">6a</a></div>
+    <div style="font-size:40px;font-weight:700;color:#FFFFFF">Ô trái thông minh</div>
+    <div style="font-size:18px;color:#A8A8A8;text-wrap:pretty">Bỏ tam giác xu hướng Body Battery. Ô bên trái (mặc định stress) tự đổi nội dung: 05:00–10:00 hiện điểm giấc ngủ đêm qua, sau buổi tập hiện số giờ hồi phục còn lại. Stress trên 75 luôn được ưu tiên. Trong cài đặt trên điện thoại có thể đổi ô trái thành SpO₂ hoặc độ cao, và tắt từng chế độ tự đổi.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:120px;align-items:flex-start">
+    <sc-for list="{{ options7 }}" as="o" hint-placeholder-count="2">
+      <div id="{{ o.id }}" style="display:flex;flex-direction:column;gap:40px;width:1856px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:#8EE3B8;color:#000000;padding:4px 10px;border-radius:999px">{{ o.id }}</div>
+          <div style="font-size:30px;font-weight:700;color:#FFFFFF">{{ o.title }}</div>
+          <div style="font-size:17px;color:#8C8C8C">{{ o.desc }}</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;column-gap:48px;row-gap:56px">
+          <sc-for list="{{ o.frames }}" as="f" hint-placeholder-count="13">
+            <div style="display:flex;flex-direction:column;gap:18px;width:416px">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:19px;font-weight:600;color:#FFFFFF">{{ f.label }}</div>
+                <div style="font-size:15px;color:#8C8C8C;min-height:38px;text-wrap:pretty">{{ f.sub }}</div>
+              </div>
+              <div style="position:relative;width:416px;height:416px;border-radius:50%;outline:1px solid #2C2C2C;outline-offset:8px">
+                {{ f.el }}
+                <sc-if value="{{ f.stat }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:-6px;right:-14px;background:#1E1E1E;border:1px solid #3A3A3A;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:12px;color:#8C8C8C;letter-spacing:0.5px">ĐIỂM ẢNH SÁNG</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;color:#8EE3B8">{{ f.stat }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C8C8C">{{ f.statDetail }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:48px;align-items:flex-start;background:#1A1A1A;border-radius:16px;padding:32px">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">FONT GIỜ · GLYPH CẦN XUẤT · 1:1</div>
+            {{ o.fontStrip }}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:0">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">THÔNG SỐ FONT</div>
+            <sc-for list="{{ o.fontSpec }}" as="k" hint-placeholder-count="8">
+              <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;font-size:16px;border-bottom:1px solid #262626;padding-bottom:8px">
+                <div style="color:#8C8C8C">{{ k.k }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#E6E6E6">{{ k.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;background:#1A1A1A;border-radius:16px;padding:12px 32px 24px">
+          <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:16px 0 12px;font-size:13px;color:#8C8C8C;letter-spacing:1px;border-bottom:1px solid #333333">
+            <div>THÀNH PHẦN</div><div>X</div><div>Y</div><div>RỘNG</div><div>CAO</div><div>FONT · CỠ / CÁCH VẼ</div><div>MÀU</div><div>DỮ LIỆU</div><div>ĐỔI MÀU CẢNH BÁO</div>
+          </div>
+          <sc-for list="{{ o.spec }}" as="r" hint-placeholder-count="14">
+            <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:12px 0;border-bottom:1px solid #262626;font-size:15px;align-items:start">
+              <div style="font-weight:600;color:#FFFFFF">{{ r.name }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.x }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.y }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.w }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.h }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.font }}</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ r.colors }}" as="c" hint-placeholder-count="1">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="width:14px;height:14px;border-radius:4px;background:{{ c.hex }};outline:1px solid #3A3A3A"></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#E6E6E6">{{ c.hex }}</div>
+                    <div style="font-size:13px;color:#8C8C8C">{{ c.role }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.data }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.warn }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section style="padding:72px 80px 40px;display:flex;flex-direction:column;gap:48px;border-bottom:1px solid #2A2A2A">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1200px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8C8C8C;letter-spacing:1px">LƯỢT 6 · TỪ <a href="#5a">5a</a></div>
+    <div style="font-size:40px;font-weight:700;color:#FFFFFF">Vùng nhịp tim, mốc bước, xu hướng Body Battery, chế độ ngủ</div>
+    <div style="font-size:18px;color:#A8A8A8;text-wrap:pretty">Vòng nhịp tim chia 5 đoạn theo vùng nhịp tim của hồ sơ Garmin, sáng tới vùng hiện tại. Vòng bước chân có 3 khía đen ở 25 / 50 / 75%. Body Battery có tam giác ▲▼ so với 1 giờ trước. Trong giờ ngủ đã đặt, màu nhấn giảm còn 60%, chữ trắng thành xám và nền tối hơn.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:120px;align-items:flex-start">
+    <sc-for list="{{ options6 }}" as="o" hint-placeholder-count="2">
+      <div id="{{ o.id }}" style="display:flex;flex-direction:column;gap:40px;width:1856px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:#8EE3B8;color:#000000;padding:4px 10px;border-radius:999px">{{ o.id }}</div>
+          <div style="font-size:30px;font-weight:700;color:#FFFFFF">{{ o.title }}</div>
+          <div style="font-size:17px;color:#8C8C8C">{{ o.desc }}</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;column-gap:48px;row-gap:56px">
+          <sc-for list="{{ o.frames }}" as="f" hint-placeholder-count="9">
+            <div style="display:flex;flex-direction:column;gap:18px;width:416px">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:19px;font-weight:600;color:#FFFFFF">{{ f.label }}</div>
+                <div style="font-size:15px;color:#8C8C8C;min-height:38px;text-wrap:pretty">{{ f.sub }}</div>
+              </div>
+              <div style="position:relative;width:416px;height:416px;border-radius:50%;outline:1px solid #2C2C2C;outline-offset:8px">
+                {{ f.el }}
+                <sc-if value="{{ f.stat }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:-6px;right:-14px;background:#1E1E1E;border:1px solid #3A3A3A;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:12px;color:#8C8C8C;letter-spacing:0.5px">ĐIỂM ẢNH SÁNG</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;color:#8EE3B8">{{ f.stat }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C8C8C">{{ f.statDetail }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:48px;align-items:flex-start;background:#1A1A1A;border-radius:16px;padding:32px">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">FONT GIỜ · GLYPH CẦN XUẤT · 1:1</div>
+            {{ o.fontStrip }}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:0">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">THÔNG SỐ FONT</div>
+            <sc-for list="{{ o.fontSpec }}" as="k" hint-placeholder-count="8">
+              <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;font-size:16px;border-bottom:1px solid #262626;padding-bottom:8px">
+                <div style="color:#8C8C8C">{{ k.k }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#E6E6E6">{{ k.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;background:#1A1A1A;border-radius:16px;padding:12px 32px 24px">
+          <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:16px 0 12px;font-size:13px;color:#8C8C8C;letter-spacing:1px;border-bottom:1px solid #333333">
+            <div>THÀNH PHẦN</div><div>X</div><div>Y</div><div>RỘNG</div><div>CAO</div><div>FONT · CỠ / CÁCH VẼ</div><div>MÀU</div><div>DỮ LIỆU</div><div>ĐỔI MÀU CẢNH BÁO</div>
+          </div>
+          <sc-for list="{{ o.spec }}" as="r" hint-placeholder-count="14">
+            <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:12px 0;border-bottom:1px solid #262626;font-size:15px;align-items:start">
+              <div style="font-weight:600;color:#FFFFFF">{{ r.name }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.x }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.y }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.w }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.h }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.font }}</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ r.colors }}" as="c" hint-placeholder-count="1">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="width:14px;height:14px;border-radius:4px;background:{{ c.hex }};outline:1px solid #3A3A3A"></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#E6E6E6">{{ c.hex }}</div>
+                    <div style="font-size:13px;color:#8C8C8C">{{ c.role }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.data }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.warn }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section style="padding:72px 80px 40px;display:flex;flex-direction:column;gap:48px;border-bottom:1px solid #2A2A2A">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1200px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8C8C8C;letter-spacing:1px">LƯỢT 5 · CHỐT <a href="#4a">4a</a></div>
+    <div style="font-size:40px;font-weight:700;color:#FFFFFF">Đủ trạng thái để lập trình</div>
+    <div style="font-size:18px;color:#A8A8A8;text-wrap:pretty">Giữ nguyên bố cục 4a, thêm các trạng thái mặt đồng hồ sẽ gặp thực tế. Chấm pin đổi cam khi ≤ 20% và đỏ khi ≤ 10%, luôn sáng ít nhất 1 chấm khi pin > 0. Khi đạt mục tiêu bước, viên số bước chuyển nền mint. Khi không đeo hoặc chưa có số đo, stress và nhịp tim hiện “--” và vòng để trống.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:120px;align-items:flex-start">
+    <sc-for list="{{ options5 }}" as="o" hint-placeholder-count="2">
+      <div id="{{ o.id }}" style="display:flex;flex-direction:column;gap:40px;width:1856px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:#8EE3B8;color:#000000;padding:4px 10px;border-radius:999px">{{ o.id }}</div>
+          <div style="font-size:30px;font-weight:700;color:#FFFFFF">{{ o.title }}</div>
+          <div style="font-size:17px;color:#8C8C8C">{{ o.desc }}</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;column-gap:48px;row-gap:56px">
+          <sc-for list="{{ o.frames }}" as="f" hint-placeholder-count="7">
+            <div style="display:flex;flex-direction:column;gap:18px;width:416px">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:19px;font-weight:600;color:#FFFFFF">{{ f.label }}</div>
+                <div style="font-size:15px;color:#8C8C8C;min-height:38px;text-wrap:pretty">{{ f.sub }}</div>
+              </div>
+              <div style="position:relative;width:416px;height:416px;border-radius:50%;outline:1px solid #2C2C2C;outline-offset:8px">
+                {{ f.el }}
+                <sc-if value="{{ f.stat }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:-6px;right:-14px;background:#1E1E1E;border:1px solid #3A3A3A;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:12px;color:#8C8C8C;letter-spacing:0.5px">ĐIỂM ẢNH SÁNG</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;color:#8EE3B8">{{ f.stat }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C8C8C">{{ f.statDetail }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:48px;align-items:flex-start;background:#1A1A1A;border-radius:16px;padding:32px">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">FONT GIỜ · GLYPH CẦN XUẤT · 1:1</div>
+            {{ o.fontStrip }}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:0">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">THÔNG SỐ FONT</div>
+            <sc-for list="{{ o.fontSpec }}" as="k" hint-placeholder-count="8">
+              <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;font-size:16px;border-bottom:1px solid #262626;padding-bottom:8px">
+                <div style="color:#8C8C8C">{{ k.k }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#E6E6E6">{{ k.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;background:#1A1A1A;border-radius:16px;padding:12px 32px 24px">
+          <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:16px 0 12px;font-size:13px;color:#8C8C8C;letter-spacing:1px;border-bottom:1px solid #333333">
+            <div>THÀNH PHẦN</div><div>X</div><div>Y</div><div>RỘNG</div><div>CAO</div><div>FONT · CỠ / CÁCH VẼ</div><div>MÀU</div><div>DỮ LIỆU</div><div>ĐỔI MÀU CẢNH BÁO</div>
+          </div>
+          <sc-for list="{{ o.spec }}" as="r" hint-placeholder-count="14">
+            <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:12px 0;border-bottom:1px solid #262626;font-size:15px;align-items:start">
+              <div style="font-weight:600;color:#FFFFFF">{{ r.name }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.x }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.y }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.w }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.h }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.font }}</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ r.colors }}" as="c" hint-placeholder-count="1">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="width:14px;height:14px;border-radius:4px;background:{{ c.hex }};outline:1px solid #3A3A3A"></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#E6E6E6">{{ c.hex }}</div>
+                    <div style="font-size:13px;color:#8C8C8C">{{ c.role }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.data }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.warn }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section style="padding:72px 80px 40px;display:flex;flex-direction:column;gap:48px;border-bottom:1px solid #2A2A2A">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1200px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8C8C8C;letter-spacing:1px">LƯỢT 4 · TIẾP TỪ <a href="#3a">3a</a> · NỀN #1A1D1B · GIẾNG 6 PX</div>
+    <div style="font-size:40px;font-weight:700;color:#FFFFFF">Icon thay nhãn, chữ đủ đọc trên cổ tay</div>
+    <div style="font-size:18px;color:#A8A8A8;text-wrap:pretty">Màn 416 px chỉ rộng khoảng 33 mm, nên nhãn 10–11 px ở lượt 3 gần như không đọc được. Lượt này bỏ nhãn chữ, dùng icon 24 px đặt trong giếng, và nâng cỡ chữ tối thiểu lên 15 px. Stress và nhịp tim to hơn. Ngày to hơn. Số bước có icon. Đầu vòng bước chân có chấm trắng đánh dấu. <a href="#4a">4a</a> giữ các giếng tách rời. <a href="#4b">4b</a> cho giếng chồng lên nhau thành một khối đen liền.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:120px;align-items:flex-start">
+    <sc-for list="{{ options4 }}" as="o" hint-placeholder-count="2">
+      <div id="{{ o.id }}" style="display:flex;flex-direction:column;gap:40px;width:1856px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:#8EE3B8;color:#000000;padding:4px 10px;border-radius:999px">{{ o.id }}</div>
+          <div style="font-size:30px;font-weight:700;color:#FFFFFF">{{ o.title }}</div>
+          <div style="font-size:17px;color:#8C8C8C">{{ o.desc }}</div>
+        </div>
+        <div style="display:flex;gap:48px">
+          <sc-for list="{{ o.frames }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:18px;width:416px">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:19px;font-weight:600;color:#FFFFFF">{{ f.label }}</div>
+                <div style="font-size:15px;color:#8C8C8C;min-height:38px;text-wrap:pretty">{{ f.sub }}</div>
+              </div>
+              <div style="position:relative;width:416px;height:416px;border-radius:50%;outline:1px solid #2C2C2C;outline-offset:8px">
+                {{ f.el }}
+                <sc-if value="{{ f.stat }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:-6px;right:-14px;background:#1E1E1E;border:1px solid #3A3A3A;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:12px;color:#8C8C8C;letter-spacing:0.5px">ĐIỂM ẢNH SÁNG</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;color:#8EE3B8">{{ f.stat }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C8C8C">{{ f.statDetail }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:48px;align-items:flex-start;background:#1A1A1A;border-radius:16px;padding:32px">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">FONT GIỜ · GLYPH CẦN XUẤT · 1:1</div>
+            {{ o.fontStrip }}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:0">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">THÔNG SỐ FONT</div>
+            <sc-for list="{{ o.fontSpec }}" as="k" hint-placeholder-count="8">
+              <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;font-size:16px;border-bottom:1px solid #262626;padding-bottom:8px">
+                <div style="color:#8C8C8C">{{ k.k }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#E6E6E6">{{ k.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;background:#1A1A1A;border-radius:16px;padding:12px 32px 24px">
+          <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:16px 0 12px;font-size:13px;color:#8C8C8C;letter-spacing:1px;border-bottom:1px solid #333333">
+            <div>THÀNH PHẦN</div><div>X</div><div>Y</div><div>RỘNG</div><div>CAO</div><div>FONT · CỠ / CÁCH VẼ</div><div>MÀU</div><div>DỮ LIỆU</div><div>ĐỔI MÀU CẢNH BÁO</div>
+          </div>
+          <sc-for list="{{ o.spec }}" as="r" hint-placeholder-count="14">
+            <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:12px 0;border-bottom:1px solid #262626;font-size:15px;align-items:start">
+              <div style="font-weight:600;color:#FFFFFF">{{ r.name }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.x }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.y }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.w }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.h }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.font }}</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ r.colors }}" as="c" hint-placeholder-count="1">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="width:14px;height:14px;border-radius:4px;background:{{ c.hex }};outline:1px solid #3A3A3A"></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#E6E6E6">{{ c.hex }}</div>
+                    <div style="font-size:13px;color:#8C8C8C">{{ c.role }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.data }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.warn }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section style="padding:72px 80px 40px;display:flex;flex-direction:column;gap:48px;border-bottom:1px solid #2A2A2A">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1200px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8C8C8C;letter-spacing:1px">LƯỢT 3 · SỬA TỪ <a href="#2b">2b</a></div>
+    <div style="font-size:40px;font-weight:700;color:#FFFFFF">Nền toàn cục, giếng đen theo hình</div>
+    <div style="font-size:18px;color:#A8A8A8;text-wrap:pretty">Toàn bộ mặt là một đĩa nền màu, cách vòng bước chân bằng khe đen 6 px. Mỗi thành phần nằm trong một giếng đen theo đúng hình của nó: vòng tròn cho Body Battery, stress, nhịp tim; viên thuốc cho ngày và số bước; cung cho dải pin; chữ nhật bo góc cho dải giờ. Bỏ số % pin. <a href="#3a">3a</a> nền xám trung tính, padding 6 px. <a href="#3b">3b</a> nền xanh tối, padding 10 px.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:120px;align-items:flex-start">
+    <sc-for list="{{ options3 }}" as="o" hint-placeholder-count="2">
+      <div id="{{ o.id }}" style="display:flex;flex-direction:column;gap:40px;width:1856px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:#8EE3B8;color:#000000;padding:4px 10px;border-radius:999px">{{ o.id }}</div>
+          <div style="font-size:30px;font-weight:700;color:#FFFFFF">{{ o.title }}</div>
+          <div style="font-size:17px;color:#8C8C8C">{{ o.desc }}</div>
+        </div>
+        <div style="display:flex;gap:48px">
+          <sc-for list="{{ o.frames }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:18px;width:416px">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:19px;font-weight:600;color:#FFFFFF">{{ f.label }}</div>
+                <div style="font-size:15px;color:#8C8C8C;min-height:38px;text-wrap:pretty">{{ f.sub }}</div>
+              </div>
+              <div style="position:relative;width:416px;height:416px;border-radius:50%;outline:1px solid #2C2C2C;outline-offset:8px">
+                {{ f.el }}
+                <sc-if value="{{ f.stat }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:-6px;right:-14px;background:#1E1E1E;border:1px solid #3A3A3A;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:12px;color:#8C8C8C;letter-spacing:0.5px">ĐIỂM ẢNH SÁNG</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;color:#8EE3B8">{{ f.stat }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C8C8C">{{ f.statDetail }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:48px;align-items:flex-start;background:#1A1A1A;border-radius:16px;padding:32px">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">FONT GIỜ · GLYPH CẦN XUẤT · 1:1</div>
+            {{ o.fontStrip }}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:0">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">THÔNG SỐ FONT</div>
+            <sc-for list="{{ o.fontSpec }}" as="k" hint-placeholder-count="8">
+              <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;font-size:16px;border-bottom:1px solid #262626;padding-bottom:8px">
+                <div style="color:#8C8C8C">{{ k.k }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#E6E6E6">{{ k.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;background:#1A1A1A;border-radius:16px;padding:12px 32px 24px">
+          <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:16px 0 12px;font-size:13px;color:#8C8C8C;letter-spacing:1px;border-bottom:1px solid #333333">
+            <div>THÀNH PHẦN</div><div>X</div><div>Y</div><div>RỘNG</div><div>CAO</div><div>FONT · CỠ / CÁCH VẼ</div><div>MÀU</div><div>DỮ LIỆU</div><div>ĐỔI MÀU CẢNH BÁO</div>
+          </div>
+          <sc-for list="{{ o.spec }}" as="r" hint-placeholder-count="14">
+            <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:12px 0;border-bottom:1px solid #262626;font-size:15px;align-items:start">
+              <div style="font-weight:600;color:#FFFFFF">{{ r.name }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.x }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.y }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.w }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.h }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.font }}</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ r.colors }}" as="c" hint-placeholder-count="1">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="width:14px;height:14px;border-radius:4px;background:{{ c.hex }};outline:1px solid #3A3A3A"></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#E6E6E6">{{ c.hex }}</div>
+                    <div style="font-size:13px;color:#8C8C8C">{{ c.role }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.data }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.warn }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section style="padding:72px 80px 40px;display:flex;flex-direction:column;gap:48px;border-bottom:1px solid #2A2A2A">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1200px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8C8C8C;letter-spacing:1px">LƯỢT 2 · TIẾP TỤC TỪ KHUNG DASH (<a href="#1b">1b</a>)</div>
+    <div style="font-size:40px;font-weight:700;color:#FFFFFF">Dash v2: khối nền tách biệt</div>
+    <div style="font-size:18px;color:#A8A8A8;text-wrap:pretty">Bỏ số LCD, giờ dùng font thường (đổi được trong Tweaks). Mỗi số liệu nằm trên một khối nền #1A1D1B, cách nhau bằng rãnh đen 6 px. Mỗi khối cũng chính là vùng giữ tay. Pin hiển thị bằng 10 chấm trên cung tròn. Khi cảnh báo, cả khối đổi sang nền ấm. <a href="#2a">2a</a> cắt khối từ hình tròn, <a href="#2b">2b</a> dùng khối bo góc nổi.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:120px;align-items:flex-start">
+    <sc-for list="{{ options2 }}" as="o" hint-placeholder-count="2">
+      <div id="{{ o.id }}" style="display:flex;flex-direction:column;gap:40px;width:1856px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:#8EE3B8;color:#000000;padding:4px 10px;border-radius:999px">{{ o.id }}</div>
+          <div style="font-size:30px;font-weight:700;color:#FFFFFF">{{ o.title }}</div>
+          <div style="font-size:17px;color:#8C8C8C">{{ o.desc }}</div>
+        </div>
+        <div style="display:flex;gap:48px">
+          <sc-for list="{{ o.frames }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:18px;width:416px">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:19px;font-weight:600;color:#FFFFFF">{{ f.label }}</div>
+                <div style="font-size:15px;color:#8C8C8C;min-height:38px;text-wrap:pretty">{{ f.sub }}</div>
+              </div>
+              <div style="position:relative;width:416px;height:416px;border-radius:50%;outline:1px solid #2C2C2C;outline-offset:8px">
+                {{ f.el }}
+                <sc-if value="{{ f.stat }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:-6px;right:-14px;background:#1E1E1E;border:1px solid #3A3A3A;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:12px;color:#8C8C8C;letter-spacing:0.5px">ĐIỂM ẢNH SÁNG</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;color:#8EE3B8">{{ f.stat }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C8C8C">{{ f.statDetail }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:48px;align-items:flex-start;background:#1A1A1A;border-radius:16px;padding:32px">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">FONT GIỜ · GLYPH CẦN XUẤT · 1:1</div>
+            {{ o.fontStrip }}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:0">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">THÔNG SỐ FONT</div>
+            <sc-for list="{{ o.fontSpec }}" as="k" hint-placeholder-count="8">
+              <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;font-size:16px;border-bottom:1px solid #262626;padding-bottom:8px">
+                <div style="color:#8C8C8C">{{ k.k }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#E6E6E6">{{ k.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;background:#1A1A1A;border-radius:16px;padding:12px 32px 24px">
+          <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:16px 0 12px;font-size:13px;color:#8C8C8C;letter-spacing:1px;border-bottom:1px solid #333333">
+            <div>THÀNH PHẦN</div><div>X</div><div>Y</div><div>RỘNG</div><div>CAO</div><div>FONT · CỠ / CÁCH VẼ</div><div>MÀU</div><div>DỮ LIỆU</div><div>ĐỔI MÀU CẢNH BÁO</div>
+          </div>
+          <sc-for list="{{ o.spec }}" as="r" hint-placeholder-count="14">
+            <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 260px 210px minmax(0,1fr) 240px;gap:16px;padding:12px 0;border-bottom:1px solid #262626;font-size:15px;align-items:start">
+              <div style="font-weight:600;color:#FFFFFF">{{ r.name }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.x }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.y }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.w }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.h }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.font }}</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ r.colors }}" as="c" hint-placeholder-count="1">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="width:14px;height:14px;border-radius:4px;background:{{ c.hex }};outline:1px solid #3A3A3A"></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#E6E6E6">{{ c.hex }}</div>
+                    <div style="font-size:13px;color:#8C8C8C">{{ c.role }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.data }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.warn }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section style="padding:72px 80px 120px;display:flex;flex-direction:column;gap:48px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1200px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8C8C8C;letter-spacing:1px">LƯỢT 1 · GARMIN FORERUNNER 265 · AMOLED 416×416 · NỀN #000000</div>
+    <div style="font-size:40px;font-weight:700;color:#FFFFFF">Mặt đồng hồ LCD + viên số liệu</div>
+    <div style="font-size:18px;color:#A8A8A8;text-wrap:pretty">Hai bố cục: <a href="#1a">1a</a> Khung Focus và <a href="#1b">1b</a> Khung Dash. Mỗi bố cục có khung bình thường, cảnh báo, AOD, chú thích vùng giữ tay và bảng thông số cho lập trình viên. Khung hiển thị tỉ lệ 1:1 (1 px CSS = 1 px màn hình).</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:120px;align-items:flex-start">
+    <sc-for list="{{ options }}" as="o" hint-placeholder-count="2">
+      <div id="{{ o.id }}" style="display:flex;flex-direction:column;gap:40px;width:1856px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:#8EE3B8;color:#000000;padding:4px 10px;border-radius:999px">{{ o.id }}</div>
+          <div style="font-size:30px;font-weight:700;color:#FFFFFF">{{ o.title }}</div>
+          <div style="font-size:17px;color:#8C8C8C">{{ o.desc }}</div>
+        </div>
+        <div style="display:flex;gap:48px">
+          <sc-for list="{{ o.frames }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:18px;width:416px">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:19px;font-weight:600;color:#FFFFFF">{{ f.label }}</div>
+                <div style="font-size:15px;color:#8C8C8C;min-height:38px;text-wrap:pretty">{{ f.sub }}</div>
+              </div>
+              <div style="position:relative;width:416px;height:416px;border-radius:50%;outline:1px solid #2C2C2C;outline-offset:8px">
+                {{ f.el }}
+                <sc-if value="{{ f.stat }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:-6px;right:-14px;background:#1E1E1E;border:1px solid #3A3A3A;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:12px;color:#8C8C8C;letter-spacing:0.5px">ĐIỂM ẢNH SÁNG</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;color:#8EE3B8">{{ f.stat }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8C8C8C">{{ f.statDetail }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:48px;align-items:flex-start;background:#1A1A1A;border-radius:16px;padding:32px">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">FONT LCD · 0–9 VÀ “:” · 1:1</div>
+            {{ o.lcdStrip }}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">SƠ ĐỒ ĐOẠN · PHÓNG 3×</div>
+            {{ o.lcdDiagram }}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:0">
+            <div style="font-size:14px;color:#8C8C8C;letter-spacing:1px">THÔNG SỐ FONT LCD</div>
+            <sc-for list="{{ o.lcdSpec }}" as="k" hint-placeholder-count="8">
+              <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;font-size:16px;border-bottom:1px solid #262626;padding-bottom:8px">
+                <div style="color:#8C8C8C">{{ k.k }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#E6E6E6">{{ k.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;background:#1A1A1A;border-radius:16px;padding:12px 32px 24px">
+          <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 230px 190px minmax(0,1fr) 260px;gap:16px;padding:16px 0 12px;font-size:13px;color:#8C8C8C;letter-spacing:1px;border-bottom:1px solid #333333">
+            <div>THÀNH PHẦN</div><div>X</div><div>Y</div><div>RỘNG</div><div>CAO</div><div>FONT · CỠ / NÉT</div><div>MÀU</div><div>DỮ LIỆU</div><div>ĐỔI MÀU CẢNH BÁO</div>
+          </div>
+          <sc-for list="{{ o.spec }}" as="r" hint-placeholder-count="10">
+            <div style="display:grid;grid-template-columns:190px 52px 52px 52px 52px 230px 190px minmax(0,1fr) 260px;gap:16px;padding:12px 0;border-bottom:1px solid #262626;font-size:15px;align-items:start">
+              <div style="font-weight:600;color:#FFFFFF">{{ r.name }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.x }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.y }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.w }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">{{ r.h }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.font }}</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ r.colors }}" as="c" hint-placeholder-count="1">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="width:14px;height:14px;border-radius:4px;background:{{ c.hex }};outline:1px solid #3A3A3A"></div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#E6E6E6">{{ c.hex }}</div>
+                    <div style="font-size:13px;color:#8C8C8C">{{ c.role }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.data }}</div>
+              <div style="color:#C8C8C8;text-wrap:pretty">{{ r.warn }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;timeFont8&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Big Shoulders Display&quot;,&quot;options&quot;:[&quot;Big Shoulders Display&quot;,&quot;Sora&quot;,&quot;Lexend&quot;,&quot;Red Hat Display&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Lượt 8&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#8EE3B8&quot;,&quot;options&quot;:[&quot;#8EE3B8&quot;,&quot;#A6E3A1&quot;,&quot;#7FDCC8&quot;,&quot;#B8E68E&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Màu&quot;},&quot;aodStroke&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;2&quot;,&quot;options&quot;:[&quot;2&quot;,&quot;3&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;AOD&quot;},&quot;timeFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Big Shoulders Display&quot;,&quot;options&quot;:[&quot;Big Shoulders Display&quot;,&quot;Saira Condensed&quot;,&quot;Space Grotesk&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Lượt 2–7&quot;},&quot;ghostSegments&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Lượt 1 (LCD)&quot;}}">
+const h = React.createElement;
+const FONT = '"Barlow Semi Condensed", sans-serif';
+const HEART = 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z';
+const K = { track: '#1E1E1E', white: '#FFFFFF', grey: '#8C8C8C', black: '#000000', orange: '#FF8A3D', red: '#FF4D4D', zone: '#6EA8FF' };
+const SEG = { 0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc', 5: 'afgcd', 6: 'afgedc', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' };
+const NORMAL = { time: '0842', bb: 56, st: 27, hr: 62, steps: 1147, goal: 3110, bat: 78, date: 'THU 12' };
+const WARN = { ...NORMAL, bb: 22, st: 68 };
+const HRZ = [95, 114, 133, 152, 171];
+const N6 = { ...NORMAL, bbTrend: -1 };
+const WARN6 = { ...N6, bb: 22, st: 68, bat: 18 }, RED6 = { ...N6, bb: 12, st: 82, bat: 9 };
+const RUN6 = { ...N6, bb: 41, st: 74, hr: 142, steps: 2480, time: '1730', bat: 52 };
+const GOAL6 = { ...N6, steps: 3512, time: '1905', bb: 33 };
+const SLEEP6 = { ...N6, time: '2315', bb: 34, bbTrend: 1, st: 18, hr: 54, steps: 3512, bat: 61 };
+const N7 = { ...NORMAL };
+function slot(kind, val, P) {
+  const cl = x => Math.max(0, Math.min(1, x));
+  if (kind === 'rec') return { kind, icon: IC.glass, stroke: 2.2, str: val + 'h', ring: cl(val / 96), color: P.acc };
+  if (kind === 'sleep') return { kind, icon: IC.moon, str: String(val), ring: cl(val / 100), color: val < 60 ? K.orange : P.acc, warn: val < 60 };
+  if (kind === 'spo2') return { kind, icon: IC.drop, str: val + '%', ring: cl((val - 80) / 20), color: val < 90 ? K.orange : P.acc, warn: val < 90, size: 24 };
+  if (kind === 'alt') return { kind, icon: IC.mount, str: fmt(val) + 'm', ring: null, color: P.acc, size: val >= 1000 ? 18 : 22 };
+}
+const WARN5 = { ...WARN, bat: 18 }, RED5 = { ...NORMAL, bb: 12, st: 82, bat: 9 }, GOAL5 = { ...NORMAL, steps: 3512 }, NODATA5 = { ...NORMAL, st: null, hr: null };
+const SCREEN_PX = Math.round(Math.PI * 208 * 208);
+const DA = { W: 48, H: 84, T: 12, S: 2, G: 12, CG: 0, R: 3 };
+const DB = { W: 50, H: 84, T: 13, S: 2, G: 12, CG: 14, R: 3 };
+
+function shade(hex, k) {
+  const n = parseInt(hex.slice(1), 16);
+  const c = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.round(v * k));
+  return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+const bbCol = (v, acc) => v < 15 ? K.red : v < 25 ? K.orange : acc;
+const stCol = (v, acc) => v > 75 ? K.red : v > 50 ? K.orange : acc;
+const fmt = n => n.toLocaleString('de-DE');
+
+function segRects(D) {
+  const { W, H, T, S } = D, vh = (H - S) / 2, hw = W - 2 * T - 2 * S;
+  return {
+    f: [0, 0, T, vh], e: [0, (H + S) / 2, T, vh], b: [W - T, 0, T, vh], c: [W - T, (H + S) / 2, T, vh],
+    a: [T + S, 0, hw, T], g: [T + S, (H - T) / 2, hw, T], d: [T + S, H - T, hw, T]
+  };
+}
+function lcdWidth(str, D) {
+  let w = 0;
+  [...str].forEach((ch, i) => {
+    if (i > 0) w += (ch === ':' || str[i - 1] === ':') ? D.CG : D.G;
+    w += ch === ':' ? D.T : D.W;
+  });
+  return w;
+}
+function lcd(ops, str, x, y, D, st) {
+  const R = segRects(D);
+  let cx = x;
+  [...str].forEach((ch, i) => {
+    if (i > 0) cx += (ch === ':' || str[i - 1] === ':') ? D.CG : D.G;
+    let rects, lit;
+    if (ch === ':') {
+      rects = { p: [0, D.H * 0.3 - D.T / 2, D.T, D.T], q: [0, D.H * 0.7 - D.T / 2, D.T, D.T] };
+      lit = 'pq';
+    } else { rects = R; lit = SEG[ch]; }
+    Object.entries(rects).forEach(([k, r]) => {
+      const on = lit.includes(k);
+      const [rx, ry, rw, rh] = [cx + r[0], y + r[1], r[2], r[3]];
+      if (st.aod) {
+        if (on) { const s = st.sw; ops.push({ t: 'rect', x: rx + s / 2, y: ry + s / 2, w: rw - s, h: rh - s, r: Math.max(0, D.R - s / 2), stroke: st.color, sw: s }); }
+      } else if (on) ops.push({ t: 'rect', x: rx, y: ry, w: rw, h: rh, r: D.R, fill: st.color });
+      else if (st.ghost) ops.push({ t: 'rect', x: rx, y: ry, w: rw, h: rh, r: D.R, fill: st.ghost });
+    });
+    cx += ch === ':' ? D.T : D.W;
+  });
+}
+function gauge(ops, cx, cy, R, w, val, color, track) {
+  const r = R - w / 2;
+  ops.push({ t: 'ring', cx, cy, r, w, color: track || K.track });
+  if (val != null) ops.push({ t: 'arc', cx, cy, r, w, a0: 0, a1: Math.max(0, Math.min(100, val)) * 3.6, color });
+}
+function stepRing(ops, v, acc) {
+  ops.push({ t: 'ring', cx: 208, cy: 208, r: 204, w: 8, color: K.track });
+  ops.push({ t: 'arc', cx: 208, cy: 208, r: 204, w: 8, a0: 0, a1: Math.min(1, v.steps / v.goal) * 360, color: acc });
+}
+const sw = (hex, role) => ({ hex, role });
+
+function buildA(v, mode, P) {
+  const ops = [], zones = [], aod = mode === 'aod';
+  const xc = 288, D = DA, dx = xc - lcdWidth('00', D) / 2;
+  const bbC = bbCol(v.bb, P.acc), stC = stCol(v.st, P.acc);
+  if (!aod) {
+    stepRing(ops, v, P.acc);
+    ops.push({ t: 'circle', cx: 208, cy: 208, r: 186, fill: P.acc, clip: [216, 0, 200, 416] });
+  }
+  if (aod) {
+    const s = P.sw;
+    ops.push({ t: 'rect', x: 246 + s / 2, y: 96 + s / 2, w: 84 - s, h: 30 - s, r: 15 - s / 2, stroke: P.aod, sw: s });
+    ops.push({ t: 'text', x: 288, y: 111, str: v.date, size: 18, weight: 600, color: P.aod, ls: 1 });
+  } else {
+    ops.push({ t: 'rect', x: 246, y: 96, w: 84, h: 30, r: 15, fill: K.black });
+    ops.push({ t: 'text', x: 288, y: 111, str: v.date, size: 18, weight: 600, color: P.acc, ls: 1 });
+  }
+  const st = aod ? { aod: true, sw: P.sw, color: P.aod } : { color: K.black, ghost: P.ghostOn ? P.ghost : null };
+  lcd(ops, v.time.slice(0, 2), dx, 138, D, st);
+  lcd(ops, v.time.slice(2), dx, 238, D, st);
+  if (!aod) {
+    ops.push({ t: 'text', x: 288, y: 345, str: fmt(v.steps), size: 20, weight: 700, color: K.black });
+    gauge(ops, 150, 100, 30, 6, v.st, stC);
+    ops.push({ t: 'text', x: 150, y: 101, str: String(v.st), size: 24, weight: 700, color: v.st > 50 ? stC : K.white });
+    ops.push({ t: 'text', x: 112, y: 101, str: 'STRESS', size: 12, weight: 600, color: K.grey, anchor: 'end', ls: 1 });
+    gauge(ops, 120, 208, 58, 8, v.bb, bbC);
+    ops.push({ t: 'text', x: 120, y: 200, str: String(v.bb), size: 40, weight: 700, color: v.bb < 25 ? bbC : K.white });
+    ops.push({ t: 'text', x: 120, y: 234, str: 'BODY BATT', size: 12, weight: 600, color: K.grey, ls: 1 });
+    ops.push({ t: 'heart', x: 112, y: 304, size: 24, color: P.acc });
+    ops.push({ t: 'text', x: 142, y: 317, str: String(v.hr), size: 26, weight: 700, color: K.white, anchor: 'start' });
+    ops.push({ t: 'batt', x: 112, y: 349, w: 28, h: 14, level: v.bat / 100, color: K.grey });
+    ops.push({ t: 'text', x: 146, y: 357, str: v.bat + '%', size: 16, weight: 600, color: K.grey, anchor: 'start' });
+  }
+  zones.push({ x: 70, y: 66, w: 116, h: 68, label: 'Stress' });
+  zones.push({ x: 58, y: 146, w: 124, h: 124, label: 'Body Battery' });
+  zones.push({ x: 108, y: 298, w: 80, h: 36, label: 'Nhịp tim' });
+  zones.push({ x: 248, y: 330, w: 80, h: 30, label: 'Bước chân', ring: true });
+  const spec = [
+    { name: 'Vòng bước chân', x: 0, y: 0, w: 416, h: 416, font: 'drawArc tâm (208,208), r đường giữa 204, nét 8. Bắt đầu 12 giờ, chiều kim đồng hồ', colors: [sw(K.track, 'rãnh'), sw(P.acc, 'đã đi')], data: 'ActivityMonitor.getInfo().steps / stepGoal, góc = min(1, bước/mục tiêu) × 360°', warn: '—' },
+    { name: 'Mảng màu (chữ D)', x: 216, y: 22, w: 178, h: 372, font: 'setClip(216,0,200,416) rồi fillCircle(208,208,186), clearClip()', colors: [sw(P.acc, 'nền')], data: 'Tĩnh. Tắt ở AOD', warn: '—' },
+    { name: 'Ngày (viên thuốc)', x: 246, y: 96, w: 84, h: 30, font: 'Barlow Semi Condensed SemiBold 18, giãn chữ 1. Bo góc 15', colors: [sw(K.black, 'viên'), sw(P.acc, 'chữ'), sw(P.aod, 'AOD: viền ' + P.sw + 'px + chữ')], data: 'Gregorian.info(now, FORMAT_MEDIUM): day_of_week viết hoa 3 ký tự + day. Mẫu THU 12', warn: '—' },
+    { name: 'Giờ (2 chữ số)', x: Math.round(dx), y: 138, w: lcdWidth('00', D), h: D.H, font: `LCD ${D.W}×${D.H}, nét ${D.T}, cách số ${D.G}`, colors: [sw(K.black, 'đoạn sáng'), sw(P.ghost, 'đoạn nền')], data: 'System.getClockTime().hour, 24h, luôn 2 chữ số (08)', warn: '—' },
+    { name: 'Phút (2 chữ số)', x: Math.round(dx), y: 238, w: lcdWidth('00', D), h: D.H, font: `LCD ${D.W}×${D.H}, nét ${D.T}, cách số ${D.G}`, colors: [sw(K.black, 'đoạn sáng'), sw(P.ghost, 'đoạn nền')], data: 'getClockTime().min, 2 chữ số. Không có giây', warn: '—' },
+    { name: 'Số bước', x: 262, y: 333, w: 52, h: 24, font: 'Barlow Semi Condensed Bold 20, căn giữa tại x 288', colors: [sw(K.black, 'chữ')], data: 'steps, phân cách nghìn bằng dấu chấm (1.147)', warn: '—' },
+    { name: 'Body Battery (viên)', x: 62, y: 150, w: 116, h: 116, font: 'Vòng: tâm (120,208), r đường giữa 54, nét 8. Số Bold 40 tại y 200. Nhãn SemiBold 12 tại y 234', colors: [sw(K.track, 'rãnh'), sw(P.acc, 'vòng ≥25'), sw(K.white, 'số'), sw(K.grey, 'nhãn')], data: 'SensorHistory.getBodyBatteryHistory({:period=>1}) giá trị mới nhất 0–100. Vòng = giá trị × 3,6°', warn: '15–24: vòng + số #FF8A3D. <15: vòng + số #FF4D4D' },
+    { name: 'Stress (viên)', x: 74, y: 70, w: 106, h: 60, font: 'Vòng: tâm (150,100), r đường giữa 27, nét 6. Số Bold 24. Nhãn SemiBold 12 căn phải tại x 112', colors: [sw(K.track, 'rãnh'), sw(P.acc, 'vòng ≤50'), sw(K.white, 'số'), sw(K.grey, 'nhãn')], data: 'SensorHistory.getStressHistory() giá trị mới nhất 0–100', warn: '51–75: vòng + số #FF8A3D. >75: vòng + số #FF4D4D' },
+    { name: 'Nhịp tim', x: 112, y: 304, w: 72, h: 26, font: 'Icon tim 24×24 tại (112,304). Số Bold 26 căn trái tại x 142', colors: [sw(P.acc, 'icon'), sw(K.white, 'số')], data: 'Activity.getActivityInfo().currentHeartRate, dự phòng ActivityMonitor.getHeartRateHistory. Không có: “--”', warn: '—' },
+    { name: 'Pin đồng hồ', x: 112, y: 349, w: 64, h: 16, font: 'Icon pin 28×14 (viền 2, mức tô theo %). Số SemiBold 16 căn trái tại x 146', colors: [sw(K.grey, 'icon + số')], data: 'System.getSystemStats().battery, làm tròn, kèm “%”', warn: '—' },
+  ];
+  return { ops, zones, spec };
+}
+
+function buildB(v, mode, P) {
+  const ops = [], zones = [], aod = mode === 'aod';
+  const D = DB, tw = lcdWidth('00:00', D), tx = Math.round(208 - tw / 2);
+  const bbC = bbCol(v.bb, P.acc), stC = stCol(v.st, P.acc);
+  if (!aod) {
+    stepRing(ops, v, P.acc);
+    ops.push({ t: 'rect', x: 60, y: 88, w: 296, h: 96, r: 22, fill: P.acc });
+  }
+  const st = aod ? { aod: true, sw: P.sw, color: P.aod } : { color: K.black, ghost: P.ghostOn ? P.ghost : null };
+  lcd(ops, v.time.slice(0, 2) + ':' + v.time.slice(2), tx, 94, D, st);
+  if (aod) {
+    const s = P.sw;
+    ops.push({ t: 'rect', x: 164 + s / 2, y: 196 + s / 2, w: 88 - s, h: 30 - s, r: 15 - s / 2, stroke: P.aod, sw: s });
+    ops.push({ t: 'text', x: 208, y: 211, str: v.date, size: 18, weight: 600, color: P.aod, ls: 1 });
+  } else {
+    ops.push({ t: 'rect', x: 164, y: 196, w: 88, h: 30, r: 15, fill: K.track });
+    ops.push({ t: 'text', x: 208, y: 211, str: v.date, size: 18, weight: 600, color: K.white, ls: 1 });
+    ops.push({ t: 'batt', x: 176, y: 49, w: 28, h: 14, level: v.bat / 100, color: K.grey });
+    ops.push({ t: 'text', x: 210, y: 57, str: v.bat + '%', size: 16, weight: 600, color: K.grey, anchor: 'start' });
+    gauge(ops, 104, 278, 34, 6, v.st, stC);
+    ops.push({ t: 'text', x: 104, y: 279, str: String(v.st), size: 26, weight: 700, color: v.st > 50 ? stC : K.white });
+    ops.push({ t: 'text', x: 104, y: 330, str: 'STRESS', size: 12, weight: 600, color: K.grey, ls: 1 });
+    gauge(ops, 312, 278, 34, 6, null);
+    ops.push({ t: 'text', x: 312, y: 279, str: String(v.hr), size: 26, weight: 700, color: K.white });
+    ops.push({ t: 'heart', x: 300, y: 318, size: 24, color: P.acc });
+    gauge(ops, 208, 292, 56, 8, v.bb, bbC);
+    ops.push({ t: 'text', x: 208, y: 284, str: String(v.bb), size: 42, weight: 700, color: v.bb < 25 ? bbC : K.white });
+    ops.push({ t: 'text', x: 208, y: 318, str: 'BODY BATT', size: 12, weight: 600, color: K.grey, ls: 1 });
+    ops.push({ t: 'text', x: 208, y: 370, str: fmt(v.steps), size: 18, weight: 600, color: K.grey });
+  }
+  zones.push({ x: 66, y: 240, w: 76, h: 100, label: 'Stress' });
+  zones.push({ x: 150, y: 234, w: 116, h: 116, label: 'Body Battery', lx: 266, ly: 334 });
+  zones.push({ x: 274, y: 240, w: 76, h: 106, label: 'Nhịp tim' });
+  zones.push({ x: 176, y: 358, w: 64, h: 24, label: 'Bước chân', ring: true, lx: 244, ly: 362 });
+  const spec = [
+    { name: 'Vòng bước chân', x: 0, y: 0, w: 416, h: 416, font: 'drawArc tâm (208,208), r đường giữa 204, nét 8. Bắt đầu 12 giờ, chiều kim đồng hồ', colors: [sw(K.track, 'rãnh'), sw(P.acc, 'đã đi')], data: 'ActivityMonitor.getInfo().steps / stepGoal, góc = min(1, bước/mục tiêu) × 360°', warn: '—' },
+    { name: 'Dải màu', x: 60, y: 88, w: 296, h: 96, font: 'fillRoundedRectangle, bo góc 22', colors: [sw(P.acc, 'nền')], data: 'Tĩnh. Tắt ở AOD', warn: '—' },
+    { name: 'Giờ:phút', x: tx, y: 94, w: tw, h: D.H, font: `LCD ${D.W}×${D.H}, nét ${D.T}, cách số ${D.G}, quanh “:” ${D.CG}`, colors: [sw(K.black, 'đoạn sáng'), sw(P.ghost, 'đoạn nền')], data: 'System.getClockTime() hour:min, 24h, 2 chữ số mỗi phần. Không có giây', warn: '—' },
+    { name: 'Ngày (viên thuốc)', x: 164, y: 196, w: 88, h: 30, font: 'Barlow Semi Condensed SemiBold 18, giãn chữ 1. Bo góc 15', colors: [sw(K.track, 'viên'), sw(K.white, 'chữ'), sw(P.aod, 'AOD: viền ' + P.sw + 'px + chữ')], data: 'Gregorian.info(now, FORMAT_MEDIUM): day_of_week viết hoa 3 ký tự + day. Mẫu THU 12', warn: '—' },
+    { name: 'Pin đồng hồ', x: 176, y: 49, w: 64, h: 16, font: 'Icon pin 28×14 (viền 2, mức tô theo %). Số SemiBold 16 căn trái tại x 210', colors: [sw(K.grey, 'icon + số')], data: 'System.getSystemStats().battery, làm tròn, kèm “%”', warn: '—' },
+    { name: 'Body Battery (viên)', x: 152, y: 236, w: 112, h: 112, font: 'Vòng: tâm (208,292), r đường giữa 52, nét 8. Số Bold 42 tại y 284. Nhãn SemiBold 12 tại y 318', colors: [sw(K.track, 'rãnh'), sw(P.acc, 'vòng ≥25'), sw(K.white, 'số'), sw(K.grey, 'nhãn')], data: 'SensorHistory.getBodyBatteryHistory() giá trị mới nhất 0–100. Vòng = giá trị × 3,6°', warn: '15–24: vòng + số #FF8A3D. <15: vòng + số #FF4D4D' },
+    { name: 'Stress (viên)', x: 70, y: 244, w: 68, h: 94, font: 'Vòng: tâm (104,278), r đường giữa 31, nét 6. Số Bold 26. Nhãn SemiBold 12 tại y 330', colors: [sw(K.track, 'rãnh'), sw(P.acc, 'vòng ≤50'), sw(K.white, 'số'), sw(K.grey, 'nhãn')], data: 'SensorHistory.getStressHistory() giá trị mới nhất 0–100', warn: '51–75: vòng + số #FF8A3D. >75: vòng + số #FF4D4D' },
+    { name: 'Nhịp tim (viên)', x: 278, y: 244, w: 68, h: 98, font: 'Vòng rãnh: tâm (312,278), r đường giữa 31, nét 6 (không có tiến độ). Số Bold 26. Icon tim 24×24 tại (300,318)', colors: [sw(K.track, 'rãnh'), sw(K.white, 'số'), sw(P.acc, 'icon')], data: 'Activity.getActivityInfo().currentHeartRate, dự phòng getHeartRateHistory. Không có: “--”', warn: '—' },
+    { name: 'Số bước', x: 186, y: 360, w: 44, h: 20, font: 'Barlow Semi Condensed SemiBold 18, căn giữa tại x 208', colors: [sw(K.grey, 'chữ')], data: 'steps, phân cách nghìn bằng dấu chấm (1.147)', warn: '—' },
+  ];
+  return { ops, zones, spec };
+}
+
+function arcD(cx, cy, r, a0, a1) {
+  const p = a => [cx + r * Math.sin(a * Math.PI / 180), cy - r * Math.cos(a * Math.PI / 180)];
+  const [x0, y0] = p(a0), [x1, y1] = p(a1);
+  return `M${x0} ${y0} A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1} ${y1}`;
+}
+function toSvg(ops, id, zones) {
+  const els = [h('circle', { cx: 208, cy: 208, r: 208, fill: '#000000' })], defs = [];
+  ops.forEach((o, i) => {
+    if (o.t === 'ring') els.push(h('circle', { cx: o.cx, cy: o.cy, r: o.r, fill: 'none', stroke: o.color, strokeWidth: o.w }));
+    else if (o.t === 'arc') {
+      const s = o.a1 - o.a0;
+      if (s >= 359.99) els.push(h('circle', { cx: o.cx, cy: o.cy, r: o.r, fill: 'none', stroke: o.color, strokeWidth: o.w }));
+      else if (s > 0) els.push(h('path', { d: arcD(o.cx, o.cy, o.r, o.a0, o.a1), fill: 'none', stroke: o.color, strokeWidth: o.w }));
+    } else if (o.t === 'circle') {
+      let cp;
+      if (o.clip) { cp = `${id}-c${i}`; defs.push(h('clipPath', { id: cp }, h('rect', { x: o.clip[0], y: o.clip[1], width: o.clip[2], height: o.clip[3] }))); }
+      els.push(h('circle', { cx: o.cx, cy: o.cy, r: o.r, fill: o.fill, clipPath: cp ? `url(#${cp})` : undefined }));
+    } else if (o.t === 'rect') els.push(h('rect', { x: o.x, y: o.y, width: o.w, height: o.h, rx: o.r, fill: o.fill || 'none', stroke: o.stroke, strokeWidth: o.sw }));
+    else if (o.t === 'text') els.push(h('text', { x: o.x, y: o.y, fill: o.color, fontSize: o.size, fontWeight: o.weight, fontFamily: o.font || FONT, textAnchor: o.anchor || 'middle', dominantBaseline: o.base === 'alpha' ? undefined : 'central', style: o.ls ? { letterSpacing: o.ls + 'px' } : undefined }, o.str));
+    else if (o.t === 'line') els.push(h('line', { x1: o.x1, y1: o.y1, x2: o.x2, y2: o.y2, stroke: o.color, strokeWidth: o.w }));
+    else if (o.t === 'path') els.push(h('path', { d: o.d, fill: o.stroke ? 'none' : o.color, stroke: o.stroke ? o.color : undefined, strokeWidth: o.stroke, strokeLinejoin: 'round', strokeLinecap: 'round', transform: `translate(${o.x} ${o.y}) scale(${o.size / 24})` }));
+    else if (o.t === 'heart') els.push(h('path', { d: HEART, fill: o.color, transform: `translate(${o.x} ${o.y}) scale(${o.size / 24})` }));
+    else if (o.t === 'batt') {
+      els.push(h('rect', { x: o.x + 1, y: o.y + 1, width: o.w - 5, height: o.h - 2, rx: 3, fill: 'none', stroke: o.color, strokeWidth: 2 }));
+      els.push(h('rect', { x: o.x + o.w - 3, y: o.y + o.h / 2 - 3, width: 3, height: 6, rx: 1, fill: o.color }));
+      els.push(h('rect', { x: o.x + 4, y: o.y + 4, width: Math.max(1, (o.w - 11) * o.level), height: o.h - 8, rx: 1, fill: o.color }));
+    }
+  });
+  (zones || []).forEach(z => {
+    els.push(h('rect', { x: z.x, y: z.y, width: z.w, height: z.h, rx: 6, fill: 'none', stroke: K.zone, strokeWidth: 2, strokeDasharray: '5 4' }));
+    if (z.ring) els.push(h('circle', { cx: 208, cy: 208, r: 204, fill: 'none', stroke: K.zone, strokeWidth: 2, strokeDasharray: '5 4' }));
+  });
+  (zones || []).forEach(z => {
+    const tw = z.label.length * 6.4 + 12;
+    const lx = z.lx ?? z.x, ly = z.ly ?? z.y - 18;
+    els.push(h('rect', { x: lx, y: ly, width: tw, height: 16, rx: 4, fill: K.zone }));
+    els.push(h('text', { x: lx + 6, y: ly + 8, fill: '#000000', fontSize: 11, fontWeight: 700, fontFamily: FONT, dominantBaseline: 'central' }, z.label));
+  });
+  return h('svg', { width: 416, height: 416, viewBox: '0 0 416 416', style: { display: 'block' } }, h('defs', null, ...defs), ...els);
+}
+function countLit(ops) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 416;
+  const c = cv.getContext('2d');
+  c.fillStyle = '#000'; c.fillRect(0, 0, 416, 416);
+  ops.forEach(o => {
+    c.save();
+    if (o.t === 'ring' || o.t === 'arc') {
+      const a0 = o.t === 'ring' ? 0 : o.a0, a1 = o.t === 'ring' ? 360 : o.a1;
+      c.beginPath(); c.arc(o.cx, o.cy, o.r, (a0 - 90) * Math.PI / 180, (a1 - 90) * Math.PI / 180);
+      c.strokeStyle = o.color; c.lineWidth = o.w; c.stroke();
+    } else if (o.t === 'circle') {
+      if (o.clip) { c.beginPath(); c.rect(...o.clip); c.clip(); }
+      c.beginPath(); c.arc(o.cx, o.cy, o.r, 0, Math.PI * 2); c.fillStyle = o.fill; c.fill();
+    } else if (o.t === 'rect') {
+      c.beginPath(); c.roundRect(o.x, o.y, o.w, o.h, o.r || 0);
+      if (o.fill) { c.fillStyle = o.fill; c.fill(); }
+      if (o.stroke) { c.strokeStyle = o.stroke; c.lineWidth = o.sw; c.stroke(); }
+    } else if (o.t === 'text') {
+      c.font = `${o.weight} ${o.size}px ${o.font || FONT}`; c.fillStyle = o.color;
+      c.textAlign = o.anchor === 'end' ? 'right' : o.anchor === 'start' ? 'left' : 'center';
+      c.textBaseline = o.base === 'alpha' ? 'alphabetic' : 'middle'; c.letterSpacing = (o.ls || 0) + 'px';
+      c.fillText(o.str, o.x, o.y);
+    } else if (o.t === 'line') {
+      c.beginPath(); c.moveTo(o.x1, o.y1); c.lineTo(o.x2, o.y2); c.strokeStyle = o.color; c.lineWidth = o.w; c.stroke();
+    } else if (o.t === 'path') {
+      c.translate(o.x, o.y); c.scale(o.size / 24, o.size / 24);
+      if (o.stroke) { c.strokeStyle = o.color; c.lineWidth = o.stroke; c.lineJoin = 'round'; c.lineCap = 'round'; c.stroke(new Path2D(o.d)); }
+      else { c.fillStyle = o.color; c.fill(new Path2D(o.d)); }
+    } else if (o.t === 'heart') {
+      c.translate(o.x, o.y); c.scale(o.size / 24, o.size / 24); c.fillStyle = o.color; c.fill(new Path2D(HEART));
+    }
+    c.restore();
+  });
+  const d = c.getImageData(0, 0, 416, 416).data;
+  let n = 0;
+  for (let y = 0; y < 416; y++) for (let x = 0; x < 416; x++) {
+    if ((x - 207.5) ** 2 + (y - 207.5) ** 2 > 208 * 208) continue;
+    const i = (y * 416 + x) * 4;
+    if (d[i] > 0 || d[i + 1] > 0 || d[i + 2] > 0) n++;
+  }
+  return n;
+}
+function lcdStrip(D, P) {
+  const ops = [];
+  lcd(ops, '0123456789', 16, 16, { ...D }, { color: P.acc, ghost: null });
+  const w1 = lcdWidth('0123456789', D) + 32;
+  lcd(ops, ':', w1, 16, D, { color: P.acc });
+  const W = w1 + D.T + 16, H = D.H + 32;
+  const aod = [];
+  lcd(aod, '0123456789', 16, 16, D, { aod: true, sw: P.sw, color: P.aod });
+  lcd(aod, ':', w1, 16, D, { aod: true, sw: P.sw, color: P.aod });
+  const mk = list => h('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, style: { display: 'block', background: '#000', borderRadius: 10 } },
+    ...list.map(o => h('rect', { x: o.x, y: o.y, width: o.w, height: o.h, rx: o.r, fill: o.fill || 'none', stroke: o.stroke, strokeWidth: o.sw })));
+  return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } }, mk(ops), mk(aod),
+    h('div', { style: { fontSize: 13, color: '#8C8C8C' } }, 'Trên: tô đặc · Dưới: AOD viền ' + P.sw + ' px'));
+}
+function lcdDiagram(D, P) {
+  const s = 3, R = segRects(D), pad = 24;
+  const W = D.W * s + pad * 2, H = D.H * s + pad * 2;
+  const els = [];
+  Object.entries(R).forEach(([k, r]) => {
+    els.push(h('rect', { x: pad + r[0] * s, y: pad + r[1] * s, width: r[2] * s, height: r[3] * s, rx: D.R * s, fill: P.acc }));
+    els.push(h('text', { x: pad + (r[0] + r[2] / 2) * s, y: pad + (r[1] + r[3] / 2) * s, fill: '#000', fontSize: 18, fontWeight: 700, fontFamily: FONT, textAnchor: 'middle', dominantBaseline: 'central' }, k));
+  });
+  return h('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, style: { display: 'block', background: '#000', borderRadius: 10 } }, ...els);
+}
+function lcdSpec(D, P, single) {
+  const R = segRects(D), r = k => `(${R[k].join(', ')})`;
+  const rows = [
+    { k: 'Ô chữ số (rộng × cao)', v: `${D.W} × ${D.H} px` },
+    { k: 'Độ dày đoạn', v: `${D.T} px · bo góc ${D.R} px` },
+    { k: 'Khe giữa các đoạn', v: `${D.S} px` },
+    { k: 'Khoảng cách giữa 2 chữ số', v: `${D.G} px` },
+  ];
+  if (single) rows.push({ k: 'Dấu “:”', v: `2 ô ${D.T}×${D.T}, tâm tại 30% và 70% chiều cao; cách số 2 bên ${D.CG} px` });
+  else rows.push({ k: 'Dấu “:”', v: 'Không dùng (giờ trên, phút dưới, cách hàng 16 px)' });
+  rows.push(
+    { k: 'Đoạn dọc f, b / e, c', v: `f ${r('f')} · b ${r('b')} · e ${r('e')} · c ${r('c')}` },
+    { k: 'Đoạn ngang a, g, d', v: `a ${r('a')} · g ${r('g')} · d ${r('d')}` },
+    { k: 'Bảng đoạn', v: '0 abcdef · 1 bc · 2 abdeg · 3 abcdg · 4 bcfg · 5 acdfg · 6 acdefg · 7 abc · 8 abcdefg · 9 abcdfg' },
+    { k: 'Màu', v: `Sáng ${K.black} trên ${P.acc} · đoạn nền ${P.ghost}${P.ghostOn ? '' : ' (đang tắt)'} · AOD viền ${P.aod}` },
+    { k: 'AOD', v: `drawRoundedRectangle, penWidth ${P.sw}, chỉ đoạn sáng, không đoạn nền` },
+    { k: 'Lập trình', v: 'Toạ độ (x, y, rộng, cao) tính từ góc trên-trái ô chữ số. Vẽ bằng fillRoundedRectangle, hoặc xuất BMFont chỉ gồm 0–9 và “:”' }
+  );
+  return rows;
+}
+
+const SEC = 'Manrope, sans-serif';
+const TFONTS = { 'Big Shoulders Display': { w: 800, size: 88 }, 'Saira Condensed': { w: 700, size: 86 }, 'Space Grotesk': { w: 700, size: 70 } };
+const WNAME = { 600: 'SemiBold', 700: 'Bold', 800: 'ExtraBold' };
+const TILES = {
+  top: { clip: [0, 20, 416, 60], bs: [70, 20, 276, 60], rr: [124, 38, 168, 42, 16] },
+  band: { clip: [0, 86, 416, 102], bs: [21, 86, 374, 102], rr: [64, 86, 288, 102, 24] },
+  st: { clip: [0, 194, 136, 128], bs: [20, 194, 116, 128], rr: [52, 194, 84, 128, 16] },
+  bb: { clip: [142, 194, 132, 128], bs: [142, 194, 132, 128], rr: [142, 194, 132, 128, 16] },
+  hr: { clip: [280, 194, 136, 128], bs: [280, 194, 116, 128], rr: [280, 194, 84, 128, 16] },
+  steps: { clip: [0, 328, 416, 68], bs: [63, 328, 290, 68], rr: [124, 328, 168, 50, 16] },
+};
+const V3 = [{ bg: '#1A1D1B', pad: 6 }, { bg: '#13211A', pad: 10 }];
+const WARN_O = '#2E1D10', WARN_R = '#301515';
+const timeY = capH => Math.round(130 + capH / 2);
+
+function buildD(v, mode, P, style, M) {
+  const ops = [], zones = [], aod = mode === 'aod', S = style === 'slice', tf = P.tf;
+  const capH = M && M.capH ? M.capH : tf.size * 0.7;
+  const tile = (k, fill) => {
+    if (S) ops.push({ t: 'circle', cx: 208, cy: 208, r: 188, fill, clip: TILES[k].clip });
+    else { const [x, y, w, h, r] = TILES[k].rr; ops.push({ t: 'rect', x, y, w, h, r, fill }); }
+  };
+  const box = k => S ? TILES[k].bs : TILES[k].rr.slice(0, 4);
+  const how = k => S ? `setClip(${TILES[k].clip.join(', ')}) → fillCircle(208, 208, 188) → clearClip()` : `fillRoundedRectangle(${TILES[k].rr.join(', ')})`;
+  const bbC = bbCol(v.bb, P.acc), stC = stCol(v.st, P.acc);
+  const stT = v.st > 75 ? WARN_R : v.st > 50 ? WARN_O : P.tile;
+  const bbT = v.bb < 15 ? WARN_R : v.bb < 25 ? WARN_O : P.tile;
+  if (!aod) {
+    stepRing(ops, v, P.acc);
+    tile('top', P.tile); tile('band', P.acc); tile('st', stT); tile('bb', bbT); tile('hr', P.tile); tile('steps', P.tile);
+    const lit = Math.round(v.bat / 10);
+    for (let i = 0; i < 10; i++) {
+      const a = (-20 + i * 40 / 9) * Math.PI / 180;
+      ops.push({ t: 'circle', cx: +(208 + 162 * Math.sin(a)).toFixed(1), cy: +(208 - 162 * Math.cos(a)).toFixed(1), r: 3, fill: i < lit ? P.acc : P.track2 });
+    }
+    ops.push({ t: 'text', x: 208, y: 68, str: v.bat + '%', size: 14, weight: 800, font: SEC, color: K.white });
+  }
+  ops.push({ t: 'text', x: 208, y: timeY(capH), str: v.time.slice(0, 2) + ':' + v.time.slice(2), size: tf.size, weight: tf.w, font: tf.css, color: aod ? P.aod : K.black, base: 'alpha' });
+  if (aod) {
+    const s = P.sw;
+    ops.push({ t: 'rect', x: 164 + s / 2, y: 174 + s / 2, w: 88 - s, h: 26 - s, r: 13 - s / 2, stroke: P.aod, sw: s });
+    ops.push({ t: 'text', x: 208, y: 187, str: v.date, size: 14, weight: 800, font: SEC, color: P.aod, ls: 1.5 });
+  } else {
+    ops.push({ t: 'rect', x: 164, y: 174, w: 88, h: 26, r: 13, fill: K.black });
+    ops.push({ t: 'text', x: 208, y: 187, str: v.date, size: 14, weight: 800, font: SEC, color: P.acc, ls: 1.5 });
+    gauge(ops, 94, 248, 30, 6, v.st, stC, P.track2);
+    ops.push({ t: 'text', x: 94, y: 249, str: String(v.st), size: 24, weight: 800, font: SEC, color: v.st > 50 ? stC : K.white });
+    ops.push({ t: 'text', x: 94, y: 300, str: 'STRESS', size: 11, weight: 700, font: SEC, color: K.grey, ls: 1 });
+    gauge(ops, 208, 262, 52, 8, v.bb, bbC, P.track2);
+    ops.push({ t: 'text', x: 208, y: 255, str: String(v.bb), size: 40, weight: 800, font: SEC, color: v.bb < 25 ? bbC : K.white });
+    ops.push({ t: 'text', x: 208, y: 286, str: 'BODY BATT', size: 11, weight: 700, font: SEC, color: K.grey, ls: 1 });
+    ops.push({ t: 'heart', x: 310, y: 214, size: 24, color: P.acc });
+    ops.push({ t: 'text', x: 322, y: 258, str: String(v.hr), size: 30, weight: 800, font: SEC, color: K.white });
+    ops.push({ t: 'text', x: 322, y: 300, str: 'BPM', size: 11, weight: 700, font: SEC, color: K.grey, ls: 1 });
+    ops.push({ t: 'text', x: 212, y: 352, str: fmt(v.steps), size: 22, weight: 800, font: SEC, color: K.white, anchor: 'end' });
+    ops.push({ t: 'text', x: 217, y: 354, str: '/ ' + fmt(v.goal), size: 14, weight: 700, font: SEC, color: K.grey, anchor: 'start' });
+  }
+  const zb = (k, label, ring) => { const [x, y, w, h] = box(k); zones.push({ x, y, w, h, label, ring, lx: x + 6, ly: y + 6 }); };
+  zb('st', 'Stress'); zb('bb', 'Body Battery'); zb('hr', 'Nhịp tim'); zb('steps', 'Bước chân', true);
+  const g = k => { const [x, y, w, h] = box(k); return { x, y, w, h }; };
+  const tw = M && M.fullW ? Math.round(M.fullW) : Math.round(tf.size * 2.2);
+  const tileRow = (k, name, extraCols, warn) => ({ name, ...g(k), font: how(k), colors: [sw(P.tile, 'nền khối'), ...(extraCols || [])], data: 'Nền khối, cũng là vùng giữ tay. Tắt ở AOD', warn: warn || '—' });
+  const spec = [
+    { name: 'Vòng bước chân', x: 0, y: 0, w: 416, h: 416, font: 'drawArc tâm (208,208), r đường giữa 204, nét 8. Bắt đầu 12 giờ, chiều kim đồng hồ', colors: [sw(K.track, 'rãnh'), sw(P.acc, 'đã đi')], data: 'ActivityMonitor.getInfo().steps / stepGoal, góc = min(1, bước/mục tiêu) × 360°', warn: '—' },
+    tileRow('top', 'Khối pin'),
+    { name: 'Pin (10 chấm + số)', x: 150, y: 43, w: 116, h: 32, font: '10 × fillCircle r 3 trên cung r 162 tâm (208,208), từ −20° đến +20°, bước 4,44°. Số Manrope ExtraBold 14 tại (208,68)', colors: [sw(P.acc, 'chấm sáng'), sw(P.track2, 'chấm tắt'), sw(K.white, 'số')], data: 'System.getSystemStats().battery. Số chấm sáng = round(pin / 10), sáng từ trái sang', warn: '—' },
+    { name: 'Dải giờ', ...g('band'), font: how('band'), colors: [sw(P.acc, 'nền')], data: 'Tĩnh. Tắt ở AOD', warn: '—' },
+    { name: 'Giờ:phút', x: 208 - Math.round(tw / 2), y: Math.round(130 - capH / 2), w: tw, h: Math.round(capH), font: `${tf.family} ${WNAME[tf.w]} ${tf.size}px, căn giữa x 208, baseline y ${timeY(capH)}`, colors: [sw(K.black, 'chữ'), sw(P.aod, 'AOD, tô đặc')], data: 'System.getClockTime() hour:min, 24h, 2 chữ số mỗi phần. Không có giây', warn: '—' },
+    { name: 'Ngày (viên thuốc)', x: 164, y: 174, w: 88, h: 26, font: 'fillRoundedRectangle bo 13, đè lên mép dưới dải giờ. Chữ Manrope ExtraBold 14, giãn 1,5, tại (208,187)', colors: [sw(K.black, 'viên'), sw(P.acc, 'chữ'), sw(P.aod, 'AOD: viền ' + P.sw + ' px + chữ')], data: 'Gregorian.info(now, FORMAT_MEDIUM): day_of_week viết hoa 3 ký tự + day. Mẫu THU 12', warn: '—' },
+    tileRow('st', 'Khối stress', [sw(WARN_O, 'cảnh báo cam'), sw(WARN_R, 'cảnh báo đỏ')], '51–75: nền ' + WARN_O + '. >75: nền ' + WARN_R),
+    { name: 'Stress (viên)', x: 64, y: 218, w: 60, h: 90, font: 'Vòng tâm (94,248), r đường giữa 27, nét 6. Số Manrope ExtraBold 24. Nhãn Bold 11 tại y 300', colors: [sw(P.track2, 'rãnh'), sw(P.acc, 'vòng ≤50'), sw(K.white, 'số'), sw(K.grey, 'nhãn')], data: 'SensorHistory.getStressHistory() giá trị mới nhất 0–100', warn: '51–75: vòng + số #FF8A3D. >75: vòng + số #FF4D4D' },
+    tileRow('bb', 'Khối Body Battery', [sw(WARN_O, 'cảnh báo cam'), sw(WARN_R, 'cảnh báo đỏ')], '15–24: nền ' + WARN_O + '. <15: nền ' + WARN_R),
+    { name: 'Body Battery (viên)', x: 156, y: 210, w: 104, h: 104, font: 'Vòng tâm (208,262), r đường giữa 48, nét 8. Số Manrope ExtraBold 40 tại y 255. Nhãn Bold 11 tại y 286', colors: [sw(P.track2, 'rãnh'), sw(P.acc, 'vòng ≥25'), sw(K.white, 'số'), sw(K.grey, 'nhãn')], data: 'SensorHistory.getBodyBatteryHistory() giá trị mới nhất 0–100. Vòng = giá trị × 3,6°', warn: '15–24: vòng + số #FF8A3D. <15: vòng + số #FF4D4D' },
+    tileRow('hr', 'Khối nhịp tim'),
+    { name: 'Nhịp tim', x: 300, y: 214, w: 44, h: 92, font: 'Icon tim 24×24 tại (310,214). Số Manrope ExtraBold 30 tại (322,258). Nhãn “BPM” Bold 11 tại y 300', colors: [sw(P.acc, 'icon'), sw(K.white, 'số'), sw(K.grey, 'nhãn')], data: 'Activity.getActivityInfo().currentHeartRate, dự phòng getHeartRateHistory. Không có: “--”', warn: '—' },
+    tileRow('steps', 'Khối bước chân'),
+    { name: 'Số bước', x: 150, y: 340, w: 116, h: 24, font: 'Số Manrope ExtraBold 22 căn phải tại x 212. “/ mục tiêu” Bold 14 căn trái tại x 217', colors: [sw(K.white, 'số bước'), sw(K.grey, 'mục tiêu')], data: 'ActivityMonitor.getInfo().steps và stepGoal, phân cách nghìn bằng dấu chấm', warn: '—' },
+  ];
+  return { ops, zones, spec };
+}
+function fontStrip(P, M) {
+  const tf = P.tf, capH = M && M.capH ? M.capH : tf.size * 0.7;
+  const H = Math.round(capH + 40), W = Math.round((M && M.stripW ? M.stripW : tf.size * 6) + 40);
+  const mk = col => h('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, style: { display: 'block', background: '#000', borderRadius: 10 } },
+    h('text', { x: 20, y: 20 + capH, fill: col, fontSize: tf.size, fontWeight: tf.w, fontFamily: tf.css }, '0123456789:'));
+  return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } }, mk(P.acc), mk(P.aod),
+    h('div', { style: { fontSize: 13, color: '#8C8C8C' } }, 'Trên: màu nhấn · Dưới: AOD ' + P.aod + ', tô đặc'));
+}
+function fontSpec(P, M) {
+  const tf = P.tf, r = n => M && n ? Math.round(n) + ' px' : 'đang đo…';
+  return [
+    { k: 'Font giờ', v: `${tf.family} ${WNAME[tf.w]} (${tf.w}), cỡ ${tf.size} px` },
+    { k: 'Cao chữ số (đo)', v: r(M && M.capH) },
+    { k: 'Rộng chữ số “0” (đo)', v: r(M && M.digitW) + ' · số dạng tabular: ' + (M ? (M.tabular ? 'có' : 'không, nên ép cùng bề rộng khi xuất') : '…') },
+    { k: 'Rộng “:” / “08:42” (đo)', v: r(M && M.colonW) + ' / ' + r(M && M.fullW) },
+    { k: 'Glyph cần xuất', v: '0 1 2 3 4 5 6 7 8 9 :' },
+    { k: 'Màu', v: `Thường ${K.black} trên ${P.acc} · AOD ${P.aod} trên #000000, cùng vị trí và cỡ` },
+    { k: 'Font phụ', v: 'Manrope ExtraBold 14 / 22 / 24 / 30 / 40, Bold 11 và 14. Glyph: 0–9, A–Z, “%”, “/”, “.”, “-”' },
+    { k: 'Lập trình', v: 'Xuất 2 font bitmap (BMFont) chỉ gồm glyph cần dùng, mỗi cỡ một file. Tổng: 2 họ font' },
+  ];
+}
+
+function buildE(v, mode, P, V, M) {
+  const ops = [], zones = [], aod = mode === 'aod', tf = P.tf, p = V.pad;
+  const capH = M && M.capH ? M.capH : tf.size * 0.7;
+  const tY = Math.round(130 + capH / 2);
+  const bbC = bbCol(v.bb, P.acc), stC = stCol(v.st, P.acc);
+  const BAND = [64, 82, 288, 96, 24], DATE = [164, 170, 88, 26, 13];
+  const ST = [98, 258, 32], BB = [208, 268, 50], HR = [318, 258, 32];
+  const lblY = ST[1] + ST[2] + p + 12;
+  const stepY = BB[1] + BB[2] + p + 8, STEP = [142, stepY, 132, 30, 15];
+  const BAT_R = 176, BAT_A = 22;
+  if (!aod) {
+    stepRing(ops, v, P.acc);
+    ops.push({ t: 'circle', cx: 208, cy: 208, r: 194, fill: V.bg });
+    ops.push({ t: 'arc', cx: 208, cy: 208, r: BAT_R, w: 16, a0: -BAT_A, a1: BAT_A, color: K.black });
+    [-BAT_A, BAT_A].forEach(a => { const r = a * Math.PI / 180; ops.push({ t: 'circle', cx: +(208 + BAT_R * Math.sin(r)).toFixed(1), cy: +(208 - BAT_R * Math.cos(r)).toFixed(1), r: 8, fill: K.black }); });
+    const lit = Math.round(v.bat / 10);
+    for (let i = 0; i < 10; i++) {
+      const a = (-BAT_A + i * 2 * BAT_A / 9) * Math.PI / 180;
+      ops.push({ t: 'circle', cx: +(208 + BAT_R * Math.sin(a)).toFixed(1), cy: +(208 - BAT_R * Math.cos(a)).toFixed(1), r: 3, fill: i < lit ? P.acc : P.track2 });
+    }
+    ops.push({ t: 'rect', x: BAND[0] - p, y: BAND[1] - p, w: BAND[2] + 2 * p, h: BAND[3] + 2 * p, r: BAND[4] + p, fill: K.black });
+    ops.push({ t: 'rect', x: BAND[0], y: BAND[1], w: BAND[2], h: BAND[3], r: BAND[4], fill: P.acc });
+    [ST, BB, HR].forEach(([cx, cy, R]) => ops.push({ t: 'circle', cx, cy, r: R + p, fill: K.black }));
+  }
+  ops.push({ t: 'text', x: 208, y: tY, str: v.time.slice(0, 2) + ':' + v.time.slice(2), size: tf.size, weight: tf.w, font: tf.css, color: aod ? P.aod : K.black, base: 'alpha' });
+  if (aod) {
+    const s = P.sw;
+    ops.push({ t: 'rect', x: DATE[0] + s / 2, y: DATE[1] + s / 2, w: DATE[2] - s, h: DATE[3] - s, r: DATE[4] - s / 2, stroke: P.aod, sw: s });
+    ops.push({ t: 'text', x: 208, y: DATE[1] + 13, str: v.date, size: 14, weight: 800, font: SEC, color: P.aod, ls: 1.5 });
+  } else {
+    ops.push({ t: 'rect', x: DATE[0], y: DATE[1], w: DATE[2], h: DATE[3], r: DATE[4], fill: K.black });
+    ops.push({ t: 'text', x: 208, y: DATE[1] + 13, str: v.date, size: 14, weight: 800, font: SEC, color: P.acc, ls: 1.5 });
+    gauge(ops, ST[0], ST[1], ST[2], 6, v.st, stC, P.track2);
+    ops.push({ t: 'text', x: ST[0], y: ST[1] + 1, str: String(v.st), size: 24, weight: 800, font: SEC, color: v.st > 50 ? stC : K.white });
+    ops.push({ t: 'text', x: ST[0], y: lblY, str: 'STRESS', size: 11, weight: 700, font: SEC, color: K.grey, ls: 1 });
+    gauge(ops, BB[0], BB[1], BB[2], 8, v.bb, bbC, P.track2);
+    ops.push({ t: 'text', x: BB[0], y: BB[1] - 7, str: String(v.bb), size: 38, weight: 800, font: SEC, color: v.bb < 25 ? bbC : K.white });
+    ops.push({ t: 'text', x: BB[0], y: BB[1] + 23, str: 'BODY BATT', size: 10, weight: 700, font: SEC, color: K.grey, ls: 1 });
+    gauge(ops, HR[0], HR[1], HR[2], 6, null, null, P.track2);
+    ops.push({ t: 'heart', x: HR[0] - 8, y: HR[1] - 17, size: 16, color: P.acc });
+    ops.push({ t: 'text', x: HR[0], y: HR[1] + 9, str: String(v.hr), size: 22, weight: 800, font: SEC, color: K.white });
+    ops.push({ t: 'text', x: HR[0], y: lblY, str: 'BPM', size: 11, weight: 700, font: SEC, color: K.grey, ls: 1 });
+    ops.push({ t: 'rect', x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], r: STEP[4], fill: K.black });
+    ops.push({ t: 'text', x: 208, y: STEP[1] + 15, str: fmt(v.steps), size: 18, weight: 800, font: SEC, color: K.white, anchor: 'end' });
+    ops.push({ t: 'text', x: 213, y: STEP[1] + 16, str: '/ ' + fmt(v.goal), size: 13, weight: 700, font: SEC, color: K.grey, anchor: 'start' });
+  }
+  const cz = ([cx, cy, R], label, extra) => zones.push({ x: cx - R - p, y: cy - R - p, w: 2 * (R + p), h: 2 * (R + p) + (extra || 0), label, lx: cx - R - p, ly: cy - R - p - 18 });
+  cz(ST, 'Stress', 18); cz(BB, 'Body Battery'); cz(HR, 'Nhịp tim', 18);
+  zones.push({ x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], label: 'Bước chân', ring: true, lx: STEP[0] + STEP[2] + 4, ly: STEP[1] + 7 });
+  const tw = M && M.fullW ? Math.round(M.fullW) : Math.round(tf.size * 2.2);
+  const well = ([cx, cy, R]) => `Giếng: fillCircle(${cx}, ${cy}, ${R + p}) #000000.`;
+  const spec = [
+    { name: 'Vòng bước chân', x: 0, y: 0, w: 416, h: 416, font: 'drawArc tâm (208,208), r đường giữa 204, nét 8. Bắt đầu 12 giờ, chiều kim đồng hồ', colors: [sw(K.track, 'rãnh'), sw(P.acc, 'đã đi')], data: 'ActivityMonitor.getInfo().steps / stepGoal, góc = min(1, bước/mục tiêu) × 360°', warn: '—' },
+    { name: 'Nền toàn cục', x: 14, y: 14, w: 388, h: 388, font: 'fillCircle(208, 208, 194). Khe đen 6 px tới mép trong vòng bước chân (r 200). Vẽ ngay sau vòng bước chân, trước mọi giếng', colors: [sw(V.bg, 'nền')], data: 'Tĩnh. Tắt ở AOD', warn: '—' },
+    { name: 'Pin (10 chấm)', x: 136, y: 24, w: 144, h: 24, font: `Giếng: drawArc r ${BAT_R}, nét 16, từ −${BAT_A}° đến +${BAT_A}°, + fillCircle r 8 ở 2 đầu (bo tròn). Chấm: 10 × fillCircle r 3 trên cung r ${BAT_R}, bước ${(2 * BAT_A / 9).toFixed(2).replace('.', ',')}°`, colors: [sw(K.black, 'giếng'), sw(P.acc, 'chấm sáng'), sw(P.track2, 'chấm tắt')], data: 'System.getSystemStats().battery. Số chấm sáng = round(pin / 10), sáng từ trái sang. Không hiện số %', warn: '—' },
+    { name: 'Dải giờ', x: BAND[0], y: BAND[1], w: BAND[2], h: BAND[3], font: `Giếng: fillRoundedRectangle(${BAND[0] - p}, ${BAND[1] - p}, ${BAND[2] + 2 * p}, ${BAND[3] + 2 * p}, ${BAND[4] + p}). Dải: fillRoundedRectangle(${BAND.join(', ')})`, colors: [sw(K.black, 'giếng'), sw(P.acc, 'dải')], data: 'Tĩnh. Tắt ở AOD', warn: '—' },
+    { name: 'Giờ:phút', x: 208 - Math.round(tw / 2), y: Math.round(130 - capH / 2), w: tw, h: Math.round(capH), font: `${tf.family} ${WNAME[tf.w]} ${tf.size}px, căn giữa x 208, baseline y ${tY}`, colors: [sw(K.black, 'chữ'), sw(P.aod, 'AOD, tô đặc')], data: 'System.getClockTime() hour:min, 24h, 2 chữ số mỗi phần. Không có giây', warn: '—' },
+    { name: 'Ngày (viên thuốc)', x: DATE[0], y: DATE[1], w: DATE[2], h: DATE[3], font: `fillRoundedRectangle bo ${DATE[4]}, đè lên mép dưới dải giờ. Chữ Manrope ExtraBold 14, giãn 1,5, tại (208,${DATE[1] + 13})`, colors: [sw(K.black, 'viên'), sw(P.acc, 'chữ'), sw(P.aod, 'AOD: viền ' + P.sw + ' px + chữ')], data: 'Gregorian.info(now, FORMAT_MEDIUM): day_of_week viết hoa 3 ký tự + day. Mẫu THU 12', warn: '—' },
+    { name: 'Stress (viên)', x: ST[0] - ST[2] - p, y: ST[1] - ST[2] - p, w: 2 * (ST[2] + p), h: 2 * (ST[2] + p), font: `${well(ST)} Vòng r đường giữa ${ST[2] - 3}, nét 6. Số Manrope ExtraBold 24. Nhãn Bold 11 tại y ${lblY} (trên nền)`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'rãnh'), sw(P.acc, 'vòng ≤50'), sw(K.white, 'số'), sw(K.grey, 'nhãn')], data: 'SensorHistory.getStressHistory() giá trị mới nhất 0–100', warn: '51–75: vòng + số #FF8A3D. >75: vòng + số #FF4D4D' },
+    { name: 'Body Battery (viên)', x: BB[0] - BB[2] - p, y: BB[1] - BB[2] - p, w: 2 * (BB[2] + p), h: 2 * (BB[2] + p), font: `${well(BB)} Vòng r đường giữa ${BB[2] - 4}, nét 8. Số Manrope ExtraBold 38 tại y ${BB[1] - 7}. Nhãn Bold 10 tại y ${BB[1] + 23}`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'rãnh'), sw(P.acc, 'vòng ≥25'), sw(K.white, 'số'), sw(K.grey, 'nhãn')], data: 'SensorHistory.getBodyBatteryHistory() giá trị mới nhất 0–100. Vòng = giá trị × 3,6°', warn: '15–24: vòng + số #FF8A3D. <15: vòng + số #FF4D4D' },
+    { name: 'Nhịp tim (viên)', x: HR[0] - HR[2] - p, y: HR[1] - HR[2] - p, w: 2 * (HR[2] + p), h: 2 * (HR[2] + p), font: `${well(HR)} Vòng rãnh r đường giữa ${HR[2] - 3}, nét 6. Icon tim 16×16 tại (${HR[0] - 8},${HR[1] - 17}). Số Manrope ExtraBold 22 tại y ${HR[1] + 9}. Nhãn “BPM” tại y ${lblY}`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'rãnh'), sw(P.acc, 'icon'), sw(K.white, 'số'), sw(K.grey, 'nhãn')], data: 'Activity.getActivityInfo().currentHeartRate, dự phòng getHeartRateHistory. Không có: “--” màu #8C8C8C', warn: '—' },
+    { name: 'Số bước (viên thuốc)', x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], font: `fillRoundedRectangle bo ${STEP[4]} #000000. Số Manrope ExtraBold 18 căn phải tại x 208. “/ mục tiêu” Bold 13 căn trái tại x 213`, colors: [sw(K.black, 'giếng'), sw(K.white, 'số bước'), sw(K.grey, 'mục tiêu')], data: 'ActivityMonitor.getInfo().steps và stepGoal, phân cách nghìn bằng dấu chấm', warn: '—' },
+  ];
+  return { ops, zones, spec };
+}
+
+const IC = {
+  moon: 'M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z',
+  glass: 'M7 3h10 M7 21h10 M8 3c0 5 8 6 8 9s-8 4-8 9 M16 3c0 5-8 6-8 9s8 4 8 9',
+  drop: 'M12 3c3 4.5 6 7.8 6 11a6 6 0 0 1-12 0c0-3.2 3-6.5 6-11z',
+  mount: 'M2 20 L9 8 L13 14 L16 10.5 L22 20 Z',
+  bolt: 'M13.5 2 L5 13.5 H11 L10 22 L19 10 H13 Z',
+  stress: 'M2 12 H6 L9 5 L13.5 19 L16.5 9 L18.5 12 H22',
+  foot: 'M8 2.5c2 0 3.2 2.3 3.2 5.2S10 13 8 13 4.8 10.6 4.8 7.7 6 2.5 8 2.5z M16 7c2 0 3.2 2.3 3.2 5.2S18 17.5 16 17.5s-3.2-2.4-3.2-5.3S14 7 16 7z M6 14.5h4v2.5a2 2 0 0 1-4 0z M14 19h4v1a2 2 0 0 1-4 0z',
+};
+function buildF(v, mode, P, merged, M, ext) {
+  const E = ext || {}, WH = E.sleep ? '#9A9A9A' : K.white;
+  const ops = [], zones = [], aod = mode === 'aod', tf = P.tf, p = 6, bg = E.sleep ? '#101211' : '#1A1D1B';
+  const capH = M && M.capH ? M.capH : tf.size * 0.7;
+  const tY = Math.round(130 + capH / 2);
+  const bbC = bbCol(v.bb, P.acc), stC = stCol(v.st, P.acc);
+  const BAND = [64, 82, 288, 96, 24], DATE = [158, 168, 100, 30, 15];
+  const ST = merged ? [108, 256, 40] : [94, 254, 40], BB = [208, 266, 54], HR = merged ? [308, 256, 40] : [322, 254, 40];
+  const STEP = merged ? [129, 318, 158, 38, 19] : [129, 334, 158, 36, 18], sy = STEP[1] + STEP[3] / 2 + (merged ? 2 : 0);
+  const BAT_R = 176, BAT_A = 22, pt = (a, r) => [+(208 + r * Math.sin(a * Math.PI / 180)).toFixed(1), +(208 - r * Math.cos(a * Math.PI / 180)).toFixed(1)];
+  const endA = Math.min(1, v.steps / v.goal) * 360, done = v.steps >= v.goal, nv = x => x == null ? '--' : String(x);
+  if (!aod) {
+    stepRing(ops, v, P.acc);
+    if (E.ticks) [90, 180, 270].forEach(a => { const [x1, y1] = pt(a, 198), [x2, y2] = pt(a, 210); ops.push({ t: 'line', x1, y1, x2, y2, w: 3, color: K.black }); });
+    const [ex, ey] = pt(endA, 204); ops.push({ t: 'circle', cx: ex, cy: ey, r: 4, fill: WH });
+    ops.push({ t: 'circle', cx: 208, cy: 208, r: 194, fill: bg });
+    ops.push({ t: 'arc', cx: 208, cy: 208, r: BAT_R, w: 18, a0: -BAT_A, a1: BAT_A, color: K.black });
+    [-BAT_A, BAT_A].forEach(a => { const [x, y] = pt(a, BAT_R); ops.push({ t: 'circle', cx: x, cy: y, r: 9, fill: K.black }); });
+    const lit = Math.ceil(v.bat / 10), batC = v.bat <= 10 ? K.red : v.bat <= 20 ? K.orange : P.acc;
+    for (let i = 0; i < 10; i++) { const [x, y] = pt(-BAT_A + i * 2 * BAT_A / 9, BAT_R); ops.push({ t: 'circle', cx: x, cy: y, r: 3.5, fill: i < lit ? batC : P.track2 }); }
+    ops.push({ t: 'rect', x: BAND[0] - p, y: BAND[1] - p, w: BAND[2] + 2 * p, h: BAND[3] + 2 * p, r: BAND[4] + p, fill: K.black });
+    ops.push({ t: 'rect', x: BAND[0], y: BAND[1], w: BAND[2], h: BAND[3], r: BAND[4], fill: P.acc });
+    [ST, BB, HR].forEach(([cx, cy, R]) => ops.push({ t: 'circle', cx, cy, r: R + p, fill: K.black }));
+    ops.push({ t: 'rect', x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], r: STEP[4], fill: done ? P.acc : K.black });
+  }
+  ops.push({ t: 'text', x: 208, y: tY, str: v.time.slice(0, 2) + ':' + v.time.slice(2), size: tf.size, weight: tf.w, font: tf.css, color: aod ? P.aod : K.black, base: 'alpha' });
+  if (aod) {
+    const s = P.sw;
+    ops.push({ t: 'rect', x: DATE[0] + s / 2, y: DATE[1] + s / 2, w: DATE[2] - s, h: DATE[3] - s, r: DATE[4] - s / 2, stroke: P.aod, sw: s });
+    ops.push({ t: 'text', x: 208, y: DATE[1] + 15, str: v.date, size: 18, weight: 800, font: SEC, color: P.aod, ls: 1.5 });
+  } else {
+    ops.push({ t: 'rect', x: DATE[0], y: DATE[1], w: DATE[2], h: DATE[3], r: DATE[4], fill: K.black });
+    ops.push({ t: 'text', x: 208, y: DATE[1] + 15, str: v.date, size: 18, weight: 800, font: SEC, color: P.acc, ls: 1.5 });
+    if (v.slot) {
+      const sl = v.slot;
+      gauge(ops, ST[0], ST[1], ST[2], 6, sl.ring == null ? null : sl.ring * 100, sl.color, P.track2);
+      ops.push(sl.stroke ? { t: 'path', d: sl.icon, stroke: sl.stroke, x: ST[0] - 12, y: ST[1] - 30, size: 24, color: sl.color } : { t: 'path', d: sl.icon, x: ST[0] - 12, y: ST[1] - 30, size: 24, color: sl.color });
+      ops.push({ t: 'text', x: ST[0], y: ST[1] + 14, str: sl.str, size: sl.size || 26, weight: 800, font: SEC, color: sl.warn ? sl.color : WH });
+    } else {
+    gauge(ops, ST[0], ST[1], ST[2], 6, v.st, stC, P.track2);
+    ops.push({ t: 'path', d: IC.stress, stroke: 2.5, x: ST[0] - 12, y: ST[1] - 30, size: 24, color: stC });
+    ops.push({ t: 'text', x: ST[0], y: ST[1] + 14, str: nv(v.st), size: 26, weight: 800, font: SEC, ls: v.st == null ? 3 : 0, color: v.st > 50 ? stC : v.st == null ? K.grey : WH });
+    }
+    gauge(ops, BB[0], BB[1], BB[2], 8, v.bb, bbC, P.track2);
+    ops.push({ t: 'path', d: IC.bolt, x: BB[0] - 12, y: BB[1] - 38, size: 24, color: bbC });
+    const tr = E.trend && v.bbTrend ? v.bbTrend : 0;
+    if (tr) ops.push({ t: 'path', d: tr > 0 ? 'M12 7 L18.5 16 H5.5 Z' : 'M5.5 8 H18.5 L12 17 Z', x: 226, y: BB[1], size: 24, color: v.bb < 25 ? bbC : tr > 0 ? P.acc : K.grey });
+    ops.push({ t: 'text', x: tr ? 199 : BB[0], y: BB[1] + 12, str: String(v.bb), size: 44, weight: 800, font: SEC, color: v.bb < 25 ? bbC : WH });
+    if (E.zones) {
+      const z = HRZ.filter(t => v.hr != null && v.hr >= t).length;
+      for (let i = 0; i < 5; i++) ops.push({ t: 'arc', cx: HR[0], cy: HR[1], r: HR[2] - 3, w: 6, a0: i * 72 + 4, a1: (i + 1) * 72 - 4, color: i < z ? P.acc : P.track2 });
+    } else gauge(ops, HR[0], HR[1], HR[2], 6, null, null, P.track2);
+    ops.push({ t: 'heart', x: HR[0] - 12, y: HR[1] - 30, size: 24, color: P.acc });
+    ops.push({ t: 'text', x: HR[0], y: HR[1] + 14, str: nv(v.hr), size: 26, weight: 800, font: SEC, ls: v.hr == null ? 3 : 0, color: v.hr == null ? K.grey : WH });
+    ops.push({ t: 'path', d: IC.foot, x: 137, y: sy - 12, size: 24, color: done ? K.black : P.acc });
+    ops.push({ t: 'text', x: 226, y: sy, str: fmt(v.steps), size: 22, weight: 800, font: SEC, color: done ? K.black : WH, anchor: 'end' });
+    ops.push({ t: 'text', x: 231, y: sy + 1, str: '/ ' + fmt(v.goal), size: 15, weight: 700, font: SEC, color: done ? K.black : K.grey, anchor: 'start' });
+  }
+  const cz = ([cx, cy, R], label, above) => zones.push({ x: cx - R - p, y: cy - R - p, w: 2 * (R + p), h: 2 * (R + p), label, lx: cx - R - p, ly: above ? cy - R - p - 18 : cy + R + p + 2 });
+  cz(ST, 'Stress'); cz(BB, 'Body Battery', true); cz(HR, 'Nhịp tim');
+  zones.push({ x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], label: 'Bước chân', ring: true, lx: 150, ly: STEP[1] + STEP[3] + 4 });
+  const tw = M && M.fullW ? Math.round(M.fullW) : Math.round(tf.size * 2.2);
+  const well = ([cx, cy, R]) => `Giếng fillCircle(${cx}, ${cy}, ${R + p}).`;
+  const icon = (n, x, y) => `Icon ${n} 24×24 tại (${x},${y})`;
+  const spec = [
+    { name: 'Vòng bước chân', x: 0, y: 0, w: 416, h: 416, font: 'drawArc tâm (208,208), r đường giữa 204, nét 8, từ 12 giờ theo chiều kim. Chấm đầu: fillCircle r 4 tại điểm cuối cung', colors: [sw(K.track, 'rãnh'), sw(P.acc, 'đã đi'), sw(WH, 'chấm đầu')], data: 'ActivityMonitor.getInfo().steps / stepGoal, góc = min(1, bước/mục tiêu) × 360°. Đạt mục tiêu: vòng kín, chấm ở 12 giờ', warn: '—' },
+    { name: 'Nền toàn cục', x: 14, y: 14, w: 388, h: 388, font: 'fillCircle(208, 208, 194), khe đen 6 px tới vòng bước chân. Thứ tự vẽ: vòng → nền → giếng → nội dung', colors: [sw(bg, 'nền')], data: 'Tĩnh. Tắt ở AOD', warn: '—' },
+    { name: 'Pin (10 chấm)', x: 134, y: 22, w: 148, h: 28, font: `Giếng drawArc r ${BAT_R}, nét 18, −${BAT_A}° → +${BAT_A}°, + fillCircle r 9 ở 2 đầu. Chấm: 10 × fillCircle r 3,5 trên cung r ${BAT_R}, bước ${(2 * BAT_A / 9).toFixed(2).replace('.', ',')}°`, colors: [sw(K.black, 'giếng'), sw(P.acc, 'chấm sáng'), sw(P.track2, 'chấm tắt')], data: 'System.getSystemStats().battery. Chấm sáng = ceil(pin / 10), từ trái sang (pin > 0 luôn ≥ 1 chấm)', warn: '≤20%: chấm sáng #FF8A3D. ≤10%: chấm sáng #FF4D4D' },
+    { name: 'Dải giờ', x: BAND[0], y: BAND[1], w: BAND[2], h: BAND[3], font: `Giếng fillRoundedRectangle(${BAND[0] - p}, ${BAND[1] - p}, ${BAND[2] + 2 * p}, ${BAND[3] + 2 * p}, ${BAND[4] + p}). Dải fillRoundedRectangle(${BAND.join(', ')})`, colors: [sw(K.black, 'giếng'), sw(P.acc, 'dải')], data: 'Tĩnh. Tắt ở AOD', warn: '—' },
+    { name: 'Giờ:phút', x: 208 - Math.round(tw / 2), y: Math.round(130 - capH / 2), w: tw, h: Math.round(capH), font: `${tf.family} ${WNAME[tf.w]} ${tf.size}px, căn giữa x 208, baseline y ${tY}`, colors: [sw(K.black, 'chữ'), sw(P.aod, 'AOD, tô đặc')], data: 'System.getClockTime() hour:min, 24h. Không có giây', warn: '—' },
+    { name: 'Ngày (viên thuốc)', x: DATE[0], y: DATE[1], w: DATE[2], h: DATE[3], font: `fillRoundedRectangle bo ${DATE[4]}, đè mép dưới dải giờ. Manrope ExtraBold 18, giãn 1,5, tại (208,${DATE[1] + 15})`, colors: [sw(K.black, 'viên'), sw(P.acc, 'chữ'), sw(P.aod, 'AOD: viền ' + P.sw + ' px + chữ')], data: 'Gregorian.info(now, FORMAT_MEDIUM): day_of_week viết hoa 3 ký tự + day', warn: '—' },
+    { name: 'Stress', x: ST[0] - ST[2] - p, y: ST[1] - ST[2] - p, w: 2 * (ST[2] + p), h: 2 * (ST[2] + p), font: `${well(ST)} Vòng r giữa ${ST[2] - 3}, nét 6. ${icon('sóng', ST[0] - 12, ST[1] - 30)}. Số Manrope ExtraBold 26 tại y ${ST[1] + 14}`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'rãnh'), sw(P.acc, 'vòng + icon ≤50'), sw(WH, 'số')], data: 'SensorHistory.getStressHistory() mới nhất 0–100. Không có: “--” màu #8C8C8C, không vẽ cung', warn: '51–75: vòng, icon, số #FF8A3D. >75: #FF4D4D' },
+    { name: 'Body Battery', x: BB[0] - BB[2] - p, y: BB[1] - BB[2] - p, w: 2 * (BB[2] + p), h: 2 * (BB[2] + p), font: `${well(BB)} Vòng r giữa ${BB[2] - 4}, nét 8. ${icon('tia sét', BB[0] - 12, BB[1] - 38)}. Số Manrope ExtraBold 44 tại y ${BB[1] + 12}`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'rãnh'), sw(P.acc, 'vòng + icon ≥25'), sw(WH, 'số')], data: 'SensorHistory.getBodyBatteryHistory() mới nhất 0–100. Vòng = giá trị × 3,6°', warn: '15–24: vòng, icon, số #FF8A3D. <15: #FF4D4D' },
+    { name: 'Nhịp tim', x: HR[0] - HR[2] - p, y: HR[1] - HR[2] - p, w: 2 * (HR[2] + p), h: 2 * (HR[2] + p), font: `${well(HR)} Vòng rãnh r giữa ${HR[2] - 3}, nét 6. ${icon('tim', HR[0] - 12, HR[1] - 30)}. Số Manrope ExtraBold 26 tại y ${HR[1] + 14}`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'rãnh'), sw(P.acc, 'icon'), sw(WH, 'số')], data: 'Activity.getActivityInfo().currentHeartRate, dự phòng getHeartRateHistory. Không có: “--” màu #8C8C8C', warn: '—' },
+    { name: 'Số bước (viên thuốc)', x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], font: `fillRoundedRectangle bo ${STEP[4]}${merged ? ', chồng 8 px lên giếng Body Battery' : ''}. ${icon('bàn chân', 137, sy - 12)}. Số ExtraBold 22 căn phải x 226. “/ mục tiêu” Bold 15 căn trái x 231, tâm y ${sy}`, colors: [sw(K.black, 'giếng'), sw(P.acc, 'icon'), sw(WH, 'số'), sw(K.grey, 'mục tiêu')], data: 'ActivityMonitor.getInfo().steps và stepGoal, phân cách nghìn bằng dấu chấm', warn: 'Bước ≥ mục tiêu: nền viên ' + P.acc + ', icon + chữ #000000' },
+  ];
+  if (merged) spec.splice(6, 0, { name: 'Khối giếng liền', x: ST[0] - ST[2] - p, y: 206, w: HR[0] + HR[2] + p - (ST[0] - ST[2] - p), h: STEP[1] + STEP[3] - 206, font: 'Tâm stress–BB và BB–nhịp tim cách nhau ~100 px, nhỏ hơn tổng bán kính giếng (46 + 60), nên 3 giếng chồng nhau ~6 px và tạo eo tự nhiên. Vòng số liệu vẫn cách nhau ~6 px', colors: [sw(K.black, 'giếng')], data: 'Chỉ là hình vẽ, không cần thêm lệnh nào ngoài 3 fillCircle + 1 fillRoundedRectangle', warn: '—' });
+  return { ops, zones, spec };
+}
+
+const TF8 = { 'Sora': 700, 'Lexend': 700, 'Red Hat Display': 800, 'Big Shoulders Display': 800 };
+function tf8(name, M8) { const m = M8 && M8[name]; return { family: name, w: TF8[name], css: `"${name}", sans-serif`, size: m ? m.size : 64 }; }
+function measureFont(name) {
+  const c = document.createElement('canvas').getContext('2d'), w = TF8[name], css = `"${name}", sans-serif`;
+  c.font = `${w} 100px ${css}`;
+  const size = Math.round(46 * 100 / c.measureText('0').actualBoundingBoxAscent);
+  c.font = `${w} ${size}px ${css}`;
+  const m0 = c.measureText('0'), m1 = c.measureText('1');
+  return { size, capH: m0.actualBoundingBoxAscent, digitW: m0.width, tabular: Math.abs(m0.width - m1.width) < 0.5, colonW: c.measureText(':').width, fullW: c.measureText('08:42').width, stripW: c.measureText('0123456789:').width };
+}
+const fitN = str => str.length >= 5 ? 18 : str.length === 4 ? 22 : 26;
+function slot8(kind, val, P) {
+  const b = slot(kind === 'alt' ? 'sleep' : kind, kind === 'alt' ? 100 : val, P);
+  if (kind === 'alt') return { kind, icon: IC.mount, str: String(Math.round(val)), ring: null, color: P.acc };
+  return { ...b, size: undefined };
+}
+function buildG(v, mode, P, tf, M, ext) {
+  const E = ext || {}, ops = [], zones = [], aod = mode === 'aod', p = 6;
+  const bg = E.sleep ? '#101211' : '#1A1D1B', WH = E.sleep ? '#9A9A9A' : K.white, IG = E.sleep ? '#6E6E6E' : K.grey;
+  const capH = M && M.capH ? M.capH : 46;
+  const BAND = [72, 80, 272, 64, 20], DATE = [160, 140, 96, 28, 14];
+  const ST = [88, 236, 38], BB = [208, 246, 60], HR = [328, 236, 38];
+  const STEP = [126, 320, 164, 40, 20], sy = 340;
+  const BR = 180, BA = 34, BW = 12, GAP = 1.6, SEGA = (2 * BA - 9 * GAP) / 10;
+  const tY = Math.round(BAND[1] + BAND[3] / 2 + capH / 2);
+  const pt = (a, r) => [+(208 + r * Math.sin(a * Math.PI / 180)).toFixed(1), +(208 - r * Math.cos(a * Math.PI / 180)).toFixed(1)];
+  const bbC = bbCol(v.bb, P.acc), stC = stCol(v.st, P.acc);
+  const done = v.steps >= v.goal, nv = x => x == null ? '--' : String(x);
+  if (!aod) {
+    stepRing(ops, v, P.acc);
+    [90, 180, 270].forEach(a => { const [x1, y1] = pt(a, 198), [x2, y2] = pt(a, 210); ops.push({ t: 'line', x1, y1, x2, y2, w: 3, color: K.black }); });
+    const [ex, ey] = pt(Math.min(1, v.steps / v.goal) * 360, 204); ops.push({ t: 'circle', cx: ex, cy: ey, r: 4, fill: K.white });
+    ops.push({ t: 'circle', cx: 208, cy: 208, r: 194, fill: bg });
+    ops.push({ t: 'arc', cx: 208, cy: 208, r: BR, w: BW, a0: -BA - 2, a1: BA + 2, color: K.black });
+    [-BA - 2, BA + 2].forEach(a => { const [x, y] = pt(a, BR); ops.push({ t: 'circle', cx: x, cy: y, r: BW / 2, fill: K.black }); });
+    const lit = Math.ceil(v.bat / 10), batC = v.bat <= 10 ? K.red : v.bat <= 20 ? K.orange : P.acc;
+    for (let i = 0; i < 10; i++) { const a0 = -BA + i * (SEGA + GAP); ops.push({ t: 'arc', cx: 208, cy: 208, r: BR, w: 4, a0, a1: a0 + SEGA, color: i < lit ? batC : P.track2 }); }
+    ops.push({ t: 'rect', x: BAND[0] - p, y: BAND[1] - p, w: BAND[2] + 2 * p, h: BAND[3] + 2 * p, r: BAND[4] + p, fill: K.black });
+    ops.push({ t: 'rect', x: BAND[0], y: BAND[1], w: BAND[2], h: BAND[3], r: BAND[4], fill: P.acc });
+    [ST, HR].forEach(([cx, cy, R]) => ops.push({ t: 'circle', cx, cy, r: R + p, fill: K.black }));
+    ops.push({ t: 'rect', x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], r: STEP[4], fill: done ? P.acc : K.black });
+    ops.push({ t: 'circle', cx: BB[0], cy: BB[1], r: BB[2] + p, fill: K.black });
+  }
+  ops.push({ t: 'text', x: 208, y: tY, str: v.time.slice(0, 2) + ':' + v.time.slice(2), size: tf.size, weight: tf.w, font: tf.css, color: aod ? P.aod : K.black, base: 'alpha' });
+  if (aod) {
+    const s = P.sw;
+    ops.push({ t: 'rect', x: DATE[0] + s / 2, y: DATE[1] + s / 2, w: DATE[2] - s, h: DATE[3] - s, r: DATE[4] - s / 2, stroke: P.aod, sw: s });
+    ops.push({ t: 'text', x: 208, y: DATE[1] + 14, str: v.date, size: 17, weight: 800, font: SEC, color: P.aod, ls: 1.5 });
+  } else {
+    ops.push({ t: 'rect', x: DATE[0], y: DATE[1], w: DATE[2], h: DATE[3], r: DATE[4], fill: K.black });
+    ops.push({ t: 'text', x: 208, y: DATE[1] + 14, str: v.date, size: 17, weight: 800, font: SEC, color: WH, ls: 1.5 });
+    if (v.slot) {
+      const sl = v.slot;
+      gauge(ops, ST[0], ST[1], ST[2], 6, sl.ring == null ? null : sl.ring * 100, sl.color, P.track2);
+      ops.push(sl.stroke ? { t: 'path', d: sl.icon, stroke: sl.stroke, x: ST[0] - 12, y: ST[1] - 30, size: 24, color: sl.warn ? sl.color : IG } : { t: 'path', d: sl.icon, x: ST[0] - 12, y: ST[1] - 30, size: 24, color: sl.warn ? sl.color : IG });
+      ops.push({ t: 'text', x: ST[0], y: ST[1] + 14, str: sl.str, size: fitN(sl.str), weight: 800, font: SEC, color: sl.warn ? sl.color : WH });
+    } else {
+      gauge(ops, ST[0], ST[1], ST[2], 6, v.st, stC, P.track2);
+      ops.push({ t: 'path', d: IC.stress, stroke: 2.5, x: ST[0] - 12, y: ST[1] - 30, size: 24, color: v.st > 50 ? stC : IG });
+      ops.push({ t: 'text', x: ST[0], y: ST[1] + 14, str: nv(v.st), size: 26, weight: 800, font: SEC, ls: v.st == null ? 3 : 0, color: v.st > 50 ? stC : v.st == null ? K.grey : WH });
+    }
+    gauge(ops, BB[0], BB[1], BB[2], 9, v.bb, bbC, P.track2);
+    ops.push({ t: 'path', d: IC.bolt, x: BB[0] - 12, y: BB[1] - 43, size: 24, color: v.bb < 25 ? bbC : IG });
+    ops.push({ t: 'text', x: BB[0], y: BB[1] + 12, str: String(v.bb), size: 48, weight: 800, font: SEC, color: v.bb < 25 ? bbC : WH });
+    const z = HRZ.filter(t => v.hr != null && v.hr >= t).length;
+    for (let i = 0; i < 5; i++) ops.push({ t: 'arc', cx: HR[0], cy: HR[1], r: HR[2] - 3, w: 6, a0: i * 72 + 4, a1: (i + 1) * 72 - 4, color: i < z ? P.acc : P.track2 });
+    ops.push({ t: 'heart', x: HR[0] - 12, y: HR[1] - 30, size: 24, color: IG });
+    ops.push({ t: 'text', x: HR[0], y: HR[1] + 14, str: nv(v.hr), size: fitN(nv(v.hr)), weight: 800, font: SEC, ls: v.hr == null ? 3 : 0, color: v.hr == null ? K.grey : WH });
+    ops.push({ t: 'path', d: IC.foot, x: 140, y: sy - 12, size: 24, color: done ? K.black : IG });
+    ops.push({ t: 'text', x: 228, y: sy, str: fmt(v.steps), size: 22, weight: 800, font: SEC, color: done ? K.black : WH, anchor: 'end' });
+    ops.push({ t: 'text', x: 233, y: sy + 1, str: '/ ' + fmt(v.goal), size: 15, weight: 700, font: SEC, color: done ? K.black : K.grey, anchor: 'start' });
+  }
+  const cz = ([cx, cy, R], label, below) => zones.push({ x: cx - R - p, y: cy - R - p, w: 2 * (R + p), h: 2 * (R + p), label, lx: cx - R - p, ly: below ? cy + R + p + 2 : cy - R - p - 18 });
+  cz(ST, 'Ô trái', true); cz(BB, 'Body Battery'); zones[zones.length - 1].lx = 166; zones[zones.length - 1].ly = 186; cz(HR, 'Nhịp tim', true);
+  zones.push({ x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], label: 'Bước chân', ring: true, lx: 172, ly: STEP[1] + STEP[3] + 4 });
+  const tw = M && M.fullW ? Math.round(M.fullW) : 180;
+  const well = ([cx, cy, R]) => `Giếng fillCircle(${cx}, ${cy}, ${R + p}).`;
+  const icon = (n, x, y) => `Icon ${n} 24×24 tại (${x},${y})`;
+  const cb = ([cx, cy, R]) => ({ x: cx - R - p, y: cy - R - p, w: 2 * (R + p), h: 2 * (R + p) });
+  const spec = [
+    { name: 'Vòng bước chân', x: 0, y: 0, w: 416, h: 416, font: 'drawArc tâm (208,208), r giữa 204, nét 8, từ 12 giờ theo chiều kim. Khía: 3 × drawLine nét 3 #000000 tại 90°/180°/270°, r 198→210. Chấm đầu fillCircle r 4', colors: [sw(K.track, 'rãnh'), sw(P.acc, 'đã đi'), sw(K.white, 'chấm đầu')], data: 'steps / stepGoal, góc = min(1, tỉ lệ) × 360°', warn: '—' },
+    { name: 'Nền toàn cục', x: 14, y: 14, w: 388, h: 388, font: 'fillCircle(208, 208, 194). Thứ tự: vòng → nền → giếng → nội dung', colors: [sw(bg, 'nền')], data: 'Tĩnh. Tắt ở AOD', warn: '—' },
+    { name: 'Pin (10 đoạn)', x: 96, y: 22, w: 224, h: 46, font: `Giếng: drawArc r ${BR}, nét ${BW}, −${BA + 2}° → +${BA + 2}°, + fillCircle r ${BW / 2} ở 2 đầu. Đoạn: 10 × drawArc r ${BR}, nét 4, dài ${SEGA.toFixed(2).replace('.', ',')}°, khe ${GAP.toString().replace('.', ',')}°, bắt đầu −${BA}°`, colors: [sw(K.black, 'giếng'), sw(P.acc, 'đoạn sáng'), sw(P.track2, 'đoạn tắt')], data: 'System.getSystemStats().battery. Đoạn sáng = ceil(pin / 10), từ trái sang', warn: '≤20%: đoạn sáng #FF8A3D. ≤10%: #FF4D4D' },
+    { name: 'Dải giờ', x: BAND[0], y: BAND[1], w: BAND[2], h: BAND[3], font: `Giếng fillRoundedRectangle(${BAND[0] - p}, ${BAND[1] - p}, ${BAND[2] + 2 * p}, ${BAND[3] + 2 * p}, ${BAND[4] + p}). Dải fillRoundedRectangle(${BAND.join(', ')})`, colors: [sw(K.black, 'giếng'), sw(P.acc, 'dải')], data: 'Tĩnh. Tắt ở AOD', warn: '—' },
+    { name: 'Giờ:phút', x: 208 - Math.round(tw / 2), y: Math.round(112 - capH / 2), w: tw, h: Math.round(capH), font: `${tf.family} ${WNAME[tf.w]} ${tf.size}px (chữ số cao 46 px), căn giữa x 208, baseline y ${tY}`, colors: [sw(K.black, 'chữ'), sw(P.aod, 'AOD, tô đặc')], data: 'System.getClockTime() hour:min, 24h. Không có giây', warn: '—' },
+    { name: 'Ngày (viên thuốc)', x: DATE[0], y: DATE[1], w: DATE[2], h: DATE[3], font: `fillRoundedRectangle bo ${DATE[4]}, đè mép dưới dải giờ. Manrope ExtraBold 17, giãn 1,5, tại (208,${DATE[1] + 14})`, colors: [sw(K.black, 'viên'), sw(K.white, 'chữ'), sw(P.aod, 'AOD: viền ' + P.sw + ' px + chữ')], data: 'Gregorian.info(now, FORMAT_MEDIUM): day_of_week viết hoa 3 ký tự + day', warn: '—' },
+    { name: 'Ô trái (mặc định stress)', ...cb(ST), font: `${well(ST)} Vòng r giữa ${ST[2] - 3}, nét 6. ${icon('sóng / trăng / đồng hồ cát / giọt / núi', ST[0] - 12, ST[1] - 30)}. Số Manrope ExtraBold tại y ${ST[1] + 14}, cỡ theo số ký tự: ≤3 → 26, 4 → 22, ≥5 → 18 (rộng tối đa 56 px)`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'rãnh'), sw(P.acc, 'vòng'), sw(K.grey, 'icon'), sw(K.white, 'số')], data: 'Stress mặc định. Điểm ngủ: số / 100. Hồi phục: “18h”, vòng = giờ / 96. SpO₂: “96%”, vòng (x−80)/20. Độ cao: số nguyên không dấu chấm, không chữ đơn vị, đơn vị theo cài đặt máy; vòng chỉ có rãnh', warn: 'Stress 51–75 / >75, điểm ngủ <60, SpO₂ <90: vòng + icon + số sang cam / đỏ' },
+    { name: 'Body Battery', ...cb(BB), font: `${well(BB)} Vòng r giữa ${BB[2] - 4.5}, nét 9. ${icon('tia sét', BB[0] - 12, BB[1] - 43)}. Số Manrope ExtraBold 48 tại y ${BB[1] + 12}`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'rãnh'), sw(P.acc, 'vòng ≥25'), sw(K.grey, 'icon'), sw(K.white, 'số')], data: 'SensorHistory.getBodyBatteryHistory() mới nhất 0–100. Vòng = giá trị × 3,6°', warn: '15–24: vòng, icon, số #FF8A3D. <15: #FF4D4D' },
+    { name: 'Nhịp tim', ...cb(HR), font: `${well(HR)} 5 đoạn drawArc r giữa ${HR[2] - 3}, nét 6, đoạn i: i×72°+4° → (i+1)×72°−4°. ${icon('tim', HR[0] - 12, HR[1] - 30)}. Số ExtraBold, cỡ theo số ký tự như ô trái`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'đoạn tắt'), sw(P.acc, 'đoạn sáng'), sw(K.grey, 'icon'), sw(K.white, 'số')], data: 'currentHeartRate. Đoạn sáng = số ngưỡng của UserProfile.getHeartRateZones() ≤ nhịp tim. Không có: “--” xám', warn: '—' },
+    { name: 'Số bước (viên thuốc)', x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], font: `fillRoundedRectangle bo ${STEP[4]}, cách giếng Body Battery 8 px (nền xám ở giữa). ${icon('bàn chân', 140, sy - 12)}. Số ExtraBold 22 căn phải x 228. “/ mục tiêu” Bold 15 căn trái x 233, tâm y ${sy}`, colors: [sw(K.black, 'viên'), sw(K.grey, 'icon + mục tiêu'), sw(K.white, 'số')], data: 'steps và stepGoal, phân cách nghìn bằng dấu chấm', warn: 'Đạt mục tiêu: nền viên ' + P.acc + ', icon + chữ #000000' },
+    { name: 'Quy tắc màu', x: '', y: '', w: '', h: '', font: '—', colors: [sw(P.acc, 'tiến độ'), sw(K.grey, 'icon'), sw(K.white, 'số')], data: 'Mint chỉ dùng cho dải giờ và phần tiến độ: vòng bước, vòng số liệu, đoạn pin, vùng nhịp tim. Icon xám, chỉ đổi màu khi cảnh báo', warn: 'Icon đổi cùng màu với vòng khi cảnh báo' },
+    { name: 'Ưu tiên ô trái', x: '', y: '', w: '', h: '', font: '—', colors: [], data: '1. Stress >75. 2. Điểm ngủ (05:00–10:00). 3. Hồi phục (sau tập). 4. Lựa chọn cài đặt. Giữ tay mở trang Garmin của nội dung đang hiện', warn: '—' },
+    { name: 'Cài đặt (properties.xml)', x: '', y: '', w: '', h: '', font: '—', colors: [], data: 'leftSlot {Stress, SpO₂, Độ cao} · morningSleep bool · showRecovery bool', warn: '—' },
+    { name: 'Chế độ ngủ', x: 0, y: 0, w: 416, h: 416, font: 'Cùng bố cục, chỉ thay màu', colors: [sw(shade(P.acc, 0.6), 'màu nhấn'), sw('#9A9A9A', 'chữ'), sw('#6E6E6E', 'icon'), sw('#101211', 'nền')], data: 'Trong khoảng sleepTime → wakeTime của UserProfile', warn: 'Màu cảnh báo giữ nguyên' },
+  ];
+  return { ops, zones, spec };
+}
+
+class Component extends DCLogic {
+  state = { stats: {} };
+  palette() {
+    const acc = this.props.accent ?? '#8EE3B8';
+    const fam = TFONTS[this.props.timeFont] ? this.props.timeFont : 'Big Shoulders Display';
+    const tf = { family: fam, ...TFONTS[fam], css: `"${fam}", sans-serif` };
+    return { acc, ghost: shade(acc, 0.9), aod: shade(acc, 0.55), sw: Number(this.props.aodStroke ?? 2), ghostOn: this.props.ghostSegments ?? true, tf, tile: '#1A1D1B', track2: '#2E3330' };
+  }
+  f8() { return TF8[this.props.timeFont8] ? this.props.timeFont8 : 'Big Shoulders Display'; }
+  componentDidMount() { this.measure(); }
+  componentDidUpdate() { this.measure(); }
+  measure() {
+    const P = this.palette(), key = P.acc + P.sw + P.tf.family + this.f8();
+    if (this._key === key) return;
+    this._key = key;
+    const run = () => {
+      const c = document.createElement('canvas').getContext('2d');
+      c.font = `${P.tf.w} ${P.tf.size}px ${P.tf.css}`;
+      const m0 = c.measureText('0'), m1 = c.measureText('1');
+      const M = { capH: m0.actualBoundingBoxAscent, digitW: m0.width, tabular: Math.abs(m0.width - m1.width) < 0.5, colonW: c.measureText(':').width, fullW: c.measureText('08:42').width, stripW: c.measureText('0123456789:').width };
+      const a = countLit(buildA(NORMAL, 'aod', P).ops), b = countLit(buildB(NORMAL, 'aod', P).ops), d = countLit(buildD(NORMAL, 'aod', P, 'slice', M).ops);
+      const e = countLit(buildE(NORMAL, 'aod', P, V3[0], M).ops), f = countLit(buildF(NORMAL, 'aod', P, false, M).ops);
+      const M8 = {}; Object.keys(TF8).forEach(n => { M8[n] = measureFont(n); });
+      const nm = this.f8(), g = countLit(buildG(NORMAL, 'aod', P, tf8(nm, M8), M8[nm]).ops);
+      this.setState({ stats: { A: a, B: b, C: d, D: d, E: e, F: f, G: g }, metrics: M, m8: M8 });
+    };
+    const loads = document.fonts ? Promise.all([document.fonts.load(`600 18px ${FONT}`), document.fonts.load(`800 14px ${SEC}`), document.fonts.load(`${P.tf.w} ${P.tf.size}px ${P.tf.css}`), ...Object.keys(TF8).map(n => document.fonts.load(`${TF8[n]} 60px "${n}"`))]).then(() => document.fonts.ready) : Promise.resolve();
+    loads.then(run, run);
+  }
+  renderVals() {
+    const P = this.palette();
+    const st = this.state.stats;
+    const stat = n => n == null ? '…' : (n / SCREEN_PX * 100).toFixed(1).replace('.', ',') + '%';
+    const det = n => n == null ? '' : `${fmt(n)} / ${fmt(SCREEN_PX)} px`;
+    const mkOpt = (id, title, desc, build, D, single, key) => {
+      const n = build(NORMAL, 'normal', P), w = build(WARN, 'warn', P), a = build(NORMAL, 'aod', P);
+      return {
+        id, title, desc,
+        frames: [
+          { label: '1 · Bình thường', sub: 'Body Battery 56 · Stress 27 · Nhịp tim 62 · 1.147 / 3.110 bước · Pin 78%', el: toSvg(n.ops, id + 'n'), stat: null },
+          { label: '2 · Cảnh báo', sub: 'Body Battery 22 và Stress 68: vòng và số chuyển cam #FF8A3D', el: toSvg(w.ops, id + 'w'), stat: null },
+          { label: '3 · Always On (AOD)', sub: `Chỉ giờ + ngày, cùng vị trí và cỡ. Viền ${P.sw} px, màu ${P.aod}. Đếm mọi điểm ảnh khác đen trong vòng tròn, kể cả viền khử răng cưa`, el: toSvg(a.ops, id + 'a'), stat: stat(st[key]), statDetail: det(st[key]) },
+          { label: 'Chú thích · Vùng giữ tay', sub: 'Giữ trong khung nét đứt mở trang Garmin tương ứng (Complications.exitTo). Bước chân gồm cả vòng viền', el: toSvg(n.ops, id + 'z', n.zones), stat: null },
+        ],
+        lcdStrip: lcdStrip(D, P), lcdDiagram: lcdDiagram(D, P), lcdSpec: lcdSpec(D, P, single),
+        spec: n.spec
+      };
+    };
+    const M = this.state.metrics;
+    const mk2 = (id, title, desc, style) => {
+      const n = buildD(NORMAL, 'normal', P, style, M), w = buildD(WARN, 'warn', P, style, M), a = buildD(NORMAL, 'aod', P, style, M);
+      return {
+        id, title, desc,
+        frames: [
+          { label: '1 · Bình thường', sub: 'Body Battery 56 · Stress 27 · Nhịp tim 62 · 1.147 / 3.110 bước · Pin 78%', el: toSvg(n.ops, id + 'n'), stat: null },
+          { label: '2 · Cảnh báo', sub: 'Body Battery 22 và Stress 68: vòng, số và nền khối chuyển sang cam', el: toSvg(w.ops, id + 'w'), stat: null },
+          { label: '3 · Always On (AOD)', sub: `Chỉ giờ + ngày, cùng vị trí và cỡ, màu ${P.aod}. Đếm mọi điểm ảnh khác đen trong vòng tròn, kể cả viền khử răng cưa`, el: toSvg(a.ops, id + 'a'), stat: stat(st.C), statDetail: det(st.C) },
+          { label: 'Chú thích · Vùng giữ tay', sub: 'Mỗi khối là một vùng giữ tay, mở trang Garmin tương ứng (Complications.exitTo). Bước chân gồm cả vòng viền', el: toSvg(n.ops, id + 'z', n.zones), stat: null },
+        ],
+        fontStrip: fontStrip(P, M), fontSpec: fontSpec(P, M), spec: n.spec
+      };
+    };
+    const mk3 = (id, title, desc, V) => {
+      const n = buildE(NORMAL, 'normal', P, V, M), w = buildE(WARN, 'warn', P, V, M), a = buildE(NORMAL, 'aod', P, V, M);
+      return {
+        id, title, desc,
+        frames: [
+          { label: '1 · Bình thường', sub: 'Body Battery 56 · Stress 27 · Nhịp tim 62 · 1.147 / 3.110 bước · Pin 78% (8 chấm)', el: toSvg(n.ops, id + 'n'), stat: null },
+          { label: '2 · Cảnh báo', sub: 'Body Battery 22 và Stress 68: vòng và số chuyển cam #FF8A3D', el: toSvg(w.ops, id + 'w'), stat: null },
+          { label: '3 · Always On (AOD)', sub: `Chỉ giờ + ngày, cùng vị trí và cỡ, màu ${P.aod}. Nền và giếng tắt. Đếm mọi điểm ảnh khác đen trong vòng tròn`, el: toSvg(a.ops, id + 'a'), stat: stat(st.E), statDetail: det(st.E) },
+          { label: 'Chú thích · Vùng giữ tay', sub: 'Vùng giữ tay = giếng của từng thành phần, mở trang Garmin tương ứng (Complications.exitTo). Bước chân gồm cả vòng viền', el: toSvg(n.ops, id + 'z', n.zones), stat: null },
+        ],
+        fontStrip: fontStrip(P, M), fontSpec: fontSpec(P, M), spec: n.spec
+      };
+    };
+    const mk4 = (id, title, desc, merged) => {
+      const n = buildF(NORMAL, 'normal', P, merged, M), w = buildF(WARN, 'warn', P, merged, M), a = buildF(NORMAL, 'aod', P, merged, M);
+      return {
+        id, title, desc,
+        frames: [
+          { label: '1 · Bình thường', sub: 'Body Battery 56 · Stress 27 · Nhịp tim 62 · 1.147 / 3.110 bước · Pin 78% (8 chấm)', el: toSvg(n.ops, id + 'n'), stat: null },
+          { label: '2 · Cảnh báo', sub: 'Body Battery 22 và Stress 68: vòng, icon và số chuyển cam #FF8A3D', el: toSvg(w.ops, id + 'w'), stat: null },
+          { label: '3 · Always On (AOD)', sub: `Chỉ giờ + ngày, cùng vị trí và cỡ, màu ${P.aod}. Đếm mọi điểm ảnh khác đen trong vòng tròn`, el: toSvg(a.ops, id + 'a'), stat: stat(st.F), statDetail: det(st.F) },
+          { label: 'Chú thích · Vùng giữ tay', sub: 'Vùng giữ tay = giếng của từng thành phần (Complications.exitTo). Bước chân gồm cả vòng viền', el: toSvg(n.ops, id + 'z', n.zones), stat: null },
+        ],
+        fontStrip: fontStrip(P, M), fontSpec: fontSpec(P, M).map(r => r.k === 'Font phụ' ? { k: 'Font phụ', v: 'Manrope ExtraBold 18 / 22 / 26 / 44, Bold 15. Glyph: 0–9, A–Z, “/”, “.”, “-”. Nhỏ nhất 15 px' } : r), spec: n.spec
+      };
+    };
+    const n5 = buildF(NORMAL, 'normal', P, false, M), a5 = buildF(NORMAL, 'aod', P, false, M);
+    const fr = (label, sub, v, k) => ({ label, sub, el: toSvg(buildF(v, 'normal', P, false, M).ops, '5a' + k), stat: null });
+    const opt5 = {
+      id: '5a', title: 'Dash · giếng tách rời', desc: 'Bố cục 4a, đủ 7 trạng thái.',
+      frames: [
+        fr('1 · Bình thường', 'Body Battery 56 · Stress 27 · Nhịp tim 62 · 1.147 / 3.110 bước · Pin 78% (8 chấm)', NORMAL, 'n'),
+        fr('2 · Cảnh báo cam', 'Body Battery 22 · Stress 68 · Pin 18% (2 chấm cam)', WARN5, 'w'),
+        fr('3 · Cảnh báo đỏ', 'Body Battery 12 · Stress 82 · Pin 9% (1 chấm đỏ)', RED5, 'r'),
+        fr('4 · Đạt mục tiêu bước', '3.512 / 3.110: vòng kín, viên số bước chuyển nền mint, chữ đen', GOAL5, 'g'),
+        fr('5 · Thiếu dữ liệu', 'Không đeo hoặc chưa đo: stress và nhịp tim hiện “--” màu xám, vòng trống', NODATA5, 'x'),
+        { label: '6 · Always On (AOD)', sub: `Chỉ giờ + ngày, cùng vị trí và cỡ, màu ${P.aod}. Đếm mọi điểm ảnh khác đen trong vòng tròn`, el: toSvg(a5.ops, '5aa'), stat: stat(st.F), statDetail: det(st.F) },
+        { label: 'Chú thích · Vùng giữ tay', sub: 'Vùng giữ tay = giếng của từng thành phần (Complications.exitTo). Bước chân gồm cả vòng viền', el: toSvg(n5.ops, '5az', n5.zones), stat: null },
+      ],
+      fontStrip: fontStrip(P, M), fontSpec: fontSpec(P, M).map(r => r.k === 'Font phụ' ? { k: 'Font phụ', v: 'Manrope ExtraBold 18 / 22 / 26 / 44, Bold 15. Glyph: 0–9, A–Z, “/”, “.”, “-”. Nhỏ nhất 15 px' } : r), spec: n5.spec
+    };
+    const ext6 = { zones: true, ticks: true, trend: true };
+    const Psl = { ...P, acc: shade(P.acc, 0.6), track2: '#262A28' };
+    const n6 = buildF(N6, 'normal', P, false, M, ext6), a6 = buildF(N6, 'aod', P, false, M, ext6);
+    const fr6 = (label, sub, v, k, sl) => ({ label, sub, el: toSvg(buildF(v, 'normal', sl ? Psl : P, false, M, sl ? { ...ext6, sleep: true } : ext6).ops, '6a' + k), stat: null });
+    const spec6 = n6.spec.map(r => {
+      if (r.name === 'Vòng bước chân') return { ...r, font: r.font + '. Khía mốc: 3 × drawLine nét 3 #000000 tại 90°, 180°, 270°, từ r 198 đến r 210' };
+      if (r.name === 'Nhịp tim') return { ...r, font: r.font.replace(/Vòng rãnh r giữa (\d+), nét 6\./, 'Vòng 5 đoạn: drawArc r giữa $1, nét 6, đoạn i từ i×72°+4° đến (i+1)×72°−4°.'), colors: [sw(K.black, 'giếng'), sw(P.track2, 'đoạn tắt'), sw(P.acc, 'đoạn sáng + icon'), sw(K.white, 'số')], data: r.data + '. Vùng: UserProfile.getHeartRateZones(HR_ZONE_SPORT_GENERIC). Số đoạn sáng = số ngưỡng vùng ≤ nhịp tim hiện tại (mẫu max 190 → 95/114/133/152/171)' };
+      if (r.name === 'Body Battery') return { ...r, font: r.font.replace(/Số Manrope ExtraBold 44 tại y (\d+)/, 'Số Manrope ExtraBold 44 tại y $1, x 199 khi có tam giác. Icon tam giác 24×24 tại (226,266)'), data: r.data + '. Xu hướng: so với giá trị cách ~60 phút trong cùng history; chênh ≥ 2 mới hiện ▲/▼, ngược lại ẩn và số về x 208', warn: r.warn + '. Tam giác: ▲ ' + P.acc + ', ▼ #8C8C8C, theo màu cảnh báo khi < 25' };
+      return r;
+    });
+    spec6.push({ name: 'Chế độ ngủ', x: 0, y: 0, w: 416, h: 416, font: 'Cùng bố cục, chỉ thay màu toàn cục', colors: [sw(shade(P.acc, 0.6), 'màu nhấn'), sw('#9A9A9A', 'chữ trắng → xám'), sw('#101211', 'nền'), sw('#262A28', 'rãnh / đoạn tắt')], data: 'Trong khoảng UserProfile.getProfile().sleepTime → wakeTime. Kiểm tra mỗi lần onUpdate', warn: 'Màu cảnh báo cam / đỏ giữ nguyên' });
+    const opt6 = {
+      id: '6a', title: 'Dash · đủ trạng thái v2', desc: 'Bố cục 5a + 4 tính năng mới.',
+      frames: [
+        fr6('1 · Bình thường', 'Nhịp tim 62 dưới vùng 1 nên 5 đoạn tắt. Body Battery 56 ▼. Khía 25/50/75% trên vòng bước', N6, 'n'),
+        fr6('2 · Cảnh báo cam', 'Body Battery 22 ▼ · Stress 68 · Pin 18%', WARN6, 'w'),
+        fr6('3 · Cảnh báo đỏ', 'Body Battery 12 ▼ · Stress 82 · Pin 9%', RED6, 'r'),
+        fr6('4 · Đang vận động', 'Nhịp tim 142, vùng 3: 3 đoạn sáng. Stress 74 (cam do vận động)', RUN6, 'run'),
+        fr6('5 · Đạt mục tiêu bước', '3.512 / 3.110: vòng kín, viên số bước nền mint', GOAL6, 'g'),
+        fr6('6 · Chế độ ngủ', '23:15. Màu nhấn 60%, chữ xám, nền tối hơn. Body Battery 34 ▲ (đang hồi)', SLEEP6, 's', true),
+        fr6('7 · Thiếu dữ liệu', 'Stress và nhịp tim hiện “--”, vòng tắt', { ...N6, st: null, hr: null }, 'x'),
+        { label: '8 · Always On (AOD)', sub: `Chỉ giờ + ngày, cùng vị trí và cỡ, màu ${P.aod}`, el: toSvg(a6.ops, '6aa'), stat: stat(st.F), statDetail: det(st.F) },
+        { label: 'Chú thích · Vùng giữ tay', sub: 'Vùng giữ tay = giếng của từng thành phần (Complications.exitTo). Bước chân gồm cả vòng viền', el: toSvg(n6.ops, '6az', n6.zones), stat: null },
+      ],
+      fontStrip: fontStrip(P, M), fontSpec: fontSpec(P, M).map(r => r.k === 'Font phụ' ? { k: 'Font phụ', v: 'Manrope ExtraBold 18 / 22 / 26 / 44, Bold 15. Glyph: 0–9, A–Z, “/”, “.”, “-”. Nhỏ nhất 15 px' } : r), spec: spec6
+    };
+    const ext7 = { zones: true, ticks: true };
+    const n7 = buildF(N7, 'normal', P, false, M, ext7), a7 = buildF(N7, 'aod', P, false, M, ext7);
+    const fr7 = (label, sub, v, k, sl) => ({ label, sub, el: toSvg(buildF(v, 'normal', sl ? Psl : P, false, M, sl ? { ...ext7, sleep: true } : ext7).ops, '7a' + k), stat: null });
+    const spec7 = spec6.map(r => r.name === 'Body Battery' ? n7.spec.find(x => x.name === 'Body Battery') : r).map(r => r.name === 'Stress' ? { ...r, name: 'Ô trái (mặc định stress)', data: r.data + '. Nội dung ô đổi theo quy tắc bên dưới; icon, số và vòng dùng chung vị trí', warn: r.warn + '. Stress >75 luôn chiếm ô, kể cả khi đang hiện điểm ngủ hoặc hồi phục' } : r);
+    spec7.splice(spec7.findIndex(r => r.name === 'Body Battery'), 0,
+      { name: 'Ô trái · Điểm giấc ngủ', x: 48, y: 208, w: 92, h: 92, font: 'Icon trăng 24×24 (tô đặc). Số Manrope ExtraBold 26. Vòng = điểm / 100', colors: [sw(P.acc, 'vòng + icon ≥60'), sw(K.orange, '<60'), sw(K.white, 'số')], data: 'Complications COMPLICATION_TYPE_SLEEP_SCORE (nếu firmware có), ngược lại giữ stress. Hiện 05:00–10:00 khi cài đặt “Điểm ngủ buổi sáng” bật', warn: '<60: vòng, icon, số #FF8A3D' },
+      { name: 'Ô trái · Hồi phục', x: 48, y: 208, w: 92, h: 92, font: 'Icon đồng hồ cát 24×24, nét 2,2. Số + “h” ExtraBold 26. Vòng = giờ còn lại / 96', colors: [sw(P.acc, 'vòng + icon'), sw(K.white, 'số')], data: 'ActivityMonitor.getInfo().timeToRecovery (giờ). Hiện khi > 0 và buổi tập gần nhất kết thúc < 12 giờ trước, cài đặt “Hồi phục sau tập” bật', warn: '—' },
+      { name: 'Ô trái · SpO₂ (tuỳ chọn)', x: 48, y: 208, w: 92, h: 92, font: 'Icon giọt 24×24. Số + “%” ExtraBold 24. Vòng = (SpO₂ − 80) / 20', colors: [sw(P.acc, 'vòng + icon ≥90'), sw(K.orange, '<90'), sw(K.white, 'số')], data: 'SensorHistory.getOxygenSaturationHistory() mới nhất', warn: '<90%: vòng, icon, số #FF8A3D' },
+      { name: 'Ô trái · Độ cao (tuỳ chọn)', x: 48, y: 208, w: 92, h: 92, font: 'Icon núi 24×24. Số + “m” ExtraBold 22 (18 khi ≥ 1.000 m). Vòng chỉ có rãnh', colors: [sw(P.track2, 'rãnh'), sw(P.acc, 'icon'), sw(K.white, 'số')], data: 'Activity.getActivityInfo().altitude, làm tròn mét, phân cách nghìn bằng dấu chấm', warn: '—' },
+      { name: 'Ưu tiên ô trái', x: '', y: '', w: '', h: '', font: '—', colors: [], data: '1. Stress >75. 2. Điểm ngủ (05:00–10:00). 3. Hồi phục (sau tập). 4. Lựa chọn cài đặt (stress / SpO₂ / độ cao). Giữ tay mở trang Garmin của nội dung đang hiện', warn: '—' },
+      { name: 'Cài đặt (properties.xml)', x: '', y: '', w: '', h: '', font: '—', colors: [], data: 'leftSlot: list {Stress, SpO₂, Độ cao}, mặc định Stress · morningSleep: bool, mặc định bật · showRecovery: bool, mặc định bật. Hiển thị trong Garmin Connect IQ app trên điện thoại', warn: '—' });
+    const opt7 = {
+      id: '7a', title: 'Dash · ô trái thông minh', desc: 'Bố cục 6a, bỏ xu hướng Body Battery.',
+      frames: [
+        fr7('1 · Bình thường', '08:42 · Stress 27 · Body Battery 56 · Nhịp tim 62', N7, 'n'),
+        fr7('2 · Cảnh báo cam', 'Body Battery 22 · Stress 68 · Pin 18%', { ...N7, bb: 22, st: 68, bat: 18 }, 'w'),
+        fr7('3 · Cảnh báo đỏ', 'Body Battery 12 · Stress 82 · Pin 9%', { ...N7, bb: 12, st: 82, bat: 9 }, 'r'),
+        fr7('4 · Buổi sáng · điểm ngủ', '06:45 · Ô trái hiện điểm giấc ngủ 82. Body Battery 88 sau khi ngủ', { ...N7, time: '0645', bb: 88, steps: 214, hr: 51, slot: slot('sleep', 82, P) }, 'm'),
+        fr7('5 · Buổi sáng · ngủ kém', '06:45 · Điểm ngủ 48 (<60): ô chuyển cam', { ...N7, time: '0645', bb: 41, steps: 214, hr: 58, slot: slot('sleep', 48, P) }, 'm2'),
+        fr7('6 · Đang vận động', 'Nhịp tim 142, vùng 3. Stress 74 (cam)', { ...N7, bb: 41, st: 74, hr: 142, steps: 2480, time: '1730', bat: 52 }, 'run'),
+        fr7('7 · Sau buổi tập · hồi phục', '19:15 · Ô trái hiện còn 18 giờ hồi phục', { ...N7, time: '1915', bb: 30, hr: 78, steps: 2960, bat: 49, slot: slot('rec', 18, P) }, 'rec'),
+        fr7('8 · Đạt mục tiêu bước', '3.512 / 3.110: vòng kín, viên số bước nền mint', { ...N7, steps: 3512, time: '1905', bb: 33 }, 'g'),
+        fr7('9 · Chế độ ngủ', '23:15 · Màu nhấn 60%, chữ xám, nền tối hơn', { ...N7, time: '2315', bb: 34, st: 18, hr: 54, steps: 3512, bat: 61 }, 's', true),
+        fr7('10 · Cài đặt: ô trái = SpO₂', 'SpO₂ 96%. Vòng tính từ 80% đến 100%', { ...N7, slot: slot('spo2', 96, P) }, 'o2'),
+        fr7('11 · Cài đặt: ô trái = Độ cao', 'Độ cao 1.245 m, vòng chỉ có rãnh', { ...N7, slot: slot('alt', 1245, P) }, 'alt'),
+        { label: '12 · Always On (AOD)', sub: `Chỉ giờ + ngày, cùng vị trí và cỡ, màu ${P.aod}`, el: toSvg(a7.ops, '7aa'), stat: stat(st.F), statDetail: det(st.F) },
+        { label: 'Chú thích · Vùng giữ tay', sub: 'Ô trái mở trang của nội dung đang hiện (stress, giấc ngủ, hồi phục, SpO₂, độ cao)', el: toSvg(n7.ops, '7az', n7.zones), stat: null },
+      ],
+      fontStrip: fontStrip(P, M), fontSpec: fontSpec(P, M).map(r => r.k === 'Font phụ' ? { k: 'Font phụ', v: 'Manrope ExtraBold 18 / 22 / 24 / 26 / 44, Bold 15. Glyph: 0–9, A–Z, “/”, “.”, “-”, “%”, “h”, “m”. Nhỏ nhất 15 px' } : r), spec: spec7
+    };
+    const M8 = this.state.m8, nm8 = this.f8(), T8 = tf8(nm8, M8), MM8 = M8 && M8[nm8];
+    const ext8 = {};
+    const fr8 = (label, sub, v, k, sl, fn) => { const t = fn ? tf8(fn, M8) : T8, mm = fn ? M8 && M8[fn] : MM8; return { label, sub, el: toSvg(buildG(v, 'normal', sl ? Psl : P, t, mm, sl ? { sleep: true } : ext8).ops, '8a' + k), stat: null }; };
+    const n8 = buildG(N7, 'normal', P, T8, MM8), a8 = buildG(N7, 'aod', P, T8, MM8);
+    const opt8 = {
+      id: '8a', title: 'Dash · tâm điểm Body Battery', desc: 'Font giờ: ' + nm8 + '.',
+      frames: [
+        fr8('1 · Bình thường', '08:42 · Stress 27 · Body Battery 56 · Nhịp tim 62 · Pin 78% (8 đoạn)', N7, 'n'),
+        fr8('2 · Cảnh báo cam', 'Body Battery 22 · Stress 68 · Pin 18%', { ...N7, bb: 22, st: 68, bat: 18 }, 'w'),
+        fr8('3 · Cảnh báo đỏ', 'Body Battery 12 · Stress 82 · Pin 9%', { ...N7, bb: 12, st: 82, bat: 9 }, 'r'),
+        fr8('4 · Buổi sáng · điểm ngủ', '06:45 · Điểm ngủ 82 · Body Battery 88', { ...N7, time: '0645', bb: 88, steps: 214, hr: 51, slot: slot8('sleep', 82, P) }, 'm'),
+        fr8('5 · Đang vận động', 'Nhịp tim 142 (vùng 3) · Stress 74', { ...N7, bb: 41, st: 74, hr: 142, steps: 2480, time: '1730', bat: 52 }, 'run'),
+        fr8('6 · Sau buổi tập · hồi phục', '19:15 · Còn 18 giờ hồi phục', { ...N7, time: '1915', bb: 30, hr: 78, steps: 2960, bat: 49, slot: slot8('rec', 18, P) }, 'rec'),
+        fr8('7 · Đạt mục tiêu bước', '3.512 / 3.110: viên bước nền mint', { ...N7, steps: 3512, time: '1905', bb: 33 }, 'g'),
+        fr8('8 · Chế độ ngủ', '23:15 · Màu nhấn 60%, chữ và icon tối hơn', { ...N7, time: '2315', bb: 34, st: 18, hr: 54, steps: 3512, bat: 61 }, 's', true),
+        fr8('9 · Cài đặt: SpO₂', 'SpO₂ 96%', { ...N7, slot: slot8('spo2', 96, P) }, 'o2'),
+        fr8('10 · Cài đặt: Độ cao', '1245 (4 ký tự → cỡ 22). Không dấu chấm, không chữ “m”, icon núi đủ nghĩa', { ...N7, slot: slot8('alt', 1245, P) }, 'alt'),
+        fr8('11 · Thiếu dữ liệu', 'Stress và nhịp tim “--”, vòng tắt', { ...N7, st: null, hr: null }, 'x'),
+        { label: '12 · Always On (AOD)', sub: `Chỉ giờ + ngày, cùng vị trí và cỡ, màu ${P.aod}`, el: toSvg(a8.ops, '8aa'), stat: stat(st.G), statDetail: det(st.G) },
+        { label: 'Chú thích · Vùng giữ tay', sub: 'Mỗi giếng là một vùng giữ tay. Bước chân gồm cả vòng viền', el: toSvg(n8.ops, '8az', n8.zones), stat: null },
+        ...Object.keys(TF8).filter(n => n !== nm8).map((n, i) => fr8('Font · ' + n, `${WNAME[TF8[n]]}, cỡ ${M8 ? M8[n].size : '…'} px để chữ số cao 46 px`, N7, 'f' + i, false, n)),
+      ],
+      fontStrip: fontStrip({ ...P, tf: T8 }, MM8), fontSpec: fontSpec({ ...P, tf: T8 }, MM8).map(r => r.k === 'Font phụ' ? { k: 'Font phụ', v: 'Manrope ExtraBold 17 / 18 / 22 / 26 / 48, Bold 15. Glyph: 0–9, A–Z, “/”, “.”, “-”, “%”, “h”. Nhỏ nhất 15 px' } : r), spec: n8.spec
+    };
+    return {
+      options8: [opt8],
+      options7: [opt7],
+      options6: [opt6],
+      options5: [opt5],
+      options4: [
+        mk4('4a', 'Giếng tách rời', 'Mỗi số liệu một giếng riêng, nền xám chạy giữa các giếng.', false),
+        mk4('4b', 'Giếng liền khối', 'Ba giếng tròn và viên số bước chồng nhau thành một khối đen.', true),
+      ],
+      options3: [
+        mk3('3a', 'Nền xám trung tính', 'Nền #1A1D1B, giếng đen padding 6 px.', V3[0]),
+        mk3('3b', 'Nền xanh tối', 'Nền #13211A, giếng đen padding 10 px.', V3[1]),
+      ],
+      options2: [
+        mk2('2a', 'Cắt khối từ hình tròn', 'Khối là lát của đĩa r 188, mép ngoài bám theo viền màn hình.', 'slice'),
+        mk2('2b', 'Khối bo góc nổi', 'Khối là hình chữ nhật bo góc nằm gọn trong vòng tròn.', 'round'),
+      ],
+      options: [
+        mkOpt('1a', 'A · Khung Focus', 'Mảng màu chữ D bên phải, giờ xếp chồng. Số liệu bên trái.', buildA, DA, false, 'A'),
+        mkOpt('1b', 'B · Khung Dash', 'Dải màu giữa với giờ một hàng, ngày bên dưới, hàng viên tròn.', buildB, DB, true, 'B'),
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
