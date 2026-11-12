@@ -21,8 +21,10 @@ The scripts never print the key or its path. If the VS Code extension generated 
 | `scripts/build-test.sh` | `bin/wellface-test.prg` | build with the `(:test)` code |
 | `scripts/run-tests.sh [test name]` | `bin/test.log` | build the tests, start the simulator, run them |
 | `scripts/build-release.sh` | `bin/wellface-release.prg` | sideload to the watch (`-r --build-stats 0`) |
+| `scripts/build-spike.sh` | `bin/wfspike.prg` | data spike (ticket 02), a separate debug-only face |
+| `scripts/run-spike.sh` | `bin/wfspike.prg` | data spike, start the simulator and load it |
 
-Every build fails on any compiler warning. Type checking is strict, set once in `monkey.jungle`.
+Every build fails on any compiler warning. Type checking is strict, set in each jungle (`monkey.jungle`, `spikes/data/monkey.jungle`).
 
 `run-tests.sh` exits 0 when all tests pass, 1 when a test fails and 2 when the tests could not run (the build failed, or there is no `RESULTS` block because the simulator was not reachable, the app crashed or the run timed out). It ignores `monkeydo`'s exit code, which is 1 even when every test passes (SDK 9.3.0).
 
@@ -31,6 +33,12 @@ Every build fails on any compiler warning. Type checking is strict, set once in 
 `scripts/run-sim.sh` builds, starts the simulator and loads the face. It stays attached and prints the face's log; press Ctrl+C to stop it.
 
 To check Always On, turn on low-power mode in the simulator's settings menu, and use File → View Screen Heat Map (menu names may differ slightly).
+
+## Data spike
+
+`spikes/data/` is a separate debug-only face (own jungle, manifest and app id) that shows raw sensor values as plain text: Body Battery, stress and heart rate polled from complications, steps and the step goal, the `HR_ZONE_SPORT_GENERIC` zones and the `FORMAT_MEDIUM` weekday with its code points. Each value shows the clock time it last changed. Nothing in it is part of `monkey.jungle`, so it never reaches the release build.
+
+It shows up on the watch as its own face, "Wellface data spike", next to Wellface. Sideload `bin/wfspike.prg` like the release PRG below. To also keep a log of every change on the watch, create an empty file `GARMIN/APPS/LOGS/WFSPIKE.TXT` before unplugging (Garmin's debugging guide: the log file must exist and match the PRG name). In the simulator, `run-spike.sh` does not print the log (seen with SDK 9.3.0).
 
 ## Sideload to the watch
 

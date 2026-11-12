@@ -275,14 +275,14 @@ This document collects what the Connect IQ platform offers and requires for Well
 ## Open questions
 
 **Data**
-1. Does `getComplication(id).value` refresh every minute on the FR265 without a subscription? Test with a 10-minute log against the native widgets.
-2. Does the fr265 simulator return Body Battery and stress history, and does it supply complication values? Check with a one-line `println`, the complication viewer, and the Activity Data menu (menu names may differ slightly).
+1. Does `getComplication(id).value` refresh every minute on the FR265 without a subscription? Test with a 10-minute log against the native widgets. **Answered (ticket 02, on the watch, 2026-11-12): yes.** Over about 17 minutes, BB changed twice and stress 28 times, at minute polls too (including in low power), and the values followed the watch widgets. While awake, heart rate changed every 2.7 s on average (often every second).
+2. Does the fr265 simulator return Body Battery and stress history, and does it supply complication values? Check with a one-line `println`, the complication viewer, and the Activity Data menu (menu names may differ slightly). **Partly answered (ticket 02, SDK 9.3.0, 2026-11-12):** the simulator supplies complication values without any setup: Body Battery and stress jumped to new values at each minute poll (57 → 28, 25 → 78), so they are simulated, not a fixed value; heart rate changed on 47 of 48 per-second polls. Steps read 0 with goal 5000 and the generic zones `[93, 111, 130, 148, 167, 185]`. History was not checked.
 3. Does `Activity.getActivityInfo().currentHeartRate` work on an fr265 face? This matters only if the HR complication proves stale.
-4. Which on-watch zone set does `HR_ZONE_SPORT_GENERIC` return (Default or Running zones)? Does the watch's own display treat a zone's max bpm as inclusive?
-5. Does `stepGoal` follow Garmin's daily auto goal? Compare with the Steps widget.
-6. Do the stress or Body Battery complications ever return negative values?
-7. What is the limit on active complication subscriptions? This does not matter if polling works.
-8. Does `getComplication` or `exitTo` require the `ComplicationSubscriber` permission? Declared anyway.
+4. Which on-watch zone set does `HR_ZONE_SPORT_GENERIC` return (Default or Running zones)? Does the watch's own display treat a zone's max bpm as inclusive? **Answered (ticket 02, on the watch):** it returns the zones the watch shows. The watch shows % of max HR (50/60/70/80/90/100% of 192), and the API returns them rounded to the nearest bpm: `[96, 115, 134, 154, 173, 192]`. Inclusivity of a boundary cannot be read from the % display; the spec counts a bound as the higher zone.
+5. Does `stepGoal` follow Garmin's daily auto goal? Compare with the Steps widget. **Likely yes (ticket 02):** `stepGoal` read 3,110, the day's auto goal (about 3,100).
+6. Do the stress or Body Battery complications ever return negative values? **Not seen (ticket 02):** no negative, null or non-Number value in about 17 minutes. Not proof that it never happens, so FaceModel still treats negatives as missing.
+7. What is the limit on active complication subscriptions? This does not matter if polling works. **Moot (ticket 02):** polling works, so the face never subscribes.
+8. Does `getComplication` or `exitTo` require the `ComplicationSubscriber` permission? Declared anyway. **Answered for `getComplication` (ticket 02):** yes. Without the permission the compiler fails with "Permission 'ComplicationSubscriber' required for '$.Toybox.Complications.getComplication'" and "Permission 'ComplicationPublisher' or 'ComplicationSubscriber' required for '...Complication.value'". `exitTo` not checked yet (ticket 12).
 
 **Rendering & AOD**
 
@@ -298,7 +298,7 @@ This document collects what the Connect IQ platform offers and requires for Well
 **Interaction & localization**
 
 17. Which screen does `exitTo` open on the FR265 for BODY_BATTERY, STRESS, HEART_RATE and STEPS?
-18. What does the FR265 return for the FORMAT_MEDIUM weekday in Vietnamese: which form ("T2", "Th 2", …), which case, and precomposed or combining diacritics? Check on the watch.
+18. What does the FR265 return for the FORMAT_MEDIUM weekday in Vietnamese: which form ("T2", "Th 2", …), which case, and precomposed or combining diacritics? Check on the watch. **Answered for Thursday (ticket 02, on the watch, 2026-11-12):** `"Thứ 5"`, code points `54 68 1EE9 20 35`: title case, the `ứ` is precomposed (U+1EE9), and the name contains a space and an ASCII digit. Other weekdays, Sunday especially, are not observed yet.
 19. Does `onPress` fire in AOD or low power, or only after the screen wakes? Does it fire when the face is shown from inside an activity?
 20. Does returning false from `onPress` trigger any system action on the FR265?
 21. How do you trigger a hold gesture with the mouse in the simulator?

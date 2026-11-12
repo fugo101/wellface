@@ -4,11 +4,13 @@
 # Needs:
 #   CIQ_DEV_KEY  path to the developer key (RSA 4096, DER). Never printed.
 #   CIQ_SDK      optional; defaults to the SDK the SDK Manager marked as current.
+#   JUNGLE       optional; the jungle to build, set by the script (default: the face).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEVICE="fr265"
 BIN="$ROOT/bin"
+JUNGLE="${JUNGLE:-$ROOT/monkey.jungle}"
 
 die() { echo "error: $*" >&2; exit 2; }
 
@@ -31,7 +33,8 @@ command -v java >/dev/null || die "java is not on PATH; install a JDK"
 mkdir -p "$BIN"
 
 # Replaces the key path with a placeholder, in case a tool ever echoes it.
-mask_key() { KEY="$CIQ_DEV_KEY" perl -pe 'BEGIN { $k = $ENV{KEY} } s/\Q$k\E/<developer key>/g'; }
+# Unbuffered, so a running app's log streams line by line.
+mask_key() { KEY="$CIQ_DEV_KEY" perl -pe 'BEGIN { $| = 1; $k = $ENV{KEY} } s/\Q$k\E/<developer key>/g'; }
 
 # compile <output.prg> [extra monkeyc flags...]
 # Type checking comes from monkey.jungle (strict). Warnings are shown (-w) and
@@ -41,7 +44,7 @@ compile() {
     local status=0
     COMPILE_LOG="$(mktemp)"
     trap 'rm -f "${COMPILE_LOG:-}"' EXIT
-    "$CIQ_SDK/bin/monkeyc" -d "$DEVICE" -f "$ROOT/monkey.jungle" -o "$out" \
+    "$CIQ_SDK/bin/monkeyc" -d "$DEVICE" -f "$JUNGLE" -o "$out" \
         -y "$CIQ_DEV_KEY" -w "$@" 2>&1 | mask_key | tee "$COMPILE_LOG" || status=$?
     if [[ $status -ne 0 ]] || ! grep -q "BUILD SUCCESSFUL" "$COMPILE_LOG"; then
         die "build failed"
@@ -49,4 +52,21 @@ compile() {
     if grep -qi "^WARNING" "$COMPILE_LOG"; then
         die "build produced warnings (the project must build with zero warnings)"
     fi
+}
+
+# run_in_sim <app.prg>
+# Starts the simulator (or focuses it) and loads the app. monkeydo stays
+# attached and prints the app's log; press Ctrl+C to detach.
+run_in_sim() {
+    local prg="$1" out status
+    "$CIQ_SDK/bin/connectiq"   # starts the simulator, or focuses it if running
+    out="$(mktemp)"
+    trap 'rm -f "${COMPILE_LOG:-}" "$out"' EXIT
+    for _ in $(seq 1 30); do
+        status=0
+        "$CIQ_SDK/bin/monkeydo" "$prg" "$DEVICE" 2>&1 | mask_key | tee "$out" || status=$?
+        grep -q "Unable to connect to simulator" "$out" || exit "$status"
+        sleep 2   # the simulator is still starting
+    done
+    die "could not reach the simulator"
 }
