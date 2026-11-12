@@ -30,6 +30,31 @@ Source: the Q1–Q17 Q&A session with the user, plus the final design in Claude 
 | Q17 | Background | Very dark gray `#1A1D1B` when the screen is on; pure black in AOD |
 | — | Testing | The single test seam is `FaceModel` (see CLAUDE.md) |
 
+## Implementation decisions (agreed 2026-11-12, second session)
+Vocabulary follows `GLOSSARY.md`. These rows extend Q1–Q17; where one changes the design, the row says so.
+
+| # | Topic | Decision |
+|---|---|---|
+| Q18 | Build order | Start with a tracer bullet (background, time band, time in a system font) that goes the whole way: build → sign → simulator → sideload to the watch. Then add elements one by one |
+| Q19 | Process | Short spec plus one ticket per step under `.scratch/mvp/` before coding |
+| Q20 | Git | One branch `feat/<slug>` per ticket, merged into `master`. Commit only with the user's approval |
+| Q21 | Date language | Weekday name follows the watch language, upper-cased with diacritics stripped. If a character is still missing from the font (Cyrillic, CJK…), fall back to English. The watch is currently set to English |
+| Q22 | Time format | Always 24 h with a leading zero (`08:42`), whatever the watch's 12/24 h setting |
+| Q23 | Date pill width | At least 96 px, grows to fit longer weekday names, stays centered, never wider than the time band |
+| Q24 | Bottom field, goal not reached | If the step text doesn't fit, the step number shrinks from 22 to 18. If it still doesn't fit, the foot icon is hidden |
+| Q25 | Bottom field, goal reached | `/ goal` is dropped: foot icon + step number, centered as a group, on the accent with black text. **Changes design frame 7** (`3.512 / 3.110` → `3.512`) |
+| Q26 | Missing data | Body Battery: `--` in gray, track only. No step goal (missing or 0): bezel ring empty and no `/ goal`. No battery reading: all 10 segments off |
+| Q27 | Intensity minutes | **Not** in the MVP |
+| Q28 | AOD burn-in shift | Time + date cycle through offsets of at most ±4 px, one step per minute. Verified with the heat map |
+| Q29 | Fields and metrics | Fields are named by position: left, center, right, bottom field and bezel ring. A field is only a place, size and well; the **metric** decides how it is drawn (gauge, zone segments, progress). The bezel ring only takes a goal metric. The MVP maps metrics to fields statically: stress → left, Body Battery → center, heart rate → right, steps → bottom field and bezel ring |
+| Q30 | Test seam | `FaceModel` stays the only test seam. Besides colors, strings, angles and segment counts it also computes the text layout of the date pill and the bottom field (from glyph-width tables generated with the fonts), the AOD burn-in offset, and which long-press target a touch point hits. Sensor reading, drawing and the font generator are checked by eye in the simulator |
+| Q31 | Up-to-date stack | Everything used is current, nothing outdated: the latest Connect IQ SDK, the newest API level the FR265 supports (5.2, its firmware ceiling) as `minApiLevel`, no deprecated APIs (checked against the SDK docs), strict type checking, the latest stable versions of every tool and library, and fonts freshly downloaded from Google Fonts. Re-check versions at the start of each ticket |
+| Q32 | Font glyph sets | Each font contains only the glyphs it draws (see "Fonts to export"). `%` and `h` are dropped until a Q15 metric needs them |
+| Q33 | Date too long | If the weekday name does not fit even in a date pill as wide as the time band (272 px), the English abbreviation is used |
+| Q34 | Bottom field last resort | If the step text still does not fit after shrinking the number and hiding the icon (only possible from 100.000 steps), `/ goal` is dropped |
+| Q35 | AMOLED rule | Acceptance criterion for AOD: **less than 10% of screen luminance**, measured with the simulator heat map (the SDK rule since the Venu 2). The hard "no pixel lit > 3 minutes" requirement is dropped. The ±4 px burn-in shift (Q28) stays, as Garmin recommends, to limit physical burn-in |
+| Q36 | Heart-rate refresh | While the screen is awake (high-power mode), heart rate alone is re-read every second and the right field updates when it changes. All other data stays once a minute and on wake. AOD shows no heart rate, so nothing is read there |
+
 ## Final design: main elements
 Coordinates are on the 416×416 canvas, center (208,208). Full details in `spec` inside the design file.
 - **Step ring:** arc r 204, stroke 8, starts at 12 o'clock, runs clockwise, angle = min(1, steps/goal) × 360°. Track `#1E1E1E`. 3 black notches at 90/180/270°. White dot r 4 at the ring's head.
@@ -43,4 +68,4 @@ Coordinates are on the 416×416 canvas, center (208,208). Full details in `spec`
 - **Steps:** pill (126,320,164,40) radius 20. Manrope number 22 right-aligned at x 228, `/ goal` Bold 15. Thousands separator is a dot (e.g. `1.147`). When the goal is reached: pill background switches to the accent color, text black.
 - **Color rule:** the accent color is used only for the time band and progress. Icons are gray `#8C8C8C` and only change color on a warning.
 - **Missing data:** stress or HR shows `--` in gray, ring off.
-- **Fonts to export:** time font as filled + outline (AOD) with glyphs `0–9 :`. Manrope at sizes 15/17/18/22/26/48 with glyphs `0–9 A–Z / . - % h`.
+- **Fonts to export:** time font as filled + outline (AOD) with glyphs `0–9 :`. Manrope at sizes 15/17/18/22/26/48, each with only the glyphs it draws (Q32): ExtraBold 17 `A–Z 0–9` + space; ExtraBold 18 and 22 `0–9 . -`; ExtraBold 26 and 48 `0–9 -`; Bold 15 `0–9 . /` + space. No `%` or `h` until a Q15 metric is built.

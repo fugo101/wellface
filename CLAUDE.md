@@ -11,7 +11,10 @@ The name "Wellface": "well" means both a well (every element sits inside a black
 - Menus on the watch, the Garmin Connect app, the Connect IQ app or Claude Design: only state paths that have been verified. Otherwise add "menu names may differ slightly".
 
 ## Docs
-- `docs/decisions.md`: every agreed design decision and the MVP scope (Q1–Q17). Read it before coding. Ask the user before changing anything in it.
+- `docs/decisions.md`: every agreed design decision and the MVP scope (Q1–Q36). Read it before coding. Ask the user before changing anything in it.
+- `GLOSSARY.md`: the project vocabulary (fields are named by position, the metric decides how a field is drawn).
+- `docs/research/connect-iq-platform.md`: verified Connect IQ platform facts for the FR265, with sources and open questions.
+- `.scratch/mvp/spec.md`: the MVP spec.
 - `docs/design-brief.md`: the brief given to Claude Design.
 - `design/claude-design/FR265 Watch Face.dc.html`: **the final design**. Coordinates, colors, fonts and the spec table live in the `buildG` function and the `spec` array. Read the source; no need to render it. `FR265 Watch Face (history).dc.html` holds older versions, for reference only. `design/claude-design/` is the extracted Claude Design handoff bundle. When Claude Design exports a new bundle, extract it with `ditto -x -k` (`unzip` fails on the Vietnamese file names inside), copy `garmin-forerunner-265-watch-face/project/*` over this folder, then rename the history file again. The `.zip` itself is gitignored.
 
@@ -19,7 +22,7 @@ The name "Wellface": "well" means both a well (every element sits inside a black
 - FR265: Connect IQ API **5.2**, round 416×416 AMOLED (FR265S is 360×360, not supported yet). Store: deviceTypeId 272, partNumber `006-B4257-00`.
 - Complications (API 4.2+) available: HR, stress, Body Battery, Pulse Ox, respiration, recovery time, steps, intensity minutes, weather. **No sleep score** (needs API 6.0.2), HRV status or Training Readiness.
 - Long-press on a field of a CIQ face: `onPress` (API 4.2) + `Complications.exitTo`.
-- AMOLED in AOD/low-power mode: at most **10% of pixels lit** and each pixel lit **≤ 3 minutes** continuously; violating this makes the watch turn the screen off. Check in the simulator: File → View Screen Heat Map, with Always On enabled.
+- AMOLED in AOD/low-power mode: since the Venu 2, the SDK docs give the rule as **less than 10% of the screen's luminance** (the older "10% of pixels, no pixel lit > 3 minutes" rule was for the original Venu). Breaking the rule makes the watch turn the screen off. Which rule the FR265 firmware enforces is not documented; the simulator heat map decides (File → View Screen Heat Map, low-power mode on). The face still shifts the AOD time and date up to 4 px each minute, as Garmin's guidelines recommend, to limit physical burn-in.
 - A sideloaded face has **no Settings page in the phone app**. All configuration is hard-coded (or an on-watch menu if ever needed).
 - The user's step goal is in **auto** mode (Garmin adjusts it daily, ~3,100 on 2026-11-12). The face reads `stepGoal` from the watch; never entered by hand. Weekly intensity-minutes goal: 150.
 
@@ -30,12 +33,12 @@ The name "Wellface": "well" means both a well (every element sits inside a black
 - Installing on the watch: copy the `.prg` file into `GARMIN/APPS`. The watch uses MTP, so macOS needs OpenMTP, and Garmin Express must be fully quit.
 
 ## Testing
-- **A single test seam: `FaceModel`**, pure logic. Input: a snapshot of the data (time, date, BB, stress, HR, HR zones, steps/goal, battery) and the mode (normal/AOD/current minute for the burn-in shift). Output: what to draw (strings, colors, arc angles, number of lit battery segments, AOD offset). Tested with Monkey C unit tests (`(:test)`) run in the simulator.
+- **A single test seam: `FaceModel`**, pure logic. Input: a snapshot of the data (time, date, BB, stress, HR, HR zones, steps/goal, battery) and the mode (normal/AOD/current minute for the burn-in shift). Output: what to draw (strings, colors, arc angles, number of lit battery segments, AOD offset), the text layout of the date pill and bottom field, and which long-press target a touch point hits. Tested with Monkey C unit tests (`(:test)`) run in the simulator.
 - Keep sensor reading and drawing thin; check them by eye in the simulator (against the design) and with the AOD heat map.
 
 ## Performance
 Lesson from the previous face: Segment34 lagged when returning from menus because it redrew everything every second (~25 drawText calls with custom fonts + a gradient bitmap). Therefore:
-- No seconds. Data updates once a minute.
+- No seconds. Data updates once a minute, except heart rate, which is re-read every second while the screen is awake (high-power mode), the only time the full face is visible.
 - Static parts (background, wells, tracks) are drawn once into a buffer.
 - Use only the bitmap fonts needed, each containing only the glyphs in use.
 
