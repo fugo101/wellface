@@ -18,6 +18,10 @@ class Snapshot {
     // Sensor part, read once a minute in high power. Null means missing.
     // Watch battery in percent, already rounded and clamped to 0-100.
     public var battery as Number? = null;
+    // Today's steps and the watch's own daily step goal (auto goal, never
+    // entered by hand).
+    public var steps as Number? = null;
+    public var stepGoal as Number? = null;
 
     function initialize(hour as Number, minute as Number) {
         self.hour = hour;
@@ -48,6 +52,15 @@ class Frame {
     // The lit battery segments only, leftmost first. The static layer holds
     // all ten unlit ones underneath.
     public var batteryLit as Array<Arc> = [] as Array<Arc>;
+    // Step progress on the bezel ring, over the static track. Sweep 0 when
+    // there is no progress to show.
+    public var bezelProgress as Arc = new Arc(0, 0, 0, 0, 0, 0, 0, 0);
+    // The dot at the head of the progress, null when there is no goal to
+    // show progress toward or the steps are missing.
+    public var bezelHead as Circle? = null;
+    // Goal reached: the goal is above 0, the steps are known and at least
+    // the goal. The bottom field switches style on it (ticket 10).
+    public var stepGoalReached as Boolean = false;
 
     function initialize() {
     }
@@ -118,6 +131,26 @@ class RoundedRect {
     }
 }
 
+// A straight line from (x1, y1) to (x2, y2).
+class Line {
+    public var x1 as Number;
+    public var y1 as Number;
+    public var x2 as Number;
+    public var y2 as Number;
+    public var pen as Number;
+    public var color as Number;
+
+    function initialize(x1 as Number, y1 as Number, x2 as Number, y2 as Number,
+            pen as Number, color as Number) {
+        self.x1 = x1;
+        self.y1 = y1;
+        self.x2 = x2;
+        self.y2 = y2;
+        self.pen = pen;
+        self.color = color;
+    }
+}
+
 // A filled circle.
 class Circle {
     public var x as Number;
@@ -156,6 +189,14 @@ module FaceModel {
         frame.timeY = Layout.TIME_BASELINE_Y - GlyphWidths.TIME_BASE;
         frame.timeColor = theme.ink;
         frame.batteryLit = batteryLit(snapshot.battery, theme);
+        var sweep = bezelSweep(snapshot.steps, snapshot.stepGoal);
+        frame.bezelProgress = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.BEZEL_RADIUS,
+            Layout.BEZEL_PEN, 0, sweep, theme.accent);
+        frame.stepGoalReached = goalReached(snapshot.steps, snapshot.stepGoal);
+        if (hasStepProgress(snapshot.steps, snapshot.stepGoal)) {
+            frame.bezelHead = circleAt(sweep, Layout.BEZEL_RADIUS, Layout.BEZEL_HEAD_RADIUS,
+                theme.text);
+        }
         frame.date = dateText(snapshot);
         frame.dateWidth = textWidth(frame.date, GlyphWidths.DATE);
         frame.dateX = Layout.CENTER_X - frame.dateWidth / 2;
@@ -208,6 +249,44 @@ module FaceModel {
         return segments;
     }
 
+    // min(steps, goal) x 360 / goal, multiplication first and rounded down,
+    // so the ring closes only when the goal is reached.
+    function bezelSweep(steps as Number?, goal as Number?) as Number {
+        // The null checks repeat hasStepProgress for the type checker.
+        if (steps == null || goal == null || !hasStepProgress(steps, goal)) {
+            return 0;
+        }
+        return (steps < goal ? steps : goal) * 360 / goal;
+    }
+
+    // The black notches across the bezel ring at 3, 6 and 9 o'clock (one per
+    // design angle in Layout.BEZEL_NOTCHES), from the inner to the outer
+    // radius. Like the static layer they depend only on the theme, so the
+    // renderer gets them once; unlike it they are drawn on every update,
+    // over the progress (they are not in the buffer).
+    function bezelNotches(theme as Theme) as Array<Line> {
+        var angles = Layout.BEZEL_NOTCHES;
+        var notches = new Array<Line>[angles.size()];
+        for (var i = 0; i < angles.size(); i++) {
+            var inner = pointAt(angles[i], Layout.BEZEL_NOTCH_INNER);
+            var outer = pointAt(angles[i], Layout.BEZEL_NOTCH_OUTER);
+            notches[i] = new Line(inner[0], inner[1], outer[0], outer[1],
+                Layout.BEZEL_NOTCH_PEN, theme.ink);
+        }
+        return notches;
+    }
+
+    // goal > 0, steps known and steps >= goal.
+    function goalReached(steps as Number?, goal as Number?) as Boolean {
+        return steps != null && goal != null && hasStepProgress(steps, goal) && steps >= goal;
+    }
+
+    // Progress toward the goal can be shown: the goal is above 0 and the
+    // steps are known (0 steps included; a negative count is no reading).
+    function hasStepProgress(steps as Number?, goal as Number?) as Boolean {
+        return steps != null && goal != null && goal > 0 && steps >= 0;
+    }
+
     // Red at 10% or less, orange at 20% or less, otherwise the accent.
     function batteryColor(battery as Number, theme as Theme) as Number {
         if (battery <= 10) {
@@ -225,12 +304,26 @@ module FaceModel {
     // A round cap of the battery well, centered on the well at
     // `designDegrees`.
     function batteryCap(designDegrees as Number, color as Number) as Circle {
+        return circleAt(designDegrees, Layout.BATTERY_RADIUS, Layout.BATTERY_WELL_PEN / 2,
+            color);
+    }
+
+    // A filled circle whose center sits `distance` from the face center at
+    // `designDegrees`.
+    function circleAt(designDegrees as Number, distance as Number, radius as Number,
+            color as Number) as Circle {
+        var center = pointAt(designDegrees, distance);
+        return new Circle(center[0], center[1], radius, color);
+    }
+
+    // The point `distance` from the face center at `designDegrees`, rounded
+    // to whole pixels: [x, y].
+    function pointAt(designDegrees as Number, distance as Number) as Array<Number> {
         var angle = Math.toRadians(designDegrees);
-        var r = Layout.BATTERY_RADIUS;
-        return new Circle(
-            Math.round(Layout.CENTER_X + r * Math.sin(angle)).toNumber(),
-            Math.round(Layout.CENTER_Y - r * Math.cos(angle)).toNumber(),
-            Layout.BATTERY_WELL_PEN / 2, color);
+        return [
+            Math.round(Layout.CENTER_X + distance * Math.sin(angle)).toNumber(),
+            Math.round(Layout.CENTER_Y - distance * Math.cos(angle)).toNumber()
+        ] as Array<Number>;
     }
 
     // An arc from design degrees (0 = 12 o'clock, clockwise positive) to the

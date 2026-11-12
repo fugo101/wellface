@@ -8,6 +8,13 @@ module Layout {
     // The bezel ring, on the screen's edge.
     const BEZEL_RADIUS = 204;
     const BEZEL_PEN = 8;
+    // The dot at the head of the step progress, centered on the ring.
+    const BEZEL_HEAD_RADIUS = 4;
+    // Notches across the ring at 3, 6 and 9 o'clock, in design degrees.
+    const BEZEL_NOTCHES = [90, 180, 270] as Array<Number>;
+    const BEZEL_NOTCH_INNER = 198;
+    const BEZEL_NOTCH_OUTER = 210;
+    const BEZEL_NOTCH_PEN = 3;
 
     // The background disc.
     const DISC_RADIUS = 194;

@@ -8,14 +8,16 @@ import Toybox.Lang;
 // return from a widget, so the buffer is rebuilt then too.
 class Renderer {
     private var _layer as StaticLayer;
+    private var _notches as Array<Line>;
     private var _fonts as Fonts;
     // The reference and the bitmap it returned. Holding the bitmap keeps it
     // locked in the graphics pool; it is drawn again if it was purged anyway.
     private var _reference as BufferedBitmapReference?;
     private var _bitmap as BufferedBitmap?;
 
-    function initialize(layer as StaticLayer, fonts as Fonts) {
+    function initialize(layer as StaticLayer, notches as Array<Line>, fonts as Fonts) {
         _layer = layer;
+        _notches = notches;
         _fonts = fonts;
     }
 
@@ -28,6 +30,17 @@ class Renderer {
         } else {
             // No room in the graphics pool: draw the layer straight on screen.
             paintStatic(dc, _layer);
+        }
+
+        // The notches go over the progress so the quarters stay readable,
+        // and the head dot over both.
+        drawArc(dc, frame.bezelProgress);
+        for (var i = 0; i < _notches.size(); i++) {
+            drawLine(dc, _notches[i]);
+        }
+        var head = frame.bezelHead;
+        if (head != null) {
+            fillCircle(dc, head);
         }
 
         var lit = frame.batteryLit;
@@ -91,9 +104,7 @@ class Renderer {
 
         drawArc(dc, layer.batteryWell);
         for (var i = 0; i < layer.batteryCaps.size(); i++) {
-            var cap = layer.batteryCaps[i];
-            dc.setColor(cap.color, cap.color);
-            dc.fillCircle(cap.x, cap.y, cap.radius);
+            fillCircle(dc, layer.batteryCaps[i]);
         }
         for (var i = 0; i < layer.batteryTrack.size(); i++) {
             drawArc(dc, layer.batteryTrack[i]);
@@ -107,6 +118,17 @@ class Renderer {
         dc.setColor(layer.timeBandColor, layer.timeBandColor);
         dc.fillRoundedRectangle(Layout.BAND_X, Layout.BAND_Y,
             Layout.BAND_W, Layout.BAND_H, Layout.BAND_RADIUS);
+    }
+
+    private function fillCircle(dc as Dc, circle as Circle) as Void {
+        dc.setColor(circle.color, circle.color);
+        dc.fillCircle(circle.x, circle.y, circle.radius);
+    }
+
+    private function drawLine(dc as Dc, line as Line) as Void {
+        dc.setColor(line.color, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(line.pen);
+        dc.drawLine(line.x1, line.y1, line.x2, line.y2);
     }
 
     private function fillRoundedRect(dc as Dc, rect as RoundedRect) as Void {

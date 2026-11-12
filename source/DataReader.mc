@@ -1,3 +1,4 @@
+import Toybox.ActivityMonitor;
 import Toybox.Lang;
 import Toybox.System;
 import Toybox.Time;
@@ -62,5 +63,10 @@ class DataReader {
         // A Float percentage; FaceModel only sees a whole number in 0-100.
         var battery = (System.getSystemStats().battery + 0.5).toNumber();
         _snapshot.battery = FaceModel.clamp(battery, 0, 100);
+
+        // Both may be null; the goal is the watch's own (auto) goal.
+        var activity = ActivityMonitor.getInfo();
+        _snapshot.steps = activity.steps;
+        _snapshot.stepGoal = activity.stepGoal;
     }
 }

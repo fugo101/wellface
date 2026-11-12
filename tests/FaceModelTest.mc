@@ -57,6 +57,32 @@ module FaceModelTest {
         return frameWithBattery(battery).batteryLit[0].color;
     }
 
+    function frameWithSteps(steps as Number?, goal as Number?) as Frame {
+        var snapshot = new Snapshot(8, 42);
+        snapshot.steps = steps;
+        snapshot.stepGoal = goal;
+        return FaceModel.compute(snapshot, Themes.mint());
+    }
+
+    function bezelSweepAt(steps as Number?, goal as Number?) as Number {
+        return frameWithSteps(steps, goal).bezelProgress.sweep;
+    }
+
+    // The head dot, asserted to be there.
+    function headAt(steps as Number, goal as Number) as Circle {
+        var dot = frameWithSteps(steps, goal).bezelHead;
+        Test.assert(dot != null);
+        return dot as Circle;
+    }
+
+    function assertLine(line as Line, x1 as Number, y1 as Number, x2 as Number,
+            y2 as Number) as Void {
+        Test.assertEqual(x1, line.x1);
+        Test.assertEqual(y1, line.y1);
+        Test.assertEqual(x2, line.x2);
+        Test.assertEqual(y2, line.y2);
+    }
+
     (:test)
     function timeJustAfterMidnightHasLeadingZeros(logger as Test.Logger) as Boolean {
         Test.assertEqual("00:05", frameAt(0, 5).time);
@@ -386,6 +412,163 @@ module FaceModelTest {
     function otherNamesAreNotShortened(logger as Test.Logger) as Boolean {
         Test.assertEqual("THU 8 3", dateOf("Thu 8", 5, 3));
         Test.assertEqual("THU 12", dateOf("Thu", 5, 12));
+        return true;
+    }
+
+    // Bezel progress (arc contract): from design 0 deg (ciq 90) clockwise,
+    // sweep = min(steps, goal) x 360 / goal, rounded down.
+    (:test)
+    function halfTheGoalFillsHalfTheBezelFrom12OClock(logger as Test.Logger) as Boolean {
+        var progress = frameWithSteps(1555, 3110).bezelProgress;
+        Test.assertEqual(180, progress.sweep);
+        Test.assertEqual(90, progress.start);
+        Test.assertEqual(270, progress.end);
+        Test.assertEqual(204, progress.radius);
+        Test.assertEqual(8, progress.pen);
+        Test.assertEqual(0x8EE3B8, progress.color);
+        return true;
+    }
+
+    (:test)
+    function overTheGoalTheBezelIsAFullCircle(logger as Test.Logger) as Boolean {
+        var progress = frameWithSteps(3512, 3110).bezelProgress;
+        Test.assertEqual(360, progress.sweep);
+        // A full circle in the arc contract: start == end.
+        Test.assertEqual(90, progress.start);
+        Test.assertEqual(90, progress.end);
+        return true;
+    }
+
+    // Story 29, Q26: no goal, no progress, and no division by zero.
+    (:test)
+    function goalZeroLeavesTheBezelEmpty(logger as Test.Logger) as Boolean {
+        Test.assertEqual(0, bezelSweepAt(1147, 0));
+        return true;
+    }
+
+    (:test)
+    function zeroStepsDrawNoBezelArc(logger as Test.Logger) as Boolean {
+        Test.assertEqual(0, bezelSweepAt(0, 3110));
+        return true;
+    }
+
+    // 360 / 3110 rounds down to 0 degrees.
+    (:test)
+    function oneStepOf3110DrawsNoBezelArc(logger as Test.Logger) as Boolean {
+        Test.assertEqual(0, bezelSweepAt(1, 3110));
+        return true;
+    }
+
+    // Story 24: 3109 x 360 / 3110 = 359.88, rounded down, so never closed early.
+    (:test)
+    function oneStepShortOfTheGoalIsNotAFullRing(logger as Test.Logger) as Boolean {
+        Test.assertEqual(359, bezelSweepAt(3109, 3110));
+        return true;
+    }
+
+    (:test)
+    function exactlyTheGoalClosesTheRing(logger as Test.Logger) as Boolean {
+        Test.assertEqual(360, bezelSweepAt(3110, 3110));
+        return true;
+    }
+
+    (:test)
+    function missingGoalLeavesTheBezelEmpty(logger as Test.Logger) as Boolean {
+        Test.assertEqual(0, bezelSweepAt(1147, null)); // Q26
+        return true;
+    }
+
+    // Story 30, Q26.
+    (:test)
+    function missingStepsLeaveTheBezelEmpty(logger as Test.Logger) as Boolean {
+        Test.assertEqual(0, bezelSweepAt(null, 3110));
+        return true;
+    }
+
+    // The head dot sits on the bezel centerline (r 204) at the progress
+    // head: design angle a gives (208 + 204 sin a, 208 - 204 cos a).
+    (:test)
+    function headDotAtHalfTheGoalSitsAt6OClock(logger as Test.Logger) as Boolean {
+        var dot = headAt(1555, 3110);
+        Test.assertEqual(208, dot.x);
+        Test.assertEqual(412, dot.y);
+        Test.assertEqual(4, dot.radius);
+        Test.assertEqual(0xFFFFFF, dot.color);
+        return true;
+    }
+
+    // Story 25: with 0 steps there is no arc, but the dot shows at 12 o'clock.
+    (:test)
+    function headDotAtZeroStepsSitsAt12OClock(logger as Test.Logger) as Boolean {
+        var dot = headAt(0, 3110);
+        Test.assertEqual(208, dot.x);
+        Test.assertEqual(4, dot.y);
+        return true;
+    }
+
+    // 90 deg is 3 o'clock: (208 + 204, 208).
+    (:test)
+    function headDotAtAQuarterSitsAt3OClock(logger as Test.Logger) as Boolean {
+        var dot = headAt(1000, 4000);
+        Test.assertEqual(412, dot.x);
+        Test.assertEqual(208, dot.y);
+        return true;
+    }
+
+    (:test)
+    function headDotIsHiddenWithoutAGoalOrSteps(logger as Test.Logger) as Boolean {
+        Test.assert(frameWithSteps(1147, 0).bezelHead == null);
+        Test.assert(frameWithSteps(1147, null).bezelHead == null);
+        Test.assert(frameWithSteps(null, 3110).bezelHead == null);
+        return true;
+    }
+
+    (:test)
+    function goalIsReachedAtExactlyTheGoal(logger as Test.Logger) as Boolean {
+        Test.assert(!frameWithSteps(3109, 3110).stepGoalReached);
+        Test.assert(frameWithSteps(3110, 3110).stepGoalReached);
+        Test.assert(frameWithSteps(3512, 3110).stepGoalReached);
+        return true;
+    }
+
+    // Story 29, Q26: steps >= 0 holds for goal 0, but there is no goal to reach.
+    (:test)
+    function goalZeroIsNeverReached(logger as Test.Logger) as Boolean {
+        Test.assert(!frameWithSteps(1147, 0).stepGoalReached);
+        return true;
+    }
+
+    (:test)
+    function missingStepsNeverReachTheGoal(logger as Test.Logger) as Boolean {
+        Test.assert(!frameWithSteps(null, 3110).stepGoalReached);
+        Test.assert(!frameWithSteps(1147, null).stepGoalReached);
+        return true;
+    }
+
+    // Story 25: black lines across the ring at 3, 6 and 9 o'clock (design
+    // 90, 180 and 270 deg), from r 198 to r 210, pen 3, whatever the steps.
+    (:test)
+    function bezelNotchesCrossTheRingAt3And6And9OClock(logger as Test.Logger) as Boolean {
+        var notches = FaceModel.bezelNotches(Themes.mint());
+        Test.assertEqual(3, notches.size());
+        assertLine(notches[0], 406, 208, 418, 208);
+        assertLine(notches[1], 208, 406, 208, 418);
+        assertLine(notches[2], 10, 208, -2, 208);
+        for (var i = 0; i < notches.size(); i++) {
+            Test.assertEqual(3, notches[i].pen);
+            Test.assertEqual(0x000000, notches[i].color);
+        }
+        return true;
+    }
+
+
+    // A negative count is not a real reading, so it counts as missing.
+    (:test)
+    function negativeStepsCountAsMissing(logger as Test.Logger) as Boolean {
+        var frame = frameWithSteps(-1, 3110);
+        Test.assertEqual(0, frame.bezelProgress.sweep);
+        Test.assert(frame.bezelHead == null);
+        Test.assert(!frame.stepGoalReached);
         return true;
     }
 }

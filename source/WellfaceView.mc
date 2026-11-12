@@ -15,7 +15,8 @@ class WellfaceView extends WatchUi.WatchFace {
         WatchFace.initialize();
         _theme = Themes.active();
         _reader = new DataReader();
-        _renderer = new Renderer(FaceModel.staticLayer(_theme), new Fonts());
+        _renderer = new Renderer(FaceModel.staticLayer(_theme), FaceModel.bezelNotches(_theme),
+            new Fonts());
     }
 
     function onUpdate(dc as Dc) as Void {
