@@ -37,7 +37,7 @@ Vocabulary follows `GLOSSARY.md`. These rows extend Q1–Q17; where one changes 
 |---|---|---|
 | Q18 | Build order | Start with a tracer bullet (background, time band, time in a system font) that goes the whole way: build → sign → simulator → sideload to the watch. Then add elements one by one |
 | Q19 | Process | Short spec plus one ticket per step under `.scratch/mvp/` before coding |
-| Q20 | Git | One branch `feat/<slug>` per ticket, merged into `master`. Commit only with the user's approval |
+| Q20 | Git | Commit straight to `master`, no feature branches (changed 2026-11-12; was one `feat/<slug>` branch per ticket). Commit only with the user's approval |
 | Q21 | Date language | Weekday name follows the watch language, upper-cased with diacritics stripped. If a character is still missing from the font (Cyrillic, CJK…), fall back to English. The watch is currently set to English |
 | Q22 | Time format | Always 24 h with a leading zero (`08:42`), whatever the watch's 12/24 h setting |
 | Q23 | Date pill width | At least 96 px, grows to fit longer weekday names, stays centered, never wider than the time band |

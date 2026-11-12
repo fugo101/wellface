@@ -36,7 +36,7 @@ To check Always On, turn on low-power mode in the simulator's settings menu, and
 
 1. Run `scripts/build-release.sh`.
 2. Fully quit Garmin Express, connect the watch with the cable and open it with an MTP client (on macOS: OpenMTP).
-3. Copy `bin/wellface-release.prg` into `GARMIN/APPS` on the watch.
+3. Copy `bin/wellface-release.prg` into `GARMIN/APPS` on the watch (the FR265 spells the folder `Apps`). Keep the MTP client closed afterwards: while it runs, it holds the watch's USB connection, so no other tool can reach it.
 4. Unplug the watch and choose Wellface from the watch-face list (menu names may differ slightly).
 
 To update, copy the new `.prg` over the old one. To remove the face, delete it from `GARMIN/APPS`.
