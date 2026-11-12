@@ -22,6 +22,18 @@ module Layout {
     const BAND_H = 64;
     const BAND_RADIUS = 20;
 
+    // The date pill, overlapping the bottom edge of the time band: centered
+    // on CENTER_X, from DATE_PILL_MIN_WIDTH up to the band's width (Q23, Q33).
+    // The date's capitals are vertically centered on DATE_CENTER_Y.
+    const DATE_PILL_Y = 140;
+    const DATE_PILL_HEIGHT = 28;
+    const DATE_PILL_RADIUS = 14;
+    // Also in tools/fontgen/generate.py, which derives GlyphWidths.DATE_PAD
+    // from it; change both and regenerate.
+    const DATE_PILL_MIN_WIDTH = 96;
+    const DATE_PILL_MAX_WIDTH = BAND_W;
+    const DATE_CENTER_Y = 154;
+
     // The time: centered on this x, with its baseline on this y.
     const TIME_CENTER_X = CENTER_X;
     const TIME_BASELINE_Y = 135;

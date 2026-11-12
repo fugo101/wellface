@@ -8,6 +8,12 @@ class Snapshot {
     // 0-23, whatever the watch's 12/24 h setting is (Q22).
     public var hour as Number;
     public var minute as Number;
+    // Day of month, 1-31.
+    public var day as Number = 1;
+    // Weekday number from FORMAT_SHORT: 1 = Sunday ... 7 = Saturday.
+    public var weekdayNumber as Number = 1;
+    // The localized weekday name from FORMAT_MEDIUM, as the watch returns it.
+    public var weekdayName as String? = null;
 
     // Sensor part, read once a minute in high power. Null means missing.
     // Watch battery in percent, already rounded and clamped to 0-100.
@@ -30,6 +36,15 @@ class Frame {
     public var timeX as Number = 0;
     public var timeY as Number = 0;
     public var timeColor as Number = 0;
+    // The date text, for example "THU 12", its width in the date font and
+    // the top-left corner to draw it from (left-justified, line top).
+    public var date as String = "";
+    public var dateWidth as Number = 0;
+    public var dateX as Number = 0;
+    public var dateY as Number = 0;
+    public var dateColor as Number = 0;
+    // The black pill behind the date; its width follows the text.
+    public var datePill as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
     // The lit battery segments only, leftmost first. The static layer holds
     // all ten unlit ones underneath.
     public var batteryLit as Array<Arc> = [] as Array<Arc>;
@@ -83,6 +98,26 @@ class Arc {
     }
 }
 
+// A filled rounded rectangle.
+class RoundedRect {
+    public var x as Number;
+    public var y as Number;
+    public var width as Number;
+    public var height as Number;
+    public var radius as Number;
+    public var color as Number;
+
+    function initialize(x as Number, y as Number, width as Number, height as Number,
+            radius as Number, color as Number) {
+        self.x = x;
+        self.y = y;
+        self.width = width;
+        self.height = height;
+        self.radius = radius;
+        self.color = color;
+    }
+}
+
 // A filled circle.
 class Circle {
     public var x as Number;
@@ -101,6 +136,18 @@ class Circle {
 // Pure display rules: no sensor, graphics or resource dependencies.
 // This is the face's only test seam.
 module FaceModel {
+    // Indexed by the FORMAT_SHORT weekday number - 1 (1 = Sunday).
+    const ENGLISH_WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as Array<String>;
+
+    // Base letters for U+00C0-U+00FF and U+0100-U+017F, one per code point;
+    // "?" means the date font cannot show it (for example AE, the
+    // multiplication sign, thorn, sharp s, IJ, OE). Letters with a stroke
+    // fold to their base letter too (D for the Vietnamese D with stroke).
+    const LATIN_1_BASE = "AAAAAA?CEEEEIIIIDNOOOOO?OUUUUY??AAAAAA?CEEEEIIIIDNOOOOO?OUUUUY?Y";
+    const LATIN_EXTENDED_A_BASE =
+        "AAAAAACCCCCCCCDDDDEEEEEEEEEEGGGGGGGGHHHHIIIIIIIIII??JJKK?LLLLLLLLLL" +
+        "NNNNNN?NNOOOOOO??RRRRRRSSSSSSSSTTTTTTUUUUUUUUUUUUWWYYYZZZZZZS";
+
     function compute(snapshot as Snapshot, theme as Theme) as Frame {
         var frame = new Frame();
         frame.time = formatTime(snapshot.hour, snapshot.minute);
@@ -109,6 +156,15 @@ module FaceModel {
         frame.timeY = Layout.TIME_BASELINE_Y - GlyphWidths.TIME_BASE;
         frame.timeColor = theme.ink;
         frame.batteryLit = batteryLit(snapshot.battery, theme);
+        frame.date = dateText(snapshot);
+        frame.dateWidth = textWidth(frame.date, GlyphWidths.DATE);
+        frame.dateX = Layout.CENTER_X - frame.dateWidth / 2;
+        // Upper case only, so the capitals are centered, as in the design.
+        frame.dateY = Layout.DATE_CENTER_Y + GlyphWidths.DATE_CAP_HEIGHT / 2 - GlyphWidths.DATE_BASE;
+        frame.dateColor = theme.text;
+        var pillWidth = datePillWidth(frame.dateWidth);
+        frame.datePill = new RoundedRect(Layout.CENTER_X - pillWidth / 2, Layout.DATE_PILL_Y,
+            pillWidth, Layout.DATE_PILL_HEIGHT, Layout.DATE_PILL_RADIUS, theme.ink);
         return frame;
     }
 
@@ -194,6 +250,115 @@ module FaceModel {
 
     function clamp(value as Number, low as Number, high as Number) as Number {
         return value < low ? low : (value > high ? high : value);
+    }
+
+    // The folded weekday, a space and the day of month without a leading zero.
+    // A name that is missing, empty or cannot be folded, or that would make
+    // the pill wider than the time band (Q33), falls back to the English
+    // abbreviation of the weekday number.
+    function dateText(snapshot as Snapshot) as String {
+        var day = " " + snapshot.day;
+        var name = foldWeekday(snapshot.weekdayName);
+        if (name != null && name.length() > 0) {
+            var text = name + day;
+            if (datePillWidth(textWidth(text, GlyphWidths.DATE)) <= Layout.DATE_PILL_MAX_WIDTH) {
+                return text;
+            }
+        }
+        return ENGLISH_WEEKDAYS[snapshot.weekdayNumber - 1] + day;
+    }
+
+    // max(minimum, text width + 2 x pad), where the pad gives "THU 12"
+    // exactly the minimum width (Q23). The font generator derives the pad
+    // from the same 96 px (its FONTS entry for the date).
+    function datePillWidth(textWidth as Number) as Number {
+        var width = textWidth + 2 * GlyphWidths.DATE_PAD;
+        return width > Layout.DATE_PILL_MIN_WIDTH ? width : Layout.DATE_PILL_MIN_WIDTH;
+    }
+
+    // The weekday folded code point by code point to A-Z, keeping spaces and
+    // the digits 0-9 and dropping combining marks. Null if any other
+    // character remains.
+    function foldWeekday(name as String?) as String? {
+        if (name == null) {
+            return null;
+        }
+        var folded = "";
+        var chars = name.toCharArray();
+        for (var i = 0; i < chars.size(); i++) {
+            var code = chars[i].toNumber();
+            if (isCombiningMark(code)) {
+                continue; // its base letter came before it
+            }
+            var c = foldChar(code);
+            if (c == null) {
+                return null;
+            }
+            folded += c;
+        }
+        return folded;
+    }
+
+    // The combining diacritical mark blocks: the main one, its extended and
+    // supplement blocks, and the marks for symbols.
+    function isCombiningMark(c as Number) as Boolean {
+        return (c >= 0x0300 && c <= 0x036F) || (c >= 0x1AB0 && c <= 0x1AFF)
+            || (c >= 0x1DC0 && c <= 0x1DFF) || (c >= 0x20D0 && c <= 0x20FF);
+    }
+
+    // One code point folded: its base letter in A-Z, itself for a space or
+    // digit, or null if the date font cannot show it.
+    function foldChar(c as Number) as Char? {
+        if ((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == ' ') {
+            return c.toChar();
+        }
+        if (c >= 'a' && c <= 'z') {
+            return (c - 32).toChar();
+        }
+        if (c >= 0x00C0 && c <= 0x00FF) {
+            return baseFromTable(LATIN_1_BASE, c - 0x00C0);
+        }
+        if (c >= 0x0100 && c <= 0x017F) {
+            return baseFromTable(LATIN_EXTENDED_A_BASE, c - 0x0100);
+        }
+        if (c == 0x01A0 || c == 0x01A1) {
+            return 'O'; // Vietnamese O with horn
+        }
+        if (c == 0x01AF || c == 0x01B0) {
+            return 'U'; // Vietnamese U with horn
+        }
+        if (c >= 0x0218 && c <= 0x021B) {
+            return c < 0x021A ? 'S' : 'T'; // Romanian S and T with comma below
+        }
+        if (c >= 0x1EA0 && c <= 0x1EF9) {
+            return vietnameseBase(c - 0x1EA0);
+        }
+        return null;
+    }
+
+    // The base letter at `offset` in a fold table, null for "?".
+    function baseFromTable(table as String, offset as Number) as Char? {
+        var c = table.toCharArray()[offset];
+        return c == '?' ? null : c;
+    }
+
+    // Latin Extended Additional U+1EA0-U+1EF9, the Vietnamese letters with
+    // tone marks, upper and lower case alternating: 24 A, 16 E, 4 I, 24 O,
+    // 14 U and 8 Y.
+    function vietnameseBase(offset as Number) as Char {
+        if (offset < 24) {
+            return 'A';
+        }
+        if (offset < 40) {
+            return 'E';
+        }
+        if (offset < 44) {
+            return 'I';
+        }
+        if (offset < 68) {
+            return 'O';
+        }
+        return offset < 82 ? 'U' : 'Y';
     }
 
     // Always 24 h with a leading zero, for example "08:42" (Q22).

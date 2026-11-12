@@ -2,4 +2,5 @@
 <fonts>
     <font id="TimeFilled" filename="time57.fnt" antialias="true" filter="0123456789:"/>
     <font id="TimeOutline" filename="time57outline.fnt" antialias="true" filter="0123456789:"/>
+    <font id="Date" filename="date17.fnt" antialias="true" filter="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "/>
 </fonts>

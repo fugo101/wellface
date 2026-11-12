@@ -8,7 +8,8 @@ repository), renders the bitmap fonts the face uses and writes:
 - resources/fonts/fonts.xml: the font resources, antialiased, with a filter;
 - resources/fonts/OFL-<family>.txt: the license of every source font used;
 - source/GlyphWidths.mc: the glyph-width tables FaceModel measures text with,
-  holding exactly the xadvance values written to each .fnt.
+  holding exactly the xadvance values written to each .fnt, plus each font's
+  base and cap height and any pad derived from a sample text.
 
 Run it with scripts/gen-fonts.sh. To add a font, add an entry to FONTS.
 """
@@ -47,6 +48,7 @@ PAGE_WIDTH = 256
 SPACING = 1
 
 DIGITS = "0123456789"
+LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 # --- Sources ------------------------------------------------------------------
@@ -146,8 +148,46 @@ def big_shoulders_display_extrabold(gf: GoogleFonts) -> SourceFont:
     )
 
 
+def manrope(gf: GoogleFonts, weight: int) -> SourceFont:
+    """Manrope at one weight: a static file if Google Fonts publishes one,
+    otherwise the variable family instanced at that weight."""
+    folder = "ofl/manrope"
+    names = {700: "Bold", 800: "ExtraBold"}
+    face = f"Manrope-{names[weight]}"
+    files = gf.list(folder)
+    license_text = gf.fetch(folder, "OFL.txt")
+    for sub, sub_files in ((folder, files),
+                           (f"{folder}/static", gf.list(f"{folder}/static")
+                            if "static" in files else [])):
+        if f"{face}.ttf" in sub_files:
+            return SourceFont(
+                path=gf.save(sub, f"{face}.ttf"),
+                face=face,
+                license_name="Manrope",
+                license_text=license_text,
+                origin=f"static {sub}/{face}.ttf @ google/fonts {gf.sha[:12]}",
+            )
+
+    variable = "Manrope[wght].ttf"
+    if variable not in files:
+        raise SystemExit(f"{folder}/{variable} is not published any more")
+    source = TTFont(gf.save(folder, variable))
+    instance = instancer.instantiateVariableFont(source, {"wght": weight})
+    path = gf.work / f"{face}.ttf"
+    instance.save(path)
+    return SourceFont(
+        path=path,
+        face=face,
+        license_name="Manrope",
+        license_text=license_text,
+        origin=(f"{folder}/{variable} instanced at wght {weight} "
+                f"@ google/fonts {gf.sha[:12]} (no static {face} published)"),
+    )
+
+
 SOURCES = {
     "big-shoulders-display-800": big_shoulders_display_extrabold,
+    "manrope-800": lambda gf: manrope(gf, 800),
 }
 
 
@@ -165,6 +205,9 @@ class FontSpec:
     outline: int = 0  # > 0: keep only this many px inside the edge (fill minus erosion)
     tracking: int = 0  # px added to every xadvance (baked-in letter spacing)
     digit_height: float | None = None  # asserted height of "0" in px, +-1
+    # (sample, min_width): emits <table>_PAD = (min_width - width(sample)) / 2,
+    # the padding that gives `sample` a box exactly min_width wide.
+    pad: tuple[str, int] | None = None
 
 
 FONTS = [
@@ -172,6 +215,10 @@ FONTS = [
              DIGITS + ":", tabular_digits=True, digit_height=46),
     FontSpec("TimeOutline", "time57outline", "TIME_OUTLINE", "big-shoulders-display-800", 57,
              DIGITS + ":", tabular_digits=True, outline=2, digit_height=46),
+    # The date: the design's 1.5 px tracking rounded to 2 px. The pad gives
+    # "THU 12" the design's 96 px pill (Layout.DATE_PILL_MIN_WIDTH; keep both equal).
+    FontSpec("Date", "date17", "DATE", "manrope-800", 17,
+             LETTERS + DIGITS + " ", tracking=2, pad=("THU 12", 96)),
 ]
 
 
@@ -192,6 +239,7 @@ class Glyph:
 class Metrics:
     line_height: int
     base: int
+    cap_height: int  # OS/2 sCapHeight, rounded
 
 
 def render_font(spec: FontSpec, src: SourceFont) -> tuple[list[Glyph], Metrics]:
@@ -207,7 +255,8 @@ def render_font(spec: FontSpec, src: SourceFont) -> tuple[list[Glyph], Metrics]:
 
     hhea = tt["hhea"]
     base = round(hhea.ascent * scale)
-    metrics = Metrics(line_height=round((hhea.ascent - hhea.descent) * scale), base=base)
+    metrics = Metrics(line_height=round((hhea.ascent - hhea.descent) * scale), base=base,
+                      cap_height=round(tt["OS/2"].sCapHeight * scale))
 
     if spec.digit_height is not None:
         pen = BoundsPen(glyph_set)
@@ -239,7 +288,9 @@ def render_font(spec: FontSpec, src: SourceFont) -> tuple[list[Glyph], Metrics]:
 
         bbox = image.getbbox()
         if bbox is None:
-            raise SystemExit(f"{spec.file}: glyph {c!r} renders empty")
+            if not c.isspace():
+                raise SystemExit(f"{spec.file}: glyph {c!r} renders empty")
+            bbox = (origin_x, origin_y - base, origin_x, origin_y - base)  # 0x0 glyph
         shift = 0
         if spec.tabular_digits and c in DIGITS:
             shift = (widest_digit - advance) // 2
@@ -280,7 +331,8 @@ def pack(glyphs: list[Glyph]) -> Image.Image:
     used_width = max(g.x + g.image.width for g in glyphs)
     page = Image.new("L", (used_width, y + row_height), 0)
     for g in glyphs:
-        page.paste(g.image, (g.x, g.y))
+        if g.image.width and g.image.height:
+            page.paste(g.image, (g.x, g.y))
     return page
 
 
@@ -335,13 +387,34 @@ def monkey_char(c: str) -> str:
     return f"(0x{ord(c):04X}).toChar()"
 
 
+def text_width(glyphs: list[Glyph], text: str) -> int:
+    """The sum of xadvances, as FaceModel.textWidth measures it."""
+    advances = {g.char: g.xadvance for g in glyphs}
+    missing = [c for c in text if c not in advances]
+    if missing:
+        raise SystemExit(f"sample {text!r} uses glyphs not in the font: {missing!r}")
+    return sum(advances[c] for c in text)
+
+
+def pad_for(spec: FontSpec, glyphs: list[Glyph]) -> int | None:
+    if spec.pad is None:
+        return None
+    sample, min_width = spec.pad
+    pad = (min_width - text_width(glyphs, sample)) // 2
+    if pad < 0:
+        raise SystemExit(f"{spec.file}: {sample!r} is wider than {min_width} px")
+    return pad
+
+
 def write_tables(results: list[tuple[FontSpec, SourceFont, list[Glyph], Metrics]]) -> None:
     lines = [
         "// Generated by tools/fontgen/generate.py. Do not edit; run scripts/gen-fonts.sh.",
         "import Toybox.Lang;",
         "",
-        "// Per font: the BMFont base (line top to baseline, px) and every glyph's",
-        "// xadvance exactly as written to its .fnt, so measured and drawn widths agree.",
+        "// Per font: the BMFont base (line top to baseline, px), the cap height",
+        "// (px), and every glyph's xadvance exactly as written to its .fnt, so",
+        "// measured and drawn widths agree. A _PAD gives its sample text a box of",
+        "// the design's minimum width.",
         "module GlyphWidths {",
     ]
     for spec, src, glyphs, metrics in results:
@@ -349,8 +422,16 @@ def write_tables(results: list[tuple[FontSpec, SourceFont, list[Glyph], Metrics]
         lines += [
             f"    // {spec.resource_id}: {src.face} {spec.size} px.",
             f"    const {spec.table}_BASE = {metrics.base};",
-            f"    const {spec.table} = {{ {entries} }} as Dictionary<Char, Number>;",
+            f"    const {spec.table}_CAP_HEIGHT = {metrics.cap_height};",
         ]
+        pad = pad_for(spec, glyphs)
+        if pad is not None:
+            sample, min_width = spec.pad
+            lines += [
+                f"    // ({min_width} - width of \"{sample}\") / 2.",
+                f"    const {spec.table}_PAD = {pad};",
+            ]
+        lines.append(f"    const {spec.table} = {{ {entries} }} as Dictionary<Char, Number>;")
     lines.append("}")
     TABLES_FILE.write_text("\n".join(lines) + "\n")
 
@@ -380,8 +461,11 @@ def main() -> None:
             advances = " ".join(f"{g.char}={g.xadvance}" for g in glyphs)
             zero = next((g for g in glyphs if g.char == "0"), None)
             ink = f", '0' ink {zero.image.height} px" if zero else ""
-            print(f"{spec.file}: base {metrics.base}, lineHeight {metrics.line_height}"
-                  f"{ink}; {advances}")
+            pad = pad_for(spec, glyphs)
+            padding = f", pad {pad} (sample {text_width(glyphs, spec.pad[0])} px)" if spec.pad else ""
+            print(f"{spec.file}: base {metrics.base}, lineHeight {metrics.line_height}, "
+                  f"cap {metrics.cap_height}"
+                  f"{ink}{padding}; {advances}")
 
 
 if __name__ == "__main__":

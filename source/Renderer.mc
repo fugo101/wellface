@@ -39,6 +39,12 @@ class Renderer {
         dc.setColor(frame.timeColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(frame.timeX, frame.timeY, _fonts.time, frame.time,
             Graphics.TEXT_JUSTIFY_LEFT);
+
+        // The pill's width follows the text, so it is not in the static layer.
+        fillRoundedRect(dc, frame.datePill);
+        dc.setColor(frame.dateColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(frame.dateX, frame.dateY, _fonts.date, frame.date,
+            Graphics.TEXT_JUSTIFY_LEFT);
     }
 
     // The whole screen black.
@@ -101,6 +107,11 @@ class Renderer {
         dc.setColor(layer.timeBandColor, layer.timeBandColor);
         dc.fillRoundedRectangle(Layout.BAND_X, Layout.BAND_Y,
             Layout.BAND_W, Layout.BAND_H, Layout.BAND_RADIUS);
+    }
+
+    private function fillRoundedRect(dc as Dc, rect as RoundedRect) as Void {
+        dc.setColor(rect.color, rect.color);
+        dc.fillRoundedRectangle(rect.x, rect.y, rect.width, rect.height, rect.radius);
     }
 
     // One arc in the arc contract. Sweep 0 draws nothing; for 360, start

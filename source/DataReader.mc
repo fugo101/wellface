@@ -1,24 +1,42 @@
 import Toybox.Lang;
 import Toybox.System;
+import Toybox.Time;
+import Toybox.Time.Gregorian;
 
 // Builds the snapshot from the watch's clock and sensors. Thin and untested;
 // every display rule lives in FaceModel.
 class DataReader {
     private var _snapshot as Snapshot = new Snapshot(0, 0);
+    private var _clockRead as Boolean = false;
     // Minute of the day the sensors were last read, -1 before the first read.
     private var _sensorMinute as Number = -1;
     private var _wasHighPower as Boolean = false;
 
-    // Called on every update that is not OFF. Reads the clock every time.
+    // Called on every update that is not OFF. Reads the clock and date
+    // every time, from one moment so they always agree (no 23:59 with the
+    // next day's date), and the weekday name only when they changed.
     // Reads the sensors only in high power, when the minute changed since
     // the last sensor read or the previous update was not high power (that
     // is how a wake is detected). Returns true if the snapshot may have
     // changed, so FaceModel should run again.
     function update(highPower as Boolean) as Boolean {
-        var clock = System.getClockTime();
-        var changed = clock.hour != _snapshot.hour || clock.min != _snapshot.minute;
+        var now = Time.now();
+        // Info.hour is 0-23 whatever the 12/24 h setting (Q22).
+        var clock = Gregorian.info(now, Time.FORMAT_SHORT);
+        var weekdayNumber = clock.day_of_week as Number;
+        var changed = !_clockRead || clock.hour != _snapshot.hour
+            || clock.min != _snapshot.minute || clock.day != _snapshot.day
+            || weekdayNumber != _snapshot.weekdayNumber;
         _snapshot.hour = clock.hour;
         _snapshot.minute = clock.min;
+        _snapshot.day = clock.day;
+        _snapshot.weekdayNumber = weekdayNumber;
+        if (changed) {
+            // Once a minute is enough to follow a change of watch language.
+            var name = Gregorian.info(now, Time.FORMAT_MEDIUM).day_of_week;
+            _snapshot.weekdayName = name instanceof String ? name : null;
+            _clockRead = true;
+        }
 
         var minuteOfDay = clock.hour * 60 + clock.min;
         if (highPower && (minuteOfDay != _sensorMinute || !_wasHighPower)) {
