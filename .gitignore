@@ -18,3 +18,6 @@ developer_key*
 
 # Design handoff bundle: duplicate of the extracted design/claude-design/
 design/*.zip
+
+# Python virtual environment for the font generator
+.venv/

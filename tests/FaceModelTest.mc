@@ -29,6 +29,30 @@ module FaceModelTest {
     }
 
     (:test)
+    function timeWidthIsTheSameWhateverTheDigits(logger as Test.Logger) as Boolean {
+        var width = frameAt(0, 0).timeWidth;
+        Test.assert(width > 0);
+        Test.assertEqual(width, frameAt(11, 11).timeWidth);
+        Test.assertEqual(width, frameAt(8, 42).timeWidth);
+        return true;
+    }
+
+    (:test)
+    function timeIsCenteredOnX208(logger as Test.Logger) as Boolean {
+        var frame = frameAt(8, 42);
+        var centerTwice = 2 * frame.timeX + frame.timeWidth;
+        Test.assert(centerTwice >= 415 && centerTwice <= 417);
+        return true;
+    }
+
+    (:test)
+    function timeBaselineIsAtY135(logger as Test.Logger) as Boolean {
+        // The renderer draws from the line top, which sits `base` above the baseline.
+        Test.assertEqual(135, frameAt(8, 42).timeY + GlyphWidths.TIME_BASE);
+        return true;
+    }
+
+    (:test)
     function mintTimeBandIsAccentWithBlackDigits(logger as Test.Logger) as Boolean {
         var frame = frameAt(8, 42);
         Test.assertEqual(0x8EE3B8, frame.timeBandColor);

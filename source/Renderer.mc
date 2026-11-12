@@ -5,7 +5,7 @@ import Toybox.Lang;
 module Renderer {
     // A full high-power frame. The screen is not guaranteed to keep its
     // previous contents, so every call repaints everything.
-    function paint(dc as Dc, frame as Frame) as Void {
+    function paint(dc as Dc, frame as Frame, fonts as Fonts) as Void {
         clear(dc);
 
         dc.setColor(frame.backgroundColor, frame.backgroundColor);
@@ -20,12 +20,10 @@ module Renderer {
         dc.fillRoundedRectangle(Layout.BAND_X, Layout.BAND_Y,
             Layout.BAND_W, Layout.BAND_H, Layout.BAND_RADIUS);
 
-        // Tracer bullet: a system font, centered in the band. Ticket 03
-        // replaces it with the generated time font placed on its baseline.
+        // FaceModel places the time by its measured width and the font's base.
         dc.setColor(frame.timeColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(Layout.CENTER_X, Layout.BAND_Y + Layout.BAND_H / 2,
-            Graphics.FONT_NUMBER_MILD, frame.time,
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(frame.timeX, frame.timeY, fonts.time, frame.time,
+            Graphics.TEXT_JUSTIFY_LEFT);
     }
 
     // The whole screen black.

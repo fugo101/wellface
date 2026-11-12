@@ -21,12 +21,19 @@ The scripts never print the key or its path. If the VS Code extension generated 
 | `scripts/build-test.sh` | `bin/wellface-test.prg` | build with the `(:test)` code |
 | `scripts/run-tests.sh [test name]` | `bin/test.log` | build the tests, start the simulator, run them |
 | `scripts/build-release.sh` | `bin/wellface-release.prg` | sideload to the watch (`-r --build-stats 0`) |
+| `scripts/gen-fonts.sh` | `resources/fonts/`, `source/GlyphWidths.mc` | regenerate the bitmap fonts and glyph-width tables |
 | `scripts/build-spike.sh` | `bin/wfspike.prg` | data spike (ticket 02), a separate debug-only face |
 | `scripts/run-spike.sh` | `bin/wfspike.prg` | data spike, start the simulator and load it |
 
 Every build fails on any compiler warning. Type checking is strict, set in each jungle (`monkey.jungle`, `spikes/data/monkey.jungle`).
 
 `run-tests.sh` exits 0 when all tests pass, 1 when a test fails and 2 when the tests could not run (the build failed, or there is no `RESULTS` block because the simulator was not reachable, the app crashed or the run timed out). It ignores `monkeydo`'s exit code, which is 1 even when every test passes (SDK 9.3.0).
+
+## Fonts
+
+`scripts/gen-fonts.sh` runs the font generator (`tools/fontgen/generate.py`). It downloads the source fonts fresh from Google Fonts (the google/fonts repository, so it needs the network) and rewrites everything in `resources/fonts/` (BMFont `.fnt` + PNG pages, `fonts.xml`, the OFL license files) and `source/GlyphWidths.mc`. Never edit those files by hand; change the `FONTS` list in the generator and run the script again. Commit the generated files.
+
+The first run creates a gitignored `.venv/` with Python 3.15 (override with `PYTHON=<interpreter>`) and the pinned versions in `tools/fontgen/requirements.txt`. The generator fails if a requested glyph is missing from a source font, or if the time font's `0` is not 46 px ± 1 tall.
 
 ## Run in the simulator
 

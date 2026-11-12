@@ -17,4 +17,8 @@ module Layout {
     const BAND_W = 272;
     const BAND_H = 64;
     const BAND_RADIUS = 20;
+
+    // The time: centered on this x, with its baseline on this y.
+    const TIME_CENTER_X = CENTER_X;
+    const TIME_BASELINE_Y = 135;
 }

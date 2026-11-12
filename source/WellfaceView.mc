@@ -5,6 +5,7 @@ import Toybox.WatchUi;
 
 class WellfaceView extends WatchUi.WatchFace {
     private var _theme as Theme;
+    private var _fonts as Fonts;
     // The last computed frame and the minute it was computed for.
     private var _frame as Frame?;
     private var _hour as Number = -1;
@@ -13,6 +14,7 @@ class WellfaceView extends WatchUi.WatchFace {
     function initialize() {
         WatchFace.initialize();
         _theme = Themes.active();
+        _fonts = new Fonts();
     }
 
     function onUpdate(dc as Dc) as Void {
@@ -37,7 +39,7 @@ class WellfaceView extends WatchUi.WatchFace {
             _hour = clock.hour;
             _minute = clock.min;
         }
-        Renderer.paint(dc, frame);
+        Renderer.paint(dc, frame, _fonts);
     }
 
     // The mode is read in onUpdate; these only ask for a repaint.
