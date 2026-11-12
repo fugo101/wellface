@@ -15,6 +15,7 @@ The name "Wellface": "well" means both a well (every element sits inside a black
 - `GLOSSARY.md`: the project vocabulary (fields are named by position, the metric decides how a field is drawn).
 - `docs/research/connect-iq-platform.md`: verified Connect IQ platform facts for the FR265, with sources and open questions.
 - `.scratch/mvp/spec.md`: the MVP spec.
+- `docs/build.md`: build, test, simulator and sideload commands (`scripts/`).
 - `docs/design-brief.md`: the brief given to Claude Design.
 - `design/claude-design/FR265 Watch Face.dc.html`: **the final design**. Coordinates, colors, fonts and the spec table live in the `buildG` function and the `spec` array. Read the source; no need to render it. `FR265 Watch Face (history).dc.html` holds older versions, for reference only. `design/claude-design/` is the extracted Claude Design handoff bundle. When Claude Design exports a new bundle, extract it with `ditto -x -k` (`unzip` fails on the Vietnamese file names inside), copy `garmin-forerunner-265-watch-face/project/*` over this folder, then rename the history file again. The `.zip` itself is gitignored.
 

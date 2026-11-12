@@ -1,0 +1,8 @@
+project.manifest = manifest.xml
+# Strict type checking is set here only, never with -l on the command line.
+project.typecheck = strict
+
+# The default source path includes every subfolder, so list them explicitly.
+# Everything in tests/ is (:test) and is compiled only into test builds (-t).
+base.sourcePath = source;tests
+base.resourcePath = resources
