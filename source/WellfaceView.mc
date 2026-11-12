@@ -5,41 +5,42 @@ import Toybox.WatchUi;
 
 class WellfaceView extends WatchUi.WatchFace {
     private var _theme as Theme;
-    private var _fonts as Fonts;
-    // The last computed frame and the minute it was computed for.
+    private var _reader as DataReader;
+    private var _renderer as Renderer;
+    // The last computed frame; FaceModel runs again only when the reader
+    // reports a change.
     private var _frame as Frame?;
-    private var _hour as Number = -1;
-    private var _minute as Number = -1;
 
     function initialize() {
         WatchFace.initialize();
         _theme = Themes.active();
-        _fonts = new Fonts();
+        _reader = new DataReader();
+        _renderer = new Renderer(FaceModel.staticLayer(_theme), new Fonts());
     }
 
     function onUpdate(dc as Dc) as Void {
         var mode = System.getDisplayMode();
         if (mode == System.DISPLAY_MODE_OFF) {
+            _reader.screenOff();
             return;
         }
+        var highPower = mode == System.DISPLAY_MODE_HIGH_POWER;
+        var changed = _reader.update(highPower);
         dc.setAntiAlias(true);
 
-        if (mode != System.DISPLAY_MODE_HIGH_POWER) {
+        if (!highPower) {
             // Always On: black until ticket 11 adds the AOD frame, so an
             // intermediate build never shows the full face in low power.
-            Renderer.clear(dc);
+            _renderer.clear(dc);
             return;
         }
 
-        var clock = System.getClockTime();
         var frame = _frame;
-        if (frame == null || clock.hour != _hour || clock.min != _minute) {
-            frame = FaceModel.compute(new Snapshot(clock.hour, clock.min), _theme);
+        if (frame == null || changed) {
+            frame = FaceModel.compute(_reader.snapshot(), _theme);
             _frame = frame;
-            _hour = clock.hour;
-            _minute = clock.min;
         }
-        Renderer.paint(dc, frame, _fonts);
+        _renderer.paint(dc, frame);
     }
 
     // The mode is read in onUpdate; these only ask for a repaint.
