@@ -85,6 +85,40 @@ module FaceModelTest {
         return frameWithBodyBattery(bodyBattery).centerField;
     }
 
+    function frameWithStress(stress as Number?) as Frame {
+        var snapshot = new Snapshot(8, 42);
+        snapshot.stress = stress;
+        return FaceModel.compute(snapshot, Themes.mint());
+    }
+
+    function leftAt(stress as Number?) as FieldFrame {
+        return frameWithStress(stress).leftField;
+    }
+
+    // The static layer's well centered on (x, y), asserted to be there.
+    function wellAt(x as Number, y as Number) as Circle {
+        var wells = mintLayer().fieldWells;
+        for (var i = 0; i < wells.size(); i++) {
+            if (wells[i].x == x && wells[i].y == y) {
+                return wells[i];
+            }
+        }
+        Test.assertMessage(false, "no well at " + x + ", " + y);
+        return wells[0];
+    }
+
+    // The static layer's gauge track centered on (x, y), asserted to be there.
+    function trackAt(x as Number, y as Number) as Arc {
+        var tracks = mintLayer().gaugeTracks;
+        for (var i = 0; i < tracks.size(); i++) {
+            if (tracks[i].x == x && tracks[i].y == y) {
+                return tracks[i];
+            }
+        }
+        Test.assertMessage(false, "no gauge track at " + x + ", " + y);
+        return tracks[0];
+    }
+
     // The gauge arc of a field, asserted to be there.
     function gaugeOf(field as FieldFrame) as Arc {
         Test.assertEqual(1, field.arcs.size());
@@ -721,12 +755,9 @@ module FaceModelTest {
     // The center field sits in a black well of r 60 + 6 around (208, 246).
     (:test)
     function centerFieldHasABlackWell(logger as Test.Logger) as Boolean {
-        var wells = mintLayer().fieldWells;
-        Test.assertEqual(1, wells.size());
-        Test.assertEqual(208, wells[0].x);
-        Test.assertEqual(246, wells[0].y);
-        Test.assertEqual(66, wells[0].radius);
-        Test.assertEqual(0x000000, wells[0].color);
+        var well = wellAt(208, 246);
+        Test.assertEqual(66, well.radius);
+        Test.assertEqual(0x000000, well.color);
         return true;
     }
 
@@ -734,14 +765,151 @@ module FaceModelTest {
     // under the gauge (same center, radius and pen).
     (:test)
     function centerGaugeTrackIsAFullCircleUnderTheGauge(logger as Test.Logger) as Boolean {
-        var tracks = mintLayer().gaugeTracks;
-        Test.assertEqual(1, tracks.size());
-        var track = tracks[0];
+        var track = trackAt(208, 246);
         var gauge = gaugeOf(centerAt(100));
         Test.assertEqual(360, track.sweep);
         Test.assertEqual(0x2E3330, track.color);
         Test.assertEqual(gauge.x, track.x);
         Test.assertEqual(gauge.y, track.y);
+        Test.assertEqual(gauge.radius, track.radius);
+        Test.assertEqual(gauge.pen, track.pen);
+        return true;
+    }
+
+    // Story 14, design frame 1: stress 27 sweeps 97 deg (27 x 360 / 100,
+    // rounded down) from 12 o'clock around the left field (88, 236), on the
+    // design's ring centerline r 35 (38 - 6 / 2), pen 6, in the accent.
+    (:test)
+    function stress27SweepsFrom12OClockInTheLeftField(logger as Test.Logger) as Boolean {
+        var gauge = gaugeOf(leftAt(27));
+        Test.assertEqual(97, gauge.sweep);
+        Test.assertEqual(90, gauge.start);
+        Test.assertEqual(353, gauge.end);
+        Test.assertEqual(88, gauge.x);
+        Test.assertEqual(236, gauge.y);
+        Test.assertEqual(35, gauge.radius);
+        Test.assertEqual(6, gauge.pen);
+        Test.assertEqual(0x8EE3B8, gauge.color);
+        return true;
+    }
+
+    // Story 15: up to 50 is no warning: accent gauge, white number, gray icon.
+    (:test)
+    function stress50IsNoWarning(logger as Test.Logger) as Boolean {
+        var field = leftAt(50);
+        Test.assertEqual(0x8EE3B8, gaugeOf(field).color);
+        Test.assertEqual(0xFFFFFF, field.numberColor);
+        Test.assertEqual(0x8C8C8C, field.iconColor);
+        return true;
+    }
+
+    // Story 15: 51-75 turns the gauge, icon and number orange.
+    (:test)
+    function stress51To75IsOrange(logger as Test.Logger) as Boolean {
+        var values = [51, 75] as Array<Number>;
+        for (var i = 0; i < values.size(); i++) {
+            var field = leftAt(values[i]);
+            Test.assertEqual(0xFF8A3D, gaugeOf(field).color);
+            Test.assertEqual(0xFF8A3D, field.numberColor);
+            Test.assertEqual(0xFF8A3D, field.iconColor);
+        }
+        return true;
+    }
+
+    // Story 15: above 75 turns the gauge, icon and number red.
+    (:test)
+    function stressAbove75IsRed(logger as Test.Logger) as Boolean {
+        var field = leftAt(76);
+        Test.assertEqual(0xFF4D4D, gaugeOf(field).color);
+        Test.assertEqual(0xFF4D4D, field.numberColor);
+        Test.assertEqual(0xFF4D4D, field.iconColor);
+        return true;
+    }
+
+    // The stress wave (U+E001 in the icon font) with its top-left at
+    // (88 - 12, 236 - 30).
+    (:test)
+    function stressIconIsTheWaveAboveTheNumber(logger as Test.Logger) as Boolean {
+        var field = leftAt(27);
+        Test.assertEqual((0xE001).toChar().toString(), field.icon);
+        Test.assertEqual(76, field.iconX);
+        Test.assertEqual(206, field.iconY);
+        return true;
+    }
+
+    // Story 16, design frame 11: missing stress is "--" in gray with the
+    // gauge off and a gray icon.
+    (:test)
+    function missingStressIsGrayDashesWithNoArc(logger as Test.Logger) as Boolean {
+        var field = leftAt(null);
+        Test.assertEqual("--", field.number);
+        Test.assertEqual(0x8C8C8C, field.numberColor);
+        Test.assertEqual(0x8C8C8C, field.iconColor);
+        Test.assertEqual(0, field.arcs.size());
+        return true;
+    }
+
+    // Story 17: up to 3 characters use 26 px ("--" included).
+    (:test)
+    function leftNumberUpTo3CharactersIs26(logger as Test.Logger) as Boolean {
+        Test.assertEqual(NUMBER_FONT_26, leftAt(7).numberFont);
+        Test.assertEqual(NUMBER_FONT_26, leftAt(100).numberFont);
+        Test.assertEqual(NUMBER_FONT_26, leftAt(null).numberFont);
+        return true;
+    }
+
+    // Story 17: 4 characters use 22 px. Stress stops at 100; the size rule
+    // belongs to the field, for the metrics it may show later (Q15).
+    (:test)
+    function leftNumberOf4CharactersIs22(logger as Test.Logger) as Boolean {
+        Test.assertEqual(NUMBER_FONT_22, leftAt(1000).numberFont);
+        return true;
+    }
+
+    // Story 17: 5 characters or more use 18 px.
+    (:test)
+    function leftNumberOf5CharactersIs18(logger as Test.Logger) as Boolean {
+        Test.assertEqual(NUMBER_FONT_18, leftAt(10000).numberFont);
+        Test.assertEqual(NUMBER_FONT_18, leftAt(100000).numberFont);
+        return true;
+    }
+
+    // Centered on the field's x 88 by the measured width in its font:
+    // "27" is 16 + 14 px at 26 px.
+    (:test)
+    function leftNumberIsCenteredOnX88(logger as Test.Logger) as Boolean {
+        var field = leftAt(27);
+        Test.assertEqual(30, field.numberWidth);
+        Test.assertEqual(73, field.numberX);
+        return true;
+    }
+
+    // The digits are vertically centered on y 250: at 26 px (cap height 19)
+    // the baseline sits on 250 + 9 = 259; at 22 px (cap 16) on 258.
+    (:test)
+    function leftNumberBaselineFollowsItsFont(logger as Test.Logger) as Boolean {
+        Test.assertEqual(259, leftAt(27).numberY + GlyphWidths.NUMBER_26_BASE);
+        Test.assertEqual(258, leftAt(1000).numberY + GlyphWidths.NUMBER_22_BASE);
+        return true;
+    }
+
+    // The left field sits in a black well of r 38 + 6 around (88, 236).
+    (:test)
+    function leftFieldHasABlackWell(logger as Test.Logger) as Boolean {
+        var well = wellAt(88, 236);
+        Test.assertEqual(44, well.radius);
+        Test.assertEqual(0x000000, well.color);
+        return true;
+    }
+
+    // The left gauge track: a full circle in the gauge-track color, exactly
+    // under the gauge.
+    (:test)
+    function leftGaugeTrackIsAFullCircleUnderTheGauge(logger as Test.Logger) as Boolean {
+        var track = trackAt(88, 236);
+        var gauge = gaugeOf(leftAt(100));
+        Test.assertEqual(360, track.sweep);
+        Test.assertEqual(0x2E3330, track.color);
         Test.assertEqual(gauge.radius, track.radius);
         Test.assertEqual(gauge.pen, track.pen);
         return true;

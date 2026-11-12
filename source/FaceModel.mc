@@ -25,6 +25,8 @@ class Snapshot {
     // Body Battery, 0-100 (the data reader drops non-Number and negative
     // values).
     public var bodyBattery as Number? = null;
+    // Stress, 0-100 (same rule).
+    public var stress as Number? = null;
 
     function initialize(hour as Number, minute as Number) {
         self.hour = hour;
@@ -64,7 +66,8 @@ class Frame {
     // Goal reached: the goal is above 0, the steps are known and at least
     // the goal. The bottom field switches style on it (ticket 10).
     public var stepGoalReached as Boolean = false;
-    // The center field's content.
+    // The left and center fields' content.
+    public var leftField as FieldFrame = new FieldFrame();
     public var centerField as FieldFrame = new FieldFrame();
 
     function initialize() {
@@ -74,7 +77,24 @@ class Frame {
 // The generated fonts a field's number can be drawn in. The renderer maps
 // each to its loaded font, FaceModel to its glyph-width table.
 enum NumberFont {
-    NUMBER_FONT_48
+    NUMBER_FONT_48,
+    NUMBER_FONT_26,
+    NUMBER_FONT_22,
+    NUMBER_FONT_18
+}
+
+// A generated font's glyph-width table, base and cap height (from
+// GlyphWidths), so FaceModel can measure and place text in it.
+class FontMetrics {
+    public var widths as Dictionary<Char, Number>;
+    public var base as Number;
+    public var capHeight as Number;
+
+    function initialize(widths as Dictionary<Char, Number>, base as Number, capHeight as Number) {
+        self.widths = widths;
+        self.base = base;
+        self.capHeight = capHeight;
+    }
 }
 
 // What a field draws over its static well and track: the lit arcs, the icon
@@ -242,6 +262,7 @@ module FaceModel {
         frame.stepGoalReached = goalReached(metricValue(Layout.BOTTOM_METRIC, snapshot),
             goalOf(Layout.BOTTOM_METRIC, snapshot));
 
+        frame.leftField = roundField(Layout.leftField(), Layout.LEFT_METRIC, snapshot, theme);
         frame.centerField = roundField(Layout.centerField(), Layout.CENTER_METRIC, snapshot,
             theme);
         frame.date = dateText(snapshot);
@@ -291,35 +312,75 @@ module FaceModel {
                     arcColor)] as Array<Arc>;
             }
         }
-        // The center field's number is always 48 px; the left and right
-        // fields pick a size by length (ticket 08).
-        content.numberFont = NUMBER_FONT_48;
-        content.numberWidth = textWidth(content.number, GlyphWidths.NUMBER_48);
+        content.numberFont = numberFontFor(field, content.number);
+        var metrics = numberMetrics(content.numberFont);
+        content.numberWidth = textWidth(content.number, metrics.widths);
         content.numberX = field.x - content.numberWidth / 2;
         // Digits only, so their cap height is centered on numberY.
-        content.numberY = field.numberY + GlyphWidths.NUMBER_48_CAP_HEIGHT / 2
-            - GlyphWidths.NUMBER_48_BASE;
+        content.numberY = field.numberY + metrics.capHeight / 2 - metrics.base;
         return content;
     }
 
-    // The code point of a metric's icon in the icon font.
+    // The center field's number is always 48 px. The left and right numbers
+    // shrink with more characters: <= 3 -> 26, 4 -> 22, >= 5 -> 18.
+    function numberFontFor(field as RoundField, text as String) as NumberFont {
+        if (field.largeNumber) {
+            return NUMBER_FONT_48;
+        }
+        var length = text.length();
+        if (length <= 3) {
+            return NUMBER_FONT_26;
+        }
+        return length == 4 ? NUMBER_FONT_22 : NUMBER_FONT_18;
+    }
+
+    // A number font's width table, base and cap height. The renderer maps
+    // the same fonts to their resources (Fonts.number).
+    function numberMetrics(font as NumberFont) as FontMetrics {
+        switch (font) {
+            case NUMBER_FONT_26:
+                return new FontMetrics(GlyphWidths.NUMBER_26, GlyphWidths.NUMBER_26_BASE,
+                    GlyphWidths.NUMBER_26_CAP_HEIGHT);
+            case NUMBER_FONT_22:
+                return new FontMetrics(GlyphWidths.NUMBER_22, GlyphWidths.NUMBER_22_BASE,
+                    GlyphWidths.NUMBER_22_CAP_HEIGHT);
+            case NUMBER_FONT_18:
+                return new FontMetrics(GlyphWidths.NUMBER_18, GlyphWidths.NUMBER_18_BASE,
+                    GlyphWidths.NUMBER_18_CAP_HEIGHT);
+        }
+        return new FontMetrics(GlyphWidths.NUMBER_48, GlyphWidths.NUMBER_48_BASE,
+            GlyphWidths.NUMBER_48_CAP_HEIGHT);
+    }
+
     // The code point of a metric's icon in the icon font, null if the icon
-    // font has none for it yet (stress, heart and foot come with tickets
-    // 08-10).
+    // font has none for it yet (heart and foot come with tickets 09-10).
     function iconOf(metric as Metric) as Number? {
-        return metric == METRIC_BODY_BATTERY ? GlyphWidths.ICON_BOLT : null;
+        switch (metric) {
+            case METRIC_BODY_BATTERY:
+                return GlyphWidths.ICON_BOLT;
+            case METRIC_STRESS:
+                return GlyphWidths.ICON_STRESS;
+        }
+        return null;
     }
 
     // The warning color for a metric's value, null when there is no warning.
     function warningColor(metric as Metric, value as Number, theme as Theme) as Number? {
-        if (metric == METRIC_BODY_BATTERY) {
-            // Red below 15, orange at 15-24.
-            if (value < 15) {
-                return theme.warningLevel2;
-            }
-            return value < 25 ? theme.warningLevel1 : null;
+        switch (metric) {
+            case METRIC_BODY_BATTERY:
+                // Red below 15, orange at 15-24.
+                if (value < 15) {
+                    return theme.warningLevel2;
+                }
+                return value < 25 ? theme.warningLevel1 : null;
+            case METRIC_STRESS:
+                // Red above 75, orange at 51-75.
+                if (value > 75) {
+                    return theme.warningLevel2;
+                }
+                return value > 50 ? theme.warningLevel1 : null;
         }
-        return null;
+        return null; // heart rate has no warning color; steps have a goal instead
     }
 
     // clamp(value, 0, 100) x 360 / 100, rounded down.
@@ -332,10 +393,12 @@ module FaceModel {
         switch (metric) {
             case METRIC_BODY_BATTERY:
                 return snapshot.bodyBattery;
+            case METRIC_STRESS:
+                return snapshot.stress;
             case METRIC_STEPS:
                 return snapshot.steps;
         }
-        return null; // stress and heart rate come with tickets 08 and 09
+        return null; // heart rate comes with ticket 09
     }
 
     // The goal of a goal metric (one whose goal is read from the watch),
@@ -368,15 +431,19 @@ module FaceModel {
         }
         layer.batteryTrack = track;
 
-        var center = Layout.centerField();
-        layer.fieldWells = [
-            new Circle(center.x, center.y, center.radius + Layout.WELL, theme.ink)
-        ] as Array<Circle>;
         // Every metric in a round field so far is a gauge, so every round
         // field has a full-circle track.
-        layer.gaugeTracks = [
-            arc(center.x, center.y, center.gaugeRadius, center.gaugePen, 0, 360, theme.gaugeTrack)
-        ] as Array<Arc>;
+        var fields = [Layout.leftField(), Layout.centerField()] as Array<RoundField>;
+        var wells = new Array<Circle>[fields.size()];
+        var tracks = new Array<Arc>[fields.size()];
+        for (var i = 0; i < fields.size(); i++) {
+            var field = fields[i];
+            wells[i] = new Circle(field.x, field.y, field.radius + Layout.WELL, theme.ink);
+            tracks[i] = arc(field.x, field.y, field.gaugeRadius, field.gaugePen, 0, 360,
+                theme.gaugeTrack);
+        }
+        layer.fieldWells = wells;
+        layer.gaugeTracks = tracks;
         return layer;
     }
 

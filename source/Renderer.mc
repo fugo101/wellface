@@ -48,6 +48,7 @@ class Renderer {
             drawArc(dc, lit[i]);
         }
 
+        paintField(dc, frame.leftField);
         paintField(dc, frame.centerField);
 
         // FaceModel places the time by its measured width and the font's base.

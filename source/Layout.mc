@@ -16,9 +16,13 @@ class RoundField {
     public var iconY as Number;
     // The number is centered on x, its digits vertically centered on this y.
     public var numberY as Number;
+    // The center field's large number (always 48 px), rather than one that
+    // shrinks with more characters (FaceModel.numberFontFor).
+    public var largeNumber as Boolean;
 
     function initialize(x as Number, y as Number, radius as Number, gaugeRadius as Number,
-            gaugePen as Number, iconX as Number, iconY as Number, numberY as Number) {
+            gaugePen as Number, iconX as Number, iconY as Number, numberY as Number,
+            largeNumber as Boolean) {
         self.x = x;
         self.y = y;
         self.radius = radius;
@@ -27,6 +31,7 @@ class RoundField {
         self.iconX = iconX;
         self.iconY = iconY;
         self.numberY = numberY;
+        self.largeNumber = largeNumber;
     }
 }
 
@@ -46,6 +51,22 @@ module Layout {
     const CENTER_X = 208;
     const CENTER_Y = 208;
 
+    // The left field. Its gauge sits on the design's ring centerline,
+    // r 38 - 6 / 2; the icon's top-left is (x - 12, y - 30).
+    const LEFT_FIELD_X = 88;
+    const LEFT_FIELD_Y = 236;
+    const LEFT_FIELD_RADIUS = 38;
+    const LEFT_GAUGE_RADIUS = 35;
+    const LEFT_GAUGE_PEN = 6;
+    const LEFT_ICON_X = 76;
+    const LEFT_ICON_Y = 206;
+    const LEFT_NUMBER_Y = 250;
+
+    function leftField() as RoundField {
+        return new RoundField(LEFT_FIELD_X, LEFT_FIELD_Y, LEFT_FIELD_RADIUS, LEFT_GAUGE_RADIUS,
+            LEFT_GAUGE_PEN, LEFT_ICON_X, LEFT_ICON_Y, LEFT_NUMBER_Y, false);
+    }
+
     // The center field.
     const CENTER_FIELD_X = 208;
     const CENTER_FIELD_Y = 246;
@@ -62,7 +83,7 @@ module Layout {
     function centerField() as RoundField {
         return new RoundField(CENTER_FIELD_X, CENTER_FIELD_Y, CENTER_FIELD_RADIUS,
             CENTER_GAUGE_RADIUS, CENTER_GAUGE_PEN, CENTER_ICON_X, CENTER_ICON_Y,
-            CENTER_NUMBER_Y);
+            CENTER_NUMBER_Y, true);
     }
 
     // The bezel ring, on the screen's edge.

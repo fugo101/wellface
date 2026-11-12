@@ -225,6 +225,11 @@ FONTS = [
              LETTERS + DIGITS + " ", tracking=2, pad=("THU 12", 96)),
     # The center field's number.
     FontSpec("Number48", "number48", "NUMBER_48", "manrope-800", 48, DIGITS + "-"),
+    # The left and right numbers by character count (<= 3, 4, >= 5); 22 and
+    # 18 also draw the step number, with its thousands dot.
+    FontSpec("Number26", "number26", "NUMBER_26", "manrope-800", 26, DIGITS + "-"),
+    FontSpec("Number22", "number22", "NUMBER_22", "manrope-800", 22, DIGITS + ".-"),
+    FontSpec("Number18", "number18", "NUMBER_18", "manrope-800", 18, DIGITS + ".-"),
 ]
 
 
@@ -235,6 +240,9 @@ class Icon:
     name: str        # GlyphWidths.ICON_<name>, the code point
     code_point: int  # in the Private Use Area
     path: str        # SVG path on the design's 24-unit grid (IC in the design's source)
+    # None: filled (nonzero). Otherwise a stroke this wide on the 24-unit
+    # grid, with round joins and caps and no fill.
+    stroke: float | None = None
 
 
 # The icon font: every icon is one glyph, ICON_SIZE px square, drawn from its
@@ -244,6 +252,7 @@ ICON_FONT_FILE = "icons24"
 ICON_SIZE = 24
 ICONS = [
     Icon("BOLT", 0xE000, "M13.5 2 L5 13.5 H11 L10 22 L19 10 H13 Z"),
+    Icon("STRESS", 0xE001, "M2 12 H6 L9 5 L13.5 19 L16.5 9 L18.5 12 H22", stroke=2.5),
 ]
 
 
@@ -330,40 +339,64 @@ def render_font(spec: FontSpec, src: SourceFont) -> tuple[list[Glyph], Metrics]:
     return glyphs, metrics
 
 
+@dataclass
+class Contour:
+    points: list[tuple[float, float]]
+    closed: bool = False
+
+
 class PolygonPen(BasePen):
-    """Collects every contour as a polygon, curves flattened into short lines."""
+    """Collects every contour as a polyline, curves flattened into short lines."""
 
     CURVE_STEPS = 16
 
     def __init__(self) -> None:
         super().__init__(None)
-        self.polygons: list[list[tuple[float, float]]] = []
+        self.contours: list[Contour] = []
 
     def _moveTo(self, pt):
-        self.polygons.append([pt])
+        self.contours.append(Contour([pt]))
 
     def _lineTo(self, pt):
-        self.polygons[-1].append(pt)
+        self.contours[-1].points.append(pt)
 
     def _curveToOne(self, pt1, pt2, pt3):
-        (x0, y0), n = self.polygons[-1][-1], self.CURVE_STEPS
+        points, n = self.contours[-1].points, self.CURVE_STEPS
+        x0, y0 = points[-1]
         for i in range(1, n + 1):
             t = i / n
             a, b, c, d = (1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t * t, t ** 3
-            self.polygons[-1].append((a * x0 + b * pt1[0] + c * pt2[0] + d * pt3[0],
-                                      a * y0 + b * pt1[1] + c * pt2[1] + d * pt3[1]))
+            points.append((a * x0 + b * pt1[0] + c * pt2[0] + d * pt3[0],
+                           a * y0 + b * pt1[1] + c * pt2[1] + d * pt3[1]))
 
     def _closePath(self):
-        pass
+        self.contours[-1].closed = True
 
     def _endPath(self):
         pass
 
 
+def stroke_polyline(draw: ImageDraw.ImageDraw, points: list[tuple[float, float]],
+                    width: float) -> None:
+    """A stroke with round joins and caps: a disc on every vertex and a
+    rectangle along every segment, which together are exactly the stroke."""
+    half = width / 2
+    for x, y in points:
+        draw.ellipse((x - half, y - half, x + half, y + half), fill=255)
+    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+        length = ((x1 - x0) ** 2 + (y1 - y0) ** 2) ** 0.5
+        if length == 0:
+            continue
+        nx, ny = -(y1 - y0) / length * half, (x1 - x0) / length * half
+        draw.polygon([(x0 + nx, y0 + ny), (x1 + nx, y1 + ny),
+                      (x1 - nx, y1 - ny), (x0 - nx, y0 - ny)], fill=255)
+
+
 def render_icons() -> tuple[list[Glyph], Metrics]:
-    """Each icon filled at ICON_SIZE px, supersampled like the text fonts.
-    Contours are filled one by one and merged, which equals the nonzero rule
-    as long as no contour cuts a hole into another (true for every icon)."""
+    """Each icon at ICON_SIZE px, supersampled like the text fonts, either
+    filled or stroked. Filled contours are drawn one by one and merged, which
+    equals the nonzero rule as long as no contour cuts a hole into another
+    (true for every icon)."""
     ss = SUPERSAMPLE
     glyphs = []
     for icon in ICONS:
@@ -374,8 +407,13 @@ def render_icons() -> tuple[list[Glyph], Metrics]:
         side = ICON_SIZE + 2 * MARGIN
         big = Image.new("L", (side * ss, side * ss), 0)
         draw = ImageDraw.Draw(big)
-        for polygon in pen.polygons:
-            draw.polygon([((MARGIN + x) * ss, (MARGIN + y) * ss) for x, y in polygon], fill=255)
+        for contour in pen.contours:
+            points = [((MARGIN + x) * ss, (MARGIN + y) * ss) for x, y in contour.points]
+            if icon.stroke is None:
+                draw.polygon(points, fill=255)
+            else:
+                stroke_polyline(draw, points + points[:1] if contour.closed else points,
+                                icon.stroke * ss)
         image = big.reduce(ss)
         bbox = image.getbbox()
         if bbox is None:

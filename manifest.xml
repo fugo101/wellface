@@ -4,7 +4,7 @@
         <iq:products>
             <iq:product id="fr265"/>
         </iq:products>
-        <!-- Only what is used. Complications: reading Body Battery. -->
+        <!-- Only what is used. Complications: reading Body Battery and stress. -->
         <iq:permissions>
             <iq:uses-permission id="ComplicationSubscriber"/>
         </iq:permissions>

@@ -8,6 +8,7 @@ import Toybox.Lang;
 // 24 px square, at these Private Use Area code points.
 module GlyphWidths {
     const ICON_BOLT = 0xE000;
+    const ICON_STRESS = 0xE001;
     // TimeFilled: BigShouldersDisplay-ExtraBold 57 px.
     const TIME_BASE = 56;
     const TIME_CAP_HEIGHT = 46;
@@ -26,4 +27,16 @@ module GlyphWidths {
     const NUMBER_48_BASE = 51;
     const NUMBER_48_CAP_HEIGHT = 35;
     const NUMBER_48 = { '0' => 32, '1' => 22, '2' => 29, '3' => 28, '4' => 30, '5' => 28, '6' => 30, '7' => 26, '8' => 30, '9' => 30, '-' => 20 } as Dictionary<Char, Number>;
+    // Number26: Manrope-ExtraBold 26 px.
+    const NUMBER_26_BASE = 28;
+    const NUMBER_26_CAP_HEIGHT = 19;
+    const NUMBER_26 = { '0' => 18, '1' => 12, '2' => 16, '3' => 15, '4' => 16, '5' => 15, '6' => 16, '7' => 14, '8' => 16, '9' => 16, '-' => 11 } as Dictionary<Char, Number>;
+    // Number22: Manrope-ExtraBold 22 px.
+    const NUMBER_22_BASE = 23;
+    const NUMBER_22_CAP_HEIGHT = 16;
+    const NUMBER_22 = { '0' => 15, '1' => 10, '2' => 13, '3' => 13, '4' => 14, '5' => 13, '6' => 14, '7' => 12, '8' => 14, '9' => 14, '.' => 7, '-' => 9 } as Dictionary<Char, Number>;
+    // Number18: Manrope-ExtraBold 18 px.
+    const NUMBER_18_BASE = 19;
+    const NUMBER_18_CAP_HEIGHT = 13;
+    const NUMBER_18 = { '0' => 12, '1' => 8, '2' => 11, '3' => 11, '4' => 11, '5' => 11, '6' => 11, '7' => 10, '8' => 11, '9' => 11, '.' => 6, '-' => 8 } as Dictionary<Char, Number>;
 }

@@ -15,6 +15,8 @@ class DataReader {
     private var _wasHighPower as Boolean = false;
     private var _bodyBatteryId as Complications.Id =
         new Complications.Id(Complications.COMPLICATION_TYPE_BODY_BATTERY);
+    private var _stressId as Complications.Id =
+        new Complications.Id(Complications.COMPLICATION_TYPE_STRESS);
 
     // Called on every update that is not OFF. Reads the clock and date
     // every time, from one moment so they always agree (no 23:59 with the
@@ -73,6 +75,7 @@ class DataReader {
         _snapshot.stepGoal = activity.stepGoal;
 
         _snapshot.bodyBattery = readComplication(_bodyBatteryId);
+        _snapshot.stress = readComplication(_stressId);
     }
 
     // A complication's value, polled (ticket 02 showed polling refreshes on
