@@ -4,9 +4,11 @@
         <iq:products>
             <iq:product id="fr265"/>
         </iq:products>
-        <!-- Only what is used. Complications: reading Body Battery and stress. -->
+        <!-- Only what is used. Complications: Body Battery, stress and heart
+             rate. UserProfile: the heart-rate zones. -->
         <iq:permissions>
             <iq:uses-permission id="ComplicationSubscriber"/>
+            <iq:uses-permission id="UserProfile"/>
         </iq:permissions>
         <iq:languages>
             <iq:language>eng</iq:language>

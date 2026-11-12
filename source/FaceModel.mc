@@ -27,6 +27,12 @@ class Snapshot {
     public var bodyBattery as Number? = null;
     // Stress, 0-100 (same rule).
     public var stress as Number? = null;
+    // Heart rate in bpm (same rule), re-read every second while the screen
+    // is awake (Q36).
+    public var heartRate as Number? = null;
+    // The lower bounds of heart-rate zones 1-5 in bpm (the first five
+    // HR_ZONE_SPORT_GENERIC thresholds), null when unreadable.
+    public var heartRateZones as Array<Number>? = null;
 
     function initialize(hour as Number, minute as Number) {
         self.hour = hour;
@@ -66,9 +72,10 @@ class Frame {
     // Goal reached: the goal is above 0, the steps are known and at least
     // the goal. The bottom field switches style on it (ticket 10).
     public var stepGoalReached as Boolean = false;
-    // The left and center fields' content.
+    // The round fields' content.
     public var leftField as FieldFrame = new FieldFrame();
     public var centerField as FieldFrame = new FieldFrame();
+    public var rightField as FieldFrame = new FieldFrame();
 
     function initialize() {
     }
@@ -101,7 +108,7 @@ class FontMetrics {
 // and the number. Which arcs, colors and strings depends on the metric shown.
 class FieldFrame {
     // Drawn over the track. A gauge has one arc, or none when the value is
-    // missing or 0.
+    // missing or 0; zone segments have one arc per zone reached.
     public var arcs as Array<Arc> = [] as Array<Arc>;
     // The metric's icon (one glyph in the icon font), its top-left corner
     // and its color.
@@ -136,7 +143,9 @@ class StaticLayer {
     public var batteryTrack as Array<Arc> = [] as Array<Arc>;
     // The black wells of the round fields, and the tracks of their gauges.
     public var fieldWells as Array<Circle> = [] as Array<Circle>;
-    public var gaugeTracks as Array<Arc> = [] as Array<Arc>;
+    // The track under each field's lit arcs: a full circle under a gauge,
+    // the five unlit segments under zone segments.
+    public var fieldTracks as Array<Arc> = [] as Array<Arc>;
 
     function initialize() {
     }
@@ -265,6 +274,7 @@ module FaceModel {
         frame.leftField = roundField(Layout.leftField(), Layout.LEFT_METRIC, snapshot, theme);
         frame.centerField = roundField(Layout.centerField(), Layout.CENTER_METRIC, snapshot,
             theme);
+        frame.rightField = roundField(Layout.rightField(), Layout.RIGHT_METRIC, snapshot, theme);
         frame.date = dateText(snapshot);
         frame.dateWidth = textWidth(frame.date, GlyphWidths.DATE);
         frame.dateX = Layout.CENTER_X - frame.dateWidth / 2;
@@ -277,17 +287,13 @@ module FaceModel {
         return frame;
     }
 
-    // A round field showing `metric`. The metric decides the style; every
-    // MVP metric in a round field so far is a gauge.
+    // A round field showing `metric`: its icon and number, plus the metric's
+    // ring, zone segments for heart rate and a gauge for every other
+    // round-field metric. In warning, the icon, number and gauge take the
+    // warning color.
     function roundField(field as RoundField, metric as Metric, snapshot as Snapshot,
             theme as Theme) as FieldFrame {
-        return gaugeField(field, metric, metricValue(metric, snapshot), theme);
-    }
-
-    // A gauge: an arc from 12 o'clock, clockwise, over the field's track. In
-    // warning, the arc and number take the warning color.
-    function gaugeField(field as RoundField, metric as Metric, value as Number?,
-            theme as Theme) as FieldFrame {
+        var value = metricValue(metric, snapshot);
         var content = new FieldFrame();
         var icon = iconOf(metric);
         content.icon = icon != null ? icon.toChar().toString() : "";
@@ -299,18 +305,14 @@ module FaceModel {
         if (value != null) {
             content.number = value.toString();
             content.numberColor = theme.text;
-            var arcColor = theme.accent;
             var warning = warningColor(metric, value, theme);
             if (warning != null) {
                 content.iconColor = warning;
                 content.numberColor = warning;
-                arcColor = warning;
             }
-            var sweep = gaugeSweep(value);
-            if (sweep > 0) {
-                content.arcs = [arc(field.x, field.y, field.gaugeRadius, field.gaugePen, 0, sweep,
-                    arcColor)] as Array<Arc>;
-            }
+            content.arcs = hasZoneSegments(metric)
+                ? litZoneSegments(field, value, snapshot.heartRateZones, theme.zones)
+                : gauge(field, value, warning != null ? warning : theme.accent);
         }
         content.numberFont = numberFontFor(field, content.number);
         var metrics = numberMetrics(content.numberFont);
@@ -319,6 +321,42 @@ module FaceModel {
         // Digits only, so their cap height is centered on numberY.
         content.numberY = field.numberY + metrics.capHeight / 2 - metrics.base;
         return content;
+    }
+
+    // A gauge: one arc from 12 o'clock, clockwise; none at 0.
+    function gauge(field as RoundField, value as Number, color as Number) as Array<Arc> {
+        var sweep = gaugeSweep(value);
+        if (sweep == 0) {
+            return [] as Array<Arc>;
+        }
+        return [arc(field.x, field.y, field.ringRadius, field.ringPen, 0, sweep, color)]
+            as Array<Arc>;
+    }
+
+    // One lit segment per zone reached: the number of zone lower bounds at
+    // or below the heart rate, each in its own zone's color (Q37). None
+    // without zones.
+    function litZoneSegments(field as RoundField, heartRate as Number,
+            zones as Array<Number>?, colors as Array<Number>) as Array<Arc> {
+        var lit = 0;
+        if (zones != null && zones.size() >= Layout.ZONE_SEGMENTS) {
+            for (var i = 0; i < Layout.ZONE_SEGMENTS; i++) {
+                if (zones[i] <= heartRate) {
+                    lit++;
+                }
+            }
+        }
+        var segments = new Array<Arc>[lit];
+        for (var i = 0; i < lit; i++) {
+            segments[i] = zoneSegment(field, i, colors[i]);
+        }
+        return segments;
+    }
+
+    // Zone segment i (zone i + 1) of a field, in the given color.
+    function zoneSegment(field as RoundField, i as Number, color as Number) as Arc {
+        return arc(field.x, field.y, field.ringRadius, field.ringPen,
+            i * Layout.ZONE_STEP + Layout.ZONE_GAP, Layout.ZONE_SWEEP, color);
     }
 
     // The center field's number is always 48 px. The left and right numbers
@@ -353,13 +391,15 @@ module FaceModel {
     }
 
     // The code point of a metric's icon in the icon font, null if the icon
-    // font has none for it yet (heart and foot come with tickets 09-10).
+    // font has none for it yet (the foot comes with ticket 10).
     function iconOf(metric as Metric) as Number? {
         switch (metric) {
             case METRIC_BODY_BATTERY:
                 return GlyphWidths.ICON_BOLT;
             case METRIC_STRESS:
                 return GlyphWidths.ICON_STRESS;
+            case METRIC_HEART_RATE:
+                return GlyphWidths.ICON_HEART;
         }
         return null;
     }
@@ -395,10 +435,12 @@ module FaceModel {
                 return snapshot.bodyBattery;
             case METRIC_STRESS:
                 return snapshot.stress;
+            case METRIC_HEART_RATE:
+                return snapshot.heartRate;
             case METRIC_STEPS:
                 return snapshot.steps;
         }
-        return null; // heart rate comes with ticket 09
+        return null;
     }
 
     // The goal of a goal metric (one whose goal is read from the watch),
@@ -431,20 +473,32 @@ module FaceModel {
         }
         layer.batteryTrack = track;
 
-        // Every metric in a round field so far is a gauge, so every round
-        // field has a full-circle track.
-        var fields = [Layout.leftField(), Layout.centerField()] as Array<RoundField>;
-        var wells = new Array<Circle>[fields.size()];
-        var tracks = new Array<Arc>[fields.size()];
-        for (var i = 0; i < fields.size(); i++) {
-            var field = fields[i];
-            wells[i] = new Circle(field.x, field.y, field.radius + Layout.WELL, theme.ink);
-            tracks[i] = arc(field.x, field.y, field.gaugeRadius, field.gaugePen, 0, 360,
-                theme.gaugeTrack);
-        }
-        layer.fieldWells = wells;
-        layer.gaugeTracks = tracks;
+        layer.fieldWells = [] as Array<Circle>;
+        layer.fieldTracks = [] as Array<Arc>;
+        addRoundField(layer, Layout.leftField(), Layout.LEFT_METRIC, theme);
+        addRoundField(layer, Layout.centerField(), Layout.CENTER_METRIC, theme);
+        addRoundField(layer, Layout.rightField(), Layout.RIGHT_METRIC, theme);
         return layer;
+    }
+
+    // A round field's well, and the track its metric's ring is drawn over.
+    function addRoundField(layer as StaticLayer, field as RoundField, metric as Metric,
+            theme as Theme) as Void {
+        layer.fieldWells.add(new Circle(field.x, field.y, field.radius + Layout.WELL, theme.ink));
+        if (hasZoneSegments(metric)) {
+            for (var i = 0; i < Layout.ZONE_SEGMENTS; i++) {
+                layer.fieldTracks.add(zoneSegment(field, i, theme.gaugeTrack));
+            }
+        } else {
+            layer.fieldTracks.add(arc(field.x, field.y, field.ringRadius, field.ringPen, 0, 360,
+                theme.gaugeTrack));
+        }
+    }
+
+    // Heart rate is drawn as zone segments (Q11); every other round-field
+    // metric as a gauge.
+    function hasZoneSegments(metric as Metric) as Boolean {
+        return metric == METRIC_HEART_RATE;
     }
 
     // lit = (battery + 9) / 10, clamped to 0-10; missing lights none.

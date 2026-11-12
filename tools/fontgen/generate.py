@@ -253,6 +253,10 @@ ICON_SIZE = 24
 ICONS = [
     Icon("BOLT", 0xE000, "M13.5 2 L5 13.5 H11 L10 22 L19 10 H13 Z"),
     Icon("STRESS", 0xE001, "M2 12 H6 L9 5 L13.5 19 L16.5 9 L18.5 12 H22", stroke=2.5),
+    # HEART in the design's source (drawn by its own 'heart' op, not IC).
+    Icon("HEART", 0xE002, "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3"
+         "c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5"
+         "c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"),
 ]
 
 

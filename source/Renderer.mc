@@ -50,6 +50,7 @@ class Renderer {
 
         paintField(dc, frame.leftField);
         paintField(dc, frame.centerField);
+        paintField(dc, frame.rightField);
 
         // FaceModel places the time by its measured width and the font's base.
         dc.setColor(frame.timeColor, Graphics.COLOR_TRANSPARENT);
@@ -139,8 +140,8 @@ class Renderer {
         for (var i = 0; i < layer.fieldWells.size(); i++) {
             fillCircle(dc, layer.fieldWells[i]);
         }
-        for (var i = 0; i < layer.gaugeTracks.size(); i++) {
-            drawArc(dc, layer.gaugeTracks[i]);
+        for (var i = 0; i < layer.fieldTracks.size(); i++) {
+            drawArc(dc, layer.fieldTracks[i]);
         }
     }
 

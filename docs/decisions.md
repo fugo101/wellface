@@ -54,6 +54,7 @@ Vocabulary follows `GLOSSARY.md`. These rows extend Q1–Q17; where one changes 
 | Q34 | Bottom field last resort | If the step text still does not fit after shrinking the number and hiding the icon (only possible from 100.000 steps), `/ goal` is dropped |
 | Q35 | AMOLED rule | Acceptance criterion for AOD: **less than 10% of screen luminance**, measured with the simulator heat map (the SDK rule since the Venu 2). The hard "no pixel lit > 3 minutes" requirement is dropped. The ±4 px burn-in shift (Q28) stays, as Garmin recommends, to limit physical burn-in |
 | Q36 | Heart-rate refresh | While the screen is awake (high-power mode), heart rate alone is re-read every second and the right field updates when it changes. All other data stays once a minute and on wake. AOD shows no heart rate, so nothing is read there |
+| Q37 | Heart-rate zone colors (agreed 2026-11-13, ticket 09) | Each lit zone segment takes its own zone's color, in Garmin's order: zone 1 gray `#B4B4B4`, 2 blue `#4DA6FF`, 3 green `#4CD964`, 4 orange `#FF8A3D`, 5 red `#FF4D4D`. Garmin's manuals name the colors but publish no values; these were chosen for the dark background, and zones 4 and 5 reuse the warning colors on purpose. The colors are a theme role. Replaces the accent for lit zone segments (Q3 otherwise unchanged) |
 
 ## Final design: main elements
 Coordinates are on the 416×416 canvas, center (208,208). Full details in `spec` inside the design file.
@@ -64,7 +65,7 @@ Coordinates are on the 416×416 canvas, center (208,208). Full details in `spec`
 - **Date:** pill (160,140,96,28) radius 14, overlapping the bottom edge of the time band. Manrope ExtraBold 17, letter spacing 1.5, white text. Format `THU 12`.
 - **Left field (stress):** center (88,236) R 38. Ring stroke 6. Icon 24 px. Manrope number 26, size shrinks with character count (≤3 → 26, 4 → 22, ≥5 → 18).
 - **Body Battery:** center (208,246) R 60. Ring stroke 9. Lightning-bolt icon. Manrope number 48.
-- **Heart rate:** center (328,236) R 38. 5 arc segments (i×72°+4° → (i+1)×72°−4°). Lit segments = number of HR-zone thresholds ≤ heart rate (zones from `UserProfile.getHeartRateZones`). No data: `--` in gray.
+- **Heart rate:** center (328,236) R 38. 5 arc segments (i×72°+4° → (i+1)×72°−4°). Lit segments = number of HR-zone thresholds ≤ heart rate (zones from `UserProfile.getHeartRateZones`), each in its zone's color (Q37). No data: `--` in gray.
 - **Steps:** pill (126,320,164,40) radius 20. Manrope number 22 right-aligned at x 228, `/ goal` Bold 15. Thousands separator is a dot (e.g. `1.147`). When the goal is reached: pill background switches to the accent color, text black.
 - **Color rule:** the accent color is used only for the time band and progress. Icons are gray `#8C8C8C` and only change color on a warning.
 - **Missing data:** stress or HR shows `--` in gray, ring off.

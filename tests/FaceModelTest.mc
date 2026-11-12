@@ -95,6 +95,27 @@ module FaceModelTest {
         return frameWithStress(stress).leftField;
     }
 
+    // The wearer's HR_ZONE_SPORT_GENERIC zones as the FR265 returned them
+    // (ticket 02): indices 0-4 are the lower bounds of zones 1-5, 5 is max.
+    function zones() as Array<Number> {
+        return [96, 115, 134, 154, 173, 192] as Array<Number>;
+    }
+
+    function frameWithHeartRate(heartRate as Number?, heartRateZones as Array<Number>?) as Frame {
+        var snapshot = new Snapshot(8, 42);
+        snapshot.heartRate = heartRate;
+        snapshot.heartRateZones = heartRateZones;
+        return FaceModel.compute(snapshot, Themes.mint());
+    }
+
+    function rightAt(heartRate as Number?) as FieldFrame {
+        return frameWithHeartRate(heartRate, zones()).rightField;
+    }
+
+    function litZonesAt(heartRate as Number?) as Number {
+        return rightAt(heartRate).arcs.size();
+    }
+
     // The static layer's well centered on (x, y), asserted to be there.
     function wellAt(x as Number, y as Number) as Circle {
         var wells = mintLayer().fieldWells;
@@ -107,16 +128,23 @@ module FaceModelTest {
         return wells[0];
     }
 
-    // The static layer's gauge track centered on (x, y), asserted to be there.
-    function trackAt(x as Number, y as Number) as Arc {
-        var tracks = mintLayer().gaugeTracks;
+    // The static layer's track arcs centered on (x, y), in order.
+    function tracksAt(x as Number, y as Number) as Array<Arc> {
+        var tracks = mintLayer().fieldTracks;
+        var found = [] as Array<Arc>;
         for (var i = 0; i < tracks.size(); i++) {
             if (tracks[i].x == x && tracks[i].y == y) {
-                return tracks[i];
+                found.add(tracks[i]);
             }
         }
-        Test.assertMessage(false, "no gauge track at " + x + ", " + y);
-        return tracks[0];
+        return found;
+    }
+
+    // The single track arc centered on (x, y), asserted to be there.
+    function trackAt(x as Number, y as Number) as Arc {
+        var found = tracksAt(x, y);
+        Test.assertEqual(1, found.size());
+        return found[0];
     }
 
     // The gauge arc of a field, asserted to be there.
@@ -912,6 +940,161 @@ module FaceModelTest {
         Test.assertEqual(0x2E3330, track.color);
         Test.assertEqual(gauge.radius, track.radius);
         Test.assertEqual(gauge.pen, track.pen);
+        return true;
+    }
+
+    // Story 18: zone 1 lights segment 0, which spans design 4 to 68 deg
+    // (ciq 86 clockwise to 22) around the right field (328, 236), r 35,
+    // pen 6, in the accent.
+    (:test)
+    function zone1LightsSegment0FromDesign4To68(logger as Test.Logger) as Boolean {
+        var field = rightAt(100);
+        Test.assertEqual(1, field.arcs.size());
+        var segment = field.arcs[0];
+        Test.assertEqual(86, segment.start);
+        Test.assertEqual(22, segment.end);
+        Test.assertEqual(64, segment.sweep);
+        Test.assertEqual(328, segment.x);
+        Test.assertEqual(236, segment.y);
+        Test.assertEqual(35, segment.radius);
+        Test.assertEqual(6, segment.pen);
+        return true;
+    }
+
+    // Story 18: below zone 1's lower bound (96) nothing is lit.
+    (:test)
+    function heartRateBelowZone1LightsNoSegment(logger as Test.Logger) as Boolean {
+        Test.assertEqual(0, litZonesAt(95));
+        return true;
+    }
+
+    // A heart rate exactly on a lower bound counts as that zone: 134 is
+    // zone 3's lower bound, so three segments light.
+    (:test)
+    function heartRateOnALowerBoundCountsAsThatZone(logger as Test.Logger) as Boolean {
+        Test.assertEqual(3, litZonesAt(134));
+        Test.assertEqual(2, litZonesAt(133));
+        return true;
+    }
+
+    // From zone 5's lower bound up (and above max HR) all five light.
+    (:test)
+    function heartRateAboveZone5LightsAllFiveSegments(logger as Test.Logger) as Boolean {
+        Test.assertEqual(5, litZonesAt(173));
+        Test.assertEqual(5, litZonesAt(200));
+        return true;
+    }
+
+    // Segment 4 (zone 5) spans design 292 to 356 deg: ciq 158 clockwise to 94.
+    (:test)
+    function zone5SegmentSpansDesign292To356(logger as Test.Logger) as Boolean {
+        var segment = rightAt(200).arcs[4];
+        Test.assertEqual(158, segment.start);
+        Test.assertEqual(94, segment.end);
+        return true;
+    }
+
+    // Each lit segment takes its own zone's color, in Garmin's order (Q37):
+    // zone 1 gray, 2 blue, 3 green, 4 orange, 5 red.
+    (:test)
+    function eachLitSegmentTakesItsZoneColor(logger as Test.Logger) as Boolean {
+        var segments = rightAt(200).arcs;
+        var expected = [0xB4B4B4, 0x4DA6FF, 0x4CD964, 0xFF8A3D, 0xFF4D4D] as Array<Number>;
+        for (var i = 0; i < expected.size(); i++) {
+            Test.assertEqual(expected[i], segments[i].color);
+        }
+        // Zone 3 lights zones 1-3 in their own colors, not the current zone's.
+        Test.assertEqual(0xB4B4B4, rightAt(142).arcs[0].color);
+        return true;
+    }
+
+    // Story 20: without zones nothing is lit, but the number still shows.
+    (:test)
+    function missingZonesLightNothingButShowTheNumber(logger as Test.Logger) as Boolean {
+        var field = frameWithHeartRate(120, null).rightField;
+        Test.assertEqual(0, field.arcs.size());
+        Test.assertEqual("120", field.number);
+        Test.assertEqual(0xFFFFFF, field.numberColor);
+        Test.assertEqual(0, frameWithHeartRate(120, [96, 115] as Array<Number>)
+            .rightField.arcs.size());
+        return true;
+    }
+
+    // Story 19, design frame 11: missing heart rate is "--" in gray with
+    // every segment off.
+    (:test)
+    function missingHeartRateIsGrayDashesWithNoSegment(logger as Test.Logger) as Boolean {
+        var field = rightAt(null);
+        Test.assertEqual("--", field.number);
+        Test.assertEqual(0x8C8C8C, field.numberColor);
+        Test.assertEqual(0, field.arcs.size());
+        return true;
+    }
+
+    // The filled heart (U+E002 in the icon font) with its top-left at
+    // (328 - 12, 236 - 30), always gray.
+    (:test)
+    function heartRateIconIsAGrayHeart(logger as Test.Logger) as Boolean {
+        var values = [62, 200, null] as Array<Number?>;
+        for (var i = 0; i < values.size(); i++) {
+            var field = rightAt(values[i]);
+            Test.assertEqual((0xE002).toChar().toString(), field.icon);
+            Test.assertEqual(316, field.iconX);
+            Test.assertEqual(206, field.iconY);
+            Test.assertEqual(0x8C8C8C, field.iconColor);
+        }
+        return true;
+    }
+
+    // Story 21: heart rate has no warning color: the number stays white and
+    // the icon gray whether low or high (zones 4 and 5 are zone colors).
+    (:test)
+    function heartRateHasNoWarningColor(logger as Test.Logger) as Boolean {
+        var values = [30, 142, 200] as Array<Number>;
+        for (var i = 0; i < values.size(); i++) {
+            var field = rightAt(values[i]);
+            Test.assertEqual(0xFFFFFF, field.numberColor);
+            Test.assertEqual(0x8C8C8C, field.iconColor);
+        }
+        return true;
+    }
+
+    // Story 17 for the right field: 62 is 26 px, centered on x 328 ("6" 16 +
+    // "2" 16 px). 4 characters would be 22 px (heart rate never reaches it).
+    (:test)
+    function rightNumberSizeFollowsItsLength(logger as Test.Logger) as Boolean {
+        var field = rightAt(62);
+        Test.assertEqual(NUMBER_FONT_26, field.numberFont);
+        Test.assertEqual(32, field.numberWidth);
+        Test.assertEqual(312, field.numberX);
+        Test.assertEqual(259, field.numberY + GlyphWidths.NUMBER_26_BASE);
+        Test.assertEqual(NUMBER_FONT_22, rightAt(1000).numberFont);
+        return true;
+    }
+
+    // The right field sits in a black well of r 38 + 6 around (328, 236).
+    (:test)
+    function rightFieldHasABlackWell(logger as Test.Logger) as Boolean {
+        var well = wellAt(328, 236);
+        Test.assertEqual(44, well.radius);
+        Test.assertEqual(0x000000, well.color);
+        return true;
+    }
+
+    // Its track is the five unlit segments in the gauge-track color, not a
+    // full circle: segment 0 spans ciq 86 to 22 like the lit one.
+    (:test)
+    function rightFieldTrackIsFiveUnlitSegments(logger as Test.Logger) as Boolean {
+        var segments = tracksAt(328, 236);
+        Test.assertEqual(5, segments.size());
+        for (var i = 0; i < segments.size(); i++) {
+            Test.assertEqual(64, segments[i].sweep);
+            Test.assertEqual(35, segments[i].radius);
+            Test.assertEqual(6, segments[i].pen);
+            Test.assertEqual(0x2E3330, segments[i].color);
+        }
+        Test.assertEqual(86, segments[0].start);
+        Test.assertEqual(22, segments[0].end);
         return true;
     }
 }

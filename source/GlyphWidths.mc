@@ -9,6 +9,7 @@ import Toybox.Lang;
 module GlyphWidths {
     const ICON_BOLT = 0xE000;
     const ICON_STRESS = 0xE001;
+    const ICON_HEART = 0xE002;
     // TimeFilled: BigShouldersDisplay-ExtraBold 57 px.
     const TIME_BASE = 56;
     const TIME_CAP_HEIGHT = 46;

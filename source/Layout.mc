@@ -1,6 +1,6 @@
 import Toybox.Lang;
 
-// The geometry of a round field: its circle, the gauge ring inside it, and
+// The geometry of a round field: its circle, the ring inside it, and
 // where its icon and number go. A field is only a place; the metric shown in
 // it decides what is drawn there (Q29).
 class RoundField {
@@ -8,9 +8,10 @@ class RoundField {
     public var x as Number;
     public var y as Number;
     public var radius as Number;
-    // The gauge ring's centerline radius and pen.
-    public var gaugeRadius as Number;
-    public var gaugePen as Number;
+    // The ring inside the field (a gauge or zone segments): its centerline
+    // radius and pen.
+    public var ringRadius as Number;
+    public var ringPen as Number;
     // The icon's top-left corner (icons are 24 px square).
     public var iconX as Number;
     public var iconY as Number;
@@ -20,14 +21,14 @@ class RoundField {
     // shrinks with more characters (FaceModel.numberFontFor).
     public var largeNumber as Boolean;
 
-    function initialize(x as Number, y as Number, radius as Number, gaugeRadius as Number,
-            gaugePen as Number, iconX as Number, iconY as Number, numberY as Number,
+    function initialize(x as Number, y as Number, radius as Number, ringRadius as Number,
+            ringPen as Number, iconX as Number, iconY as Number, numberY as Number,
             largeNumber as Boolean) {
         self.x = x;
         self.y = y;
         self.radius = radius;
-        self.gaugeRadius = gaugeRadius;
-        self.gaugePen = gaugePen;
+        self.ringRadius = ringRadius;
+        self.ringPen = ringPen;
         self.iconX = iconX;
         self.iconY = iconY;
         self.numberY = numberY;
@@ -56,16 +57,38 @@ module Layout {
     const LEFT_FIELD_X = 88;
     const LEFT_FIELD_Y = 236;
     const LEFT_FIELD_RADIUS = 38;
-    const LEFT_GAUGE_RADIUS = 35;
-    const LEFT_GAUGE_PEN = 6;
+    const LEFT_RING_RADIUS = 35;
+    const LEFT_RING_PEN = 6;
     const LEFT_ICON_X = 76;
     const LEFT_ICON_Y = 206;
     const LEFT_NUMBER_Y = 250;
 
     function leftField() as RoundField {
-        return new RoundField(LEFT_FIELD_X, LEFT_FIELD_Y, LEFT_FIELD_RADIUS, LEFT_GAUGE_RADIUS,
-            LEFT_GAUGE_PEN, LEFT_ICON_X, LEFT_ICON_Y, LEFT_NUMBER_Y, false);
+        return new RoundField(LEFT_FIELD_X, LEFT_FIELD_Y, LEFT_FIELD_RADIUS, LEFT_RING_RADIUS,
+            LEFT_RING_PEN, LEFT_ICON_X, LEFT_ICON_Y, LEFT_NUMBER_Y, false);
     }
+
+    // The right field, laid out like the left one.
+    const RIGHT_FIELD_X = 328;
+    const RIGHT_FIELD_Y = 236;
+    const RIGHT_FIELD_RADIUS = 38;
+    const RIGHT_RING_RADIUS = 35;
+    const RIGHT_RING_PEN = 6;
+    const RIGHT_ICON_X = 316;
+    const RIGHT_ICON_Y = 206;
+    const RIGHT_NUMBER_Y = 250;
+
+    function rightField() as RoundField {
+        return new RoundField(RIGHT_FIELD_X, RIGHT_FIELD_Y, RIGHT_FIELD_RADIUS,
+            RIGHT_RING_RADIUS, RIGHT_RING_PEN, RIGHT_ICON_X, RIGHT_ICON_Y, RIGHT_NUMBER_Y, false);
+    }
+
+    // Zone segments, in design degrees: segment i (zone i + 1) spans
+    // i x ZONE_STEP + ZONE_GAP for ZONE_SWEEP degrees, so 4 to 68 for zone 1.
+    const ZONE_SEGMENTS = 5;
+    const ZONE_STEP = 72;
+    const ZONE_GAP = 4;
+    const ZONE_SWEEP = 64;
 
     // The center field.
     const CENTER_FIELD_X = 208;
@@ -74,15 +97,15 @@ module Layout {
     // The design's gauge centerline is r 55.5. With pen 9, r 56 lands on
     // about r 50.4-59.5 in the simulator (design 51-60); r 55 lands 1 px
     // further in.
-    const CENTER_GAUGE_RADIUS = 56;
-    const CENTER_GAUGE_PEN = 9;
+    const CENTER_RING_RADIUS = 56;
+    const CENTER_RING_PEN = 9;
     const CENTER_ICON_X = 196;
     const CENTER_ICON_Y = 203;
     const CENTER_NUMBER_Y = 258;
 
     function centerField() as RoundField {
         return new RoundField(CENTER_FIELD_X, CENTER_FIELD_Y, CENTER_FIELD_RADIUS,
-            CENTER_GAUGE_RADIUS, CENTER_GAUGE_PEN, CENTER_ICON_X, CENTER_ICON_Y,
+            CENTER_RING_RADIUS, CENTER_RING_PEN, CENTER_ICON_X, CENTER_ICON_Y,
             CENTER_NUMBER_Y, true);
     }
 

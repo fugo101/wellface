@@ -11,7 +11,7 @@ The name "Wellface": "well" means both a well (every element sits inside a black
 - Menus on the watch, the Garmin Connect app, the Connect IQ app or Claude Design: only state paths that have been verified. Otherwise add "menu names may differ slightly".
 
 ## Docs
-- `docs/decisions.md`: every agreed design decision and the MVP scope (Q1–Q36). Read it before coding. Ask the user before changing anything in it.
+- `docs/decisions.md`: every agreed design decision and the MVP scope (Q1–Q37). Read it before coding. Ask the user before changing anything in it.
 - `GLOSSARY.md`: the project vocabulary (fields are named by position, the metric decides how a field is drawn).
 - `docs/research/connect-iq-platform.md`: verified Connect IQ platform facts for the FR265, with sources and open questions.
 - `.scratch/mvp/spec.md`: the MVP spec.

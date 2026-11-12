@@ -4,6 +4,7 @@ import Toybox.Lang;
 import Toybox.System;
 import Toybox.Time;
 import Toybox.Time.Gregorian;
+import Toybox.UserProfile;
 
 // Builds the snapshot from the watch's clock and sensors. Thin and untested;
 // every display rule lives in FaceModel.
@@ -17,14 +18,20 @@ class DataReader {
         new Complications.Id(Complications.COMPLICATION_TYPE_BODY_BATTERY);
     private var _stressId as Complications.Id =
         new Complications.Id(Complications.COMPLICATION_TYPE_STRESS);
+    private var _heartRateId as Complications.Id =
+        new Complications.Id(Complications.COMPLICATION_TYPE_HEART_RATE);
 
     // Called on every update that is not OFF. Reads the clock and date
     // every time, from one moment so they always agree (no 23:59 with the
     // next day's date), and the weekday name only when they changed.
     // Reads the sensors only in high power, when the minute changed since
     // the last sensor read or the previous update was not high power (that
-    // is how a wake is detected). Returns true if the snapshot may have
-    // changed, so FaceModel should run again.
+    // is how a wake is detected; the first high-power update after start
+    // counts as one). On a wake it also reads the heart-rate zones. Heart
+    // rate itself is read on every high-power update, about once a second
+    // (Q36). Nothing is read in AOD. Returns true if the snapshot may have
+    // changed, so FaceModel should run again; a heart rate that did not
+    // change does not count.
     function update(highPower as Boolean) as Boolean {
         var now = Time.now();
         // Info.hour is 0-23 whatever the 12/24 h setting (Q22).
@@ -44,11 +51,22 @@ class DataReader {
             _clockRead = true;
         }
 
-        var minuteOfDay = clock.hour * 60 + clock.min;
-        if (highPower && (minuteOfDay != _sensorMinute || !_wasHighPower)) {
-            readSensors();
-            _sensorMinute = minuteOfDay;
-            changed = true;
+        if (highPower) {
+            var wake = !_wasHighPower;
+            var minuteOfDay = clock.hour * 60 + clock.min;
+            if (wake) {
+                _snapshot.heartRateZones = readHeartRateZones();
+            }
+            if (wake || minuteOfDay != _sensorMinute) {
+                readSensors();
+                _sensorMinute = minuteOfDay;
+                changed = true;
+            }
+            var heartRate = readComplication(_heartRateId);
+            if (heartRate != _snapshot.heartRate) {
+                _snapshot.heartRate = heartRate;
+                changed = true;
+            }
         }
         _wasHighPower = highPower;
         return changed;
@@ -76,6 +94,22 @@ class DataReader {
 
         _snapshot.bodyBattery = readComplication(_bodyBatteryId);
         _snapshot.stress = readComplication(_stressId);
+    }
+
+    // The lower bounds of zones 1-5: the first five HR_ZONE_SPORT_GENERIC
+    // thresholds (index 5 is max HR). Null when the call fails or returns
+    // fewer than five.
+    private function readHeartRateZones() as Array<Number>? {
+        try {
+            var all = UserProfile.getHeartRateZones(UserProfile.HR_ZONE_SPORT_GENERIC);
+            var count = Layout.ZONE_SEGMENTS;
+            if (all != null && all.size() >= count) {
+                return all.slice(0, count);
+            }
+        } catch (e instanceof Lang.Exception) {
+            // Missing, like a short array.
+        }
+        return null;
     }
 
     // A complication's value, polled (ticket 02 showed polling refreshes on

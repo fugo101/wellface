@@ -7,5 +7,5 @@
     <font id="Number26" filename="number26.fnt" antialias="true" filter="0123456789-"/>
     <font id="Number22" filename="number22.fnt" antialias="true" filter="0123456789.-"/>
     <font id="Number18" filename="number18.fnt" antialias="true" filter="0123456789.-"/>
-    <font id="Icons" filename="icons24.fnt" antialias="true" filter="\uE000\uE001"/>
+    <font id="Icons" filename="icons24.fnt" antialias="true" filter="\uE000\uE001\uE002"/>
 </fonts>

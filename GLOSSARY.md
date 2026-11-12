@@ -13,8 +13,12 @@ A named set of colors used to draw the face. The face has exactly one active the
 _Avoid_: Skin, color scheme
 
 **Accent**:
-The theme's main color, used only for the time band, for progress (rings, lit segments), for a field whose goal is reached, and (dimmed) for AOD.
+The theme's main color, used only for the time band, for progress (rings, lit battery segments), for a field whose goal is reached, and (dimmed) for AOD.
 _Avoid_: Mint, primary color, highlight
+
+**Zone color**:
+The color of one heart-rate zone, used only for that zone's lit segment: gray, blue, green, orange and red for zones 1 to 5, in Garmin's order. Part of the theme.
+_Avoid_: HR color, heart-rate color
 
 **Warning color**:
 The orange or red color an element switches to when its value crosses a threshold.
