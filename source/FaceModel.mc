@@ -111,6 +111,18 @@ class AodFrame {
     }
 }
 
+// What a hold at a touch point opens: the field held and the metric it
+// shows. The metric picks the Garmin page, not the field (Q29).
+class LongPressTarget {
+    public var field as Field;
+    public var metric as Metric;
+
+    function initialize(field as Field, metric as Metric) {
+        self.field = field;
+        self.metric = metric;
+    }
+}
+
 // The generated fonts a field's number can be drawn in. The renderer maps
 // each to its loaded font, FaceModel to its glyph-width table.
 enum NumberFont {
@@ -392,6 +404,52 @@ module FaceModel {
             color |= ((channel * AOD_DIM_PERCENT + 50) / 100) << shift;
         }
         return color;
+    }
+
+    // The long-press target at a touch point, null on a miss.
+    function longPressTarget(x as Number, y as Number) as LongPressTarget? {
+        if (insideWell(Layout.leftField(), x, y)) {
+            return new LongPressTarget(FIELD_LEFT, Layout.LEFT_METRIC);
+        }
+        if (insideWell(Layout.centerField(), x, y)) {
+            return new LongPressTarget(FIELD_CENTER, Layout.CENTER_METRIC);
+        }
+        if (insideWell(Layout.rightField(), x, y)) {
+            return new LongPressTarget(FIELD_RIGHT, Layout.RIGHT_METRIC);
+        }
+        // The bottom field's pill is its own well, so it is not padded.
+        if (insideRoundedRect(x, y, Layout.BOTTOM_X, Layout.BOTTOM_Y, Layout.BOTTOM_W,
+                Layout.BOTTOM_H, Layout.BOTTOM_RADIUS)) {
+            return new LongPressTarget(FIELD_BOTTOM, Layout.BOTTOM_METRIC);
+        }
+        // The bezel ring: outside the background disc, on the screen.
+        if (!insideCircle(x, y, Layout.CENTER_X, Layout.CENTER_Y, Layout.DISC_RADIUS)
+                && insideCircle(x, y, Layout.CENTER_X, Layout.CENTER_Y, Layout.SCREEN_RADIUS)) {
+            return new LongPressTarget(FIELD_BEZEL_RING, Layout.BEZEL_METRIC);
+        }
+        return null;
+    }
+
+    // Inside a rounded rectangle, its edge included: within `radius` of the
+    // rectangle shrunk by `radius` on every side.
+    function insideRoundedRect(x as Number, y as Number, left as Number, top as Number,
+            width as Number, height as Number, radius as Number) as Boolean {
+        var nearestX = clamp(x, left + radius, left + width - radius);
+        var nearestY = clamp(y, top + radius, top + height - radius);
+        return insideCircle(x, y, nearestX, nearestY, radius);
+    }
+
+    // Inside a round field's well (the circle of radius + Layout.WELL),
+    // its edge included.
+    function insideWell(field as RoundField, x as Number, y as Number) as Boolean {
+        return insideCircle(x, y, field.x, field.y, field.radius + Layout.WELL);
+    }
+
+    function insideCircle(x as Number, y as Number, cx as Number, cy as Number,
+            radius as Number) as Boolean {
+        var dx = x - cx;
+        var dy = y - cy;
+        return dx * dx + dy * dy <= radius * radius;
     }
 
     // The bottom field for a goal metric's value and goal (Q24, Q25, Q34).

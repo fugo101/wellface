@@ -200,6 +200,23 @@ module FaceModelTest {
         Test.assert(absOf(a[1] - b[1]) >= 3);
     }
 
+    // The long-press target at a touch point, asserted to be a hit.
+    function targetAt(x as Number, y as Number) as LongPressTarget {
+        var target = FaceModel.longPressTarget(x, y);
+        Test.assert(target != null);
+        return target as LongPressTarget;
+    }
+
+    function assertTarget(x as Number, y as Number, field as Field, metric as Metric) as Void {
+        var target = targetAt(x, y);
+        Test.assertEqual(field, target.field);
+        Test.assertEqual(metric, target.metric);
+    }
+
+    function assertMiss(x as Number, y as Number) as Void {
+        Test.assert(FaceModel.longPressTarget(x, y) == null);
+    }
+
     (:test)
     function timeJustAfterMidnightHasLeadingZeros(logger as Test.Logger) as Boolean {
         Test.assertEqual("00:05", frameAt(0, 5).time);
@@ -1549,6 +1566,157 @@ module FaceModelTest {
         var aod = aodOnDate("Wednesday", 4, 28);
         Test.assertEqual(181, aod.datePill.width);
         Test.assertEqual(118 + aod.offsetX, aod.datePill.x);
+        return true;
+    }
+
+    // Story 41: holding the center field opens Body Battery. Its well is
+    // the circle (208, 246) r 60 + 6.
+    (:test)
+    function holdInTheCenterFieldTargetsBodyBattery(logger as Test.Logger) as Boolean {
+        assertTarget(208, 246, FIELD_CENTER, METRIC_BODY_BATTERY);
+        return true;
+    }
+
+    // Story 42: holding the left field opens stress. (88, 279) is 43 px
+    // below the field's center (88, 236): outside the field (r 38) but
+    // inside its well (r 44).
+    (:test)
+    function holdInTheLeftWellTargetsStress(logger as Test.Logger) as Boolean {
+        assertTarget(88, 279, FIELD_LEFT, METRIC_STRESS);
+        return true;
+    }
+
+    // Story 43: holding the right field opens heart rate. (371, 236) is
+    // 43 px right of the field's center (328, 236).
+    (:test)
+    function holdInTheRightWellTargetsHeartRate(logger as Test.Logger) as Boolean {
+        assertTarget(371, 236, FIELD_RIGHT, METRIC_HEART_RATE);
+        return true;
+    }
+
+    // The well's edge is the limit: 44 px from the left field's center
+    // hits, 45 px misses.
+    (:test)
+    function leftWellEdgeIsTheLimit(logger as Test.Logger) as Boolean {
+        assertTarget(88, 280, FIELD_LEFT, METRIC_STRESS);
+        assertMiss(88, 281);
+        return true;
+    }
+
+    // The center well ends at y 312 (246 + 66): y 311 is still the center
+    // field.
+    (:test)
+    function holdJustAboveTheCenterWellEdgeIsTheCenterField(logger as Test.Logger) as Boolean {
+        assertTarget(208, 311, FIELD_CENTER, METRIC_BODY_BATTERY);
+        return true;
+    }
+
+    // The center well's edge is the limit: y 312 (66 px below the center)
+    // hits, y 313 misses.
+    (:test)
+    function centerWellEdgeIsTheLimit(logger as Test.Logger) as Boolean {
+        assertTarget(208, 312, FIELD_CENTER, METRIC_BODY_BATTERY);
+        assertMiss(208, 313);
+        return true;
+    }
+
+    // The bottom field's top edge is the limit: y 320 hits, y 319 misses.
+    (:test)
+    function bottomFieldTopEdgeIsTheLimit(logger as Test.Logger) as Boolean {
+        assertTarget(208, 320, FIELD_BOTTOM, METRIC_STEPS);
+        assertMiss(208, 319);
+        return true;
+    }
+
+    // The 8 px of background between the center well (ends y 312) and the
+    // bottom field (starts y 320) is a miss.
+    (:test)
+    function holdInTheGapAboveTheBottomFieldMisses(logger as Test.Logger) as Boolean {
+        assertMiss(208, 316);
+        return true;
+    }
+
+    // Story 44: holding the bottom field opens steps. Its pill is (126,
+    // 320, 164, 40), radius 20, unpadded.
+    (:test)
+    function holdInTheBottomFieldTargetsSteps(logger as Test.Logger) as Boolean {
+        assertTarget(208, 321, FIELD_BOTTOM, METRIC_STEPS);
+        return true;
+    }
+
+    // The bottom field's left end is a half circle around (146, 340), r 20.
+    // (130, 330) is 16 px left and 10 px up from it: inside (256 + 100 <=
+    // 400).
+    (:test)
+    function holdJustInsideABottomFieldCornerHits(logger as Test.Logger) as Boolean {
+        assertTarget(130, 330, FIELD_BOTTOM, METRIC_STEPS);
+        return true;
+    }
+
+    // (130, 326) is inside the pill's bounding box but 16 px left and 14 px
+    // up from the corner's center: outside the arc (256 + 196 > 400).
+    (:test)
+    function holdJustOutsideABottomFieldCornerMisses(logger as Test.Logger) as Boolean {
+        assertMiss(130, 326);
+        return true;
+    }
+
+    // Story 44: holding the bezel ring opens steps too. (208, 6) is 202 px
+    // above the face center, in the band outside the background disc.
+    (:test)
+    function holdOnTheBezelRingTargetsSteps(logger as Test.Logger) as Boolean {
+        assertTarget(208, 6, FIELD_BEZEL_RING, METRIC_STEPS);
+        return true;
+    }
+
+    // The band is 194 < distance <= 208: the disc's own edge (y 14, 194 px
+    // from the center) misses, 195 px (y 13) hits, and so does the screen's
+    // edge (208 px).
+    (:test)
+    function bezelRingBandExcludesTheDiscEdgeAndIncludesTheScreenEdge(logger as Test.Logger)
+            as Boolean {
+        assertMiss(208, 14);
+        assertTarget(208, 13, FIELD_BEZEL_RING, METRIC_STEPS);
+        assertTarget(208, 0, FIELD_BEZEL_RING, METRIC_STEPS);
+        assertTarget(0, 208, FIELD_BEZEL_RING, METRIC_STEPS);
+        return true;
+    }
+
+    // Beyond the round screen: 209 px from the center, and the corner of
+    // the square canvas.
+    (:test)
+    function holdOutsideTheScreenMisses(logger as Test.Logger) as Boolean {
+        assertMiss(208, -1);
+        assertMiss(0, 0);
+        return true;
+    }
+
+    // Story 45: holding the time band does nothing.
+    (:test)
+    function holdOnTheTimeBandMisses(logger as Test.Logger) as Boolean {
+        assertMiss(208, 112);
+        return true;
+    }
+
+    // Story 45: holding the date pill does nothing.
+    (:test)
+    function holdOnTheDatePillMisses(logger as Test.Logger) as Boolean {
+        assertMiss(208, 154);
+        return true;
+    }
+
+    // Story 45: holding the battery bar does nothing. Its middle sits on
+    // r 180 at 12 o'clock.
+    (:test)
+    function holdOnTheBatteryBarMisses(logger as Test.Logger) as Boolean {
+        assertMiss(208, 28);
+        return true;
+    }
+
+    // Story 45: holding the background between the fields does nothing.
+    (:test)
+    function holdOnTheBackgroundMisses(logger as Test.Logger) as Boolean {
+        assertMiss(150, 300);
         return true;
     }
 }

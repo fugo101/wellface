@@ -1,5 +1,15 @@
 import Toybox.Lang;
 
+// The fields, named by position (Q29). The bezel ring counts as a field: it
+// shows a goal metric.
+enum Field {
+    FIELD_LEFT,
+    FIELD_CENTER,
+    FIELD_RIGHT,
+    FIELD_BOTTOM,
+    FIELD_BEZEL_RING
+}
+
 // The geometry of a round field: its circle, the ring inside it, and
 // where its icon and number go. A field is only a place; the metric shown in
 // it decides what is drawn there (Q29).
@@ -154,6 +164,9 @@ module Layout {
 
     // The background disc.
     const DISC_RADIUS = 194;
+    // The round screen. A hold between the disc and the screen's edge is a
+    // hold on the bezel ring.
+    const SCREEN_RADIUS = 208;
 
     // Width of the black well around an element.
     const WELL = 6;

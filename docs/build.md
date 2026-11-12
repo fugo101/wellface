@@ -39,6 +39,8 @@ The first run creates a gitignored `.venv/` with Python 3.15 (override with `PYT
 
 `scripts/run-sim.sh` builds, starts the simulator and loads the face. It stays attached and prints the face's log; press Ctrl+C to stop it.
 
+To try a long press, hold the left mouse button on a field for about a second. The simulator shows a plain launch view (for example "Body Battery launched") instead of a Garmin page; File → Kill App, then `scripts/run-sim.sh` again, brings the face back.
+
 To check Always On, choose Settings → Display Mode → Always-On in the simulator (High Power switches back), then File → View Screen Heat Map. The heat map window shows the current luminance usage, and its 24-Hour Simulation reports the peak luminance usage and whether burn-in was detected (simulator of SDK 9.3.0).
 
 ## Data spike

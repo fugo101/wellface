@@ -8,6 +8,6 @@ class WellfaceApp extends Application.AppBase {
     }
 
     function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
-        return [new WellfaceView()];
+        return [new WellfaceView(), new WellfaceDelegate()];
     }
 }
