@@ -90,7 +90,7 @@ This document collects what the Connect IQ platform offers and requires for Well
 | No document names the exact rule that fr265 enforces. The docs point to the luminance rule, which is less strict than the 3-minute rule in the repo's `CLAUDE.md`. | INFERRED | synthesis of the three rows above |
 | A pixel counts as "on" for any colour other than black. Protection applies only when a CIQ face is in the foreground and the system is asleep. | CONFIRMED | AMOLED FAQ ("What Qualifies as Burn-In") |
 | AOD guidelines: avoid much white or blue (light gray is better), use thin fonts, minimize static elements, and move elements "up to four pixels in any direction every minute". AMOLED faces are expected to support always-on. | CONFIRMED | `doc/docs/User_Experience_Guidelines/Watch_Faces.html` |
-| Simulator: File → View Screen Heat Map opens a "Screen Burn-in Simulation" (24 h simulated in minutes). It is enabled only for faces on devices with screen protection, and fr265 has `screenProtectionSupport: true`. It shows pixel %, peak usage and luminance (SDK 6.4.0 and 7.0.0). Low power must be toggled by hand (since 3.1.7), probably through Settings → Low Power Mode (menu names may differ slightly). | CONFIRMED (menu: INFERRED) | AMOLED FAQ ("How to Test…"); `Devices/fr265/simulator.json`; `doc/docs/Readme/History.html` |
+| Simulator: File → View Screen Heat Map opens a "Screen Burn-in Simulation" (24 h simulated in minutes). It is enabled only for faces on devices with screen protection, and fr265 has `screenProtectionSupport: true`. It shows pixel %, peak usage and luminance (SDK 6.4.0 and 7.0.0). Low power must be toggled by hand (since 3.1.7): Settings → Display Mode → Always-On in the SDK 9.3.0 simulator (ticket 11). The window shows Power Mode, Screen Protection, Burn-in State and Luminance Usage; the 24-Hour Simulation reports the peak luminance usage. | CONFIRMED | AMOLED FAQ ("How to Test…"); `Devices/fr265/simulator.json`; `doc/docs/Readme/History.html` |
 | AOD is active only if the user turns it on: hold UP → System → Display → General Use / During Activity / During Sleep → Always On Display. With it off, the screen turns off after Timeout. | CONFIRMED | `doc/docs/User_Experience_Guidelines/Watch_Faces.html`; https://www8.garmin.com/manuals/webhelp/GUID-F41EAFB3-6CC9-42DE-9C6C-9E358DBB0671/EN-US/GUID-C9A5E731-8826-4AD0-8087-F6E2EAC625D6.html |
 
 ### Buffers and memory
@@ -293,7 +293,7 @@ This document collects what the Connect IQ platform offers and requires for Well
 13. Does `onUpdate` still fire every minute when the display is `DISPLAY_MODE_OFF` (Always On disabled)? Does `getDisplayMode()` actually report OFF in that state?
 14. Does `requestUpdate()` trigger an immediate `onUpdate` in a watch face?
 15. Does `(:extendedCode)` work for watch faces? Probably not needed for the MVP.
-16. What is the exact name of the simulator's low-power menu (likely Settings → Low Power Mode)? Menu names may differ slightly.
+16. What is the exact name of the simulator's low-power menu (likely Settings → Low Power Mode)? Menu names may differ slightly. **Answered (ticket 11, SDK 9.3.0): Settings → Display Mode → Always-On.**
 
 **Interaction & localization**
 

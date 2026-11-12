@@ -83,6 +83,34 @@ class Frame {
     }
 }
 
+// The Always On frame (Q12, Q13, Q28): only the time, as outlines, and the
+// date, as filled text inside an outlined pill, all in the AOD color and
+// moved by the burn-in offset of the current minute. Everything else stays
+// black. FaceModel fills in every field; the defaults only exist to satisfy
+// the type checker.
+class AodFrame {
+    // The time in the outline-only time font, drawn from its top-left corner
+    // (left-justified, line top).
+    public var time as String = "";
+    public var timeX as Number = 0;
+    public var timeY as Number = 0;
+    public var timeColor as Number = 0;
+    // The date text, filled, from its top-left corner.
+    public var date as String = "";
+    public var dateX as Number = 0;
+    public var dateY as Number = 0;
+    public var dateColor as Number = 0;
+    // The pill around the date, drawn as an outline with datePillPen.
+    public var datePill as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
+    public var datePillPen as Number = 0;
+    // The burn-in offset this frame is moved by, in px.
+    public var offsetX as Number = 0;
+    public var offsetY as Number = 0;
+
+    function initialize() {
+    }
+}
+
 // The generated fonts a field's number can be drawn in. The renderer maps
 // each to its loaded font, FaceModel to its glyph-width table.
 enum NumberFont {
@@ -274,6 +302,9 @@ module FaceModel {
     // multiplication sign, thorn, sharp s, IJ, OE). Letters with a stroke
     // fold to their base letter too (D for the Vietnamese D with stroke).
     const LATIN_1_BASE = "AAAAAA?CEEEEIIIIDNOOOOO?OUUUUY??AAAAAA?CEEEEIIIIDNOOOOO?OUUUUY?Y";
+    // Always On: the accent dimmed to this percentage (Q13).
+    const AOD_DIM_PERCENT = 55;
+
     const LATIN_EXTENDED_A_BASE =
         "AAAAAACCCCCCCCDDDDEEEEEEEEEEGGGGGGGGHHHHIIIIIIIIII??JJKK?LLLLLLLLLL" +
         "NNNNNN?NNOOOOOO??RRRRRRSSSSSSSSTTTTTTUUUUUUUUUUUUWWYYYZZZZZZS";
@@ -317,6 +348,50 @@ module FaceModel {
         frame.datePill = new RoundedRect(Layout.CENTER_X - pillWidth / 2, Layout.DATE_PILL_Y,
             pillWidth, Layout.DATE_PILL_HEIGHT, Layout.DATE_PILL_RADIUS, theme.ink);
         return frame;
+    }
+
+    // The Always On frame for the snapshot's clock. Sensors are not used.
+    function computeAod(snapshot as Snapshot, theme as Theme) as AodFrame {
+        var frame = new AodFrame();
+        var offsets = Layout.AOD_OFFSETS;
+        var offset = offsets[snapshot.minute % offsets.size()];
+        frame.offsetX = offset[0];
+        frame.offsetY = offset[1];
+        frame.time = formatTime(snapshot.hour, snapshot.minute);
+        frame.timeX = Layout.TIME_CENTER_X - textWidth(frame.time, GlyphWidths.TIME_OUTLINE) / 2
+            + frame.offsetX;
+        frame.timeY = Layout.TIME_BASELINE_Y - GlyphWidths.TIME_OUTLINE_BASE + frame.offsetY;
+        frame.date = dateText(snapshot);
+        var dateWidth = textWidth(frame.date, GlyphWidths.DATE);
+        frame.dateX = Layout.CENTER_X - dateWidth / 2 + frame.offsetX;
+        frame.dateY = digitsTop(Layout.DATE_CENTER_Y, GlyphWidths.DATE_CAP_HEIGHT,
+            GlyphWidths.DATE_BASE) + frame.offsetY;
+        var color = aodColor(theme.accent);
+        frame.timeColor = color;
+        frame.dateColor = color;
+        // The outline's centerline runs half a pen inside the normal pill,
+        // so its outer edge stays on the pill's edge.
+        var inset = Layout.AOD_PEN / 2;
+        var pillWidth = datePillWidth(dateWidth);
+        frame.datePill = new RoundedRect(
+            Layout.CENTER_X - pillWidth / 2 + inset + frame.offsetX,
+            Layout.DATE_PILL_Y + inset + frame.offsetY,
+            pillWidth - 2 * inset, Layout.DATE_PILL_HEIGHT - 2 * inset,
+            Layout.DATE_PILL_RADIUS - inset, color);
+        frame.datePillPen = Layout.AOD_PEN;
+        return frame;
+    }
+
+    // The AOD color, derived from the accent rather than stored in the theme
+    // (Q13): each channel x AOD_DIM_PERCENT / 100, rounded half up in
+    // integer math.
+    function aodColor(accent as Number) as Number {
+        var color = 0;
+        for (var shift = 16; shift >= 0; shift -= 8) {
+            var channel = (accent >> shift) & 0xFF;
+            color |= ((channel * AOD_DIM_PERCENT + 50) / 100) << shift;
+        }
+        return color;
     }
 
     // The bottom field for a goal metric's value and goal (Q24, Q25, Q34).

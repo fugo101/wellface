@@ -39,7 +39,7 @@ The first run creates a gitignored `.venv/` with Python 3.15 (override with `PYT
 
 `scripts/run-sim.sh` builds, starts the simulator and loads the face. It stays attached and prints the face's log; press Ctrl+C to stop it.
 
-To check Always On, turn on low-power mode in the simulator's settings menu, and use File → View Screen Heat Map (menu names may differ slightly).
+To check Always On, choose Settings → Display Mode → Always-On in the simulator (High Power switches back), then File → View Screen Heat Map. The heat map window shows the current luminance usage, and its 24-Hour Simulation reports the peak luminance usage and whether burn-in was detected (simulator of SDK 9.3.0).
 
 ## Data spike
 
@@ -57,5 +57,3 @@ It shows up on the watch as its own face, "Wellface data spike", next to Wellfac
 To update, copy the new `.prg` into `GARMIN/Apps` again. The watch installs a sideloaded PRG and then deletes the file, so an empty `Apps` folder does not mean the face is gone.
 
 To remove the face, use Garmin Express on the computer (it also connects over MTP): open the watch's Connect IQ apps section, filter by watch faces and remove Wellface (user report, menu names may differ slightly). Fully quit Garmin Express afterwards, before copying a PRG with another MTP tool.
-
-While the MVP is in progress, Always On shows a black screen until the AOD ticket lands.

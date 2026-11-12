@@ -7,9 +7,10 @@ class WellfaceView extends WatchUi.WatchFace {
     private var _theme as Theme;
     private var _reader as DataReader;
     private var _renderer as Renderer;
-    // The last computed frame; FaceModel runs again only when the reader
-    // reports a change.
+    // The last computed frames, one per mode. FaceModel runs again only
+    // when the reader reports a change, which drops both.
     private var _frame as Frame?;
+    private var _aodFrame as AodFrame?;
 
     function initialize() {
         WatchFace.initialize();
@@ -26,18 +27,25 @@ class WellfaceView extends WatchUi.WatchFace {
             return;
         }
         var highPower = mode == System.DISPLAY_MODE_HIGH_POWER;
-        var changed = _reader.update(highPower);
+        if (_reader.update(highPower)) {
+            _frame = null;
+            _aodFrame = null;
+        }
         dc.setAntiAlias(true);
 
         if (!highPower) {
-            // Always On: black until ticket 11 adds the AOD frame, so an
-            // intermediate build never shows the full face in low power.
-            _renderer.clear(dc);
+            // Always On: only the clock was read, no sensors.
+            var aodFrame = _aodFrame;
+            if (aodFrame == null) {
+                aodFrame = FaceModel.computeAod(_reader.snapshot(), _theme);
+                _aodFrame = aodFrame;
+            }
+            _renderer.paintAod(dc, aodFrame);
             return;
         }
 
         var frame = _frame;
-        if (frame == null || changed) {
+        if (frame == null) {
             frame = FaceModel.compute(_reader.snapshot(), _theme);
             _frame = frame;
         }

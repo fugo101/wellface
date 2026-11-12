@@ -98,8 +98,26 @@ class Renderer {
         }
     }
 
+    // An Always On frame: no buffers, only the time in the outline font,
+    // the date pill's outline and the date text on black.
+    function paintAod(dc as Dc, frame as AodFrame) as Void {
+        clear(dc);
+        dc.setColor(frame.timeColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(frame.timeX, frame.timeY, _fonts.timeOutline, frame.time,
+            Graphics.TEXT_JUSTIFY_LEFT);
+
+        var pill = frame.datePill;
+        dc.setColor(pill.color, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(frame.datePillPen);
+        dc.drawRoundedRectangle(pill.x, pill.y, pill.width, pill.height, pill.radius);
+
+        dc.setColor(frame.dateColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(frame.dateX, frame.dateY, _fonts.date, frame.date,
+            Graphics.TEXT_JUSTIFY_LEFT);
+    }
+
     // The whole screen black.
-    function clear(dc as Dc) as Void {
+    private function clear(dc as Dc) as Void {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
     }

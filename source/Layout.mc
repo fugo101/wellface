@@ -177,6 +177,19 @@ module Layout {
     const DATE_PILL_MAX_WIDTH = BAND_W;
     const DATE_CENTER_Y = 154;
 
+    // Always On: the pen of the AOD outlines (Q12): the date pill's outline here, the
+    // time's outline baked into the outline time font.
+    const AOD_PEN = 2;
+    // The burn-in shift (Q28): the AOD time and date move by one [x, y]
+    // offset (px) per minute, offset (minute of the hour mod 12). 12 divides
+    // 60, so minute 59 steps to minute 0 like any other minute. Each step
+    // moves at least 3 px on both axes, and no 3 consecutive offsets repeat
+    // or lie on one line; the 12 offsets spread over the +-4 px square.
+    const AOD_OFFSETS = [
+        [-4, -4], [1, -1], [4, 4], [-4, -1], [-1, 2], [4, -3],
+        [-2, 0], [1, 3], [4, 0], [-4, 3], [-1, -4], [3, 2]
+    ] as Array<Array<Number> >;
+
     // The time: centered on this x, with its baseline on this y.
     const TIME_CENTER_X = CENTER_X;
     const TIME_BASELINE_Y = 135;

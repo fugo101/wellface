@@ -21,12 +21,17 @@ module FaceModelTest {
     }
 
     // weekdayNumber: 1 = Sunday ... 7 = Saturday (FORMAT_SHORT).
-    function frameOnDate(weekdayName as String?, weekdayNumber as Number, day as Number) as Frame {
+    function snapshotOnDate(weekdayName as String?, weekdayNumber as Number, day as Number)
+            as Snapshot {
         var snapshot = new Snapshot(8, 42);
         snapshot.weekdayName = weekdayName;
         snapshot.weekdayNumber = weekdayNumber;
         snapshot.day = day;
-        return FaceModel.compute(snapshot, Themes.mint());
+        return snapshot;
+    }
+
+    function frameOnDate(weekdayName as String?, weekdayNumber as Number, day as Number) as Frame {
+        return FaceModel.compute(snapshotOnDate(weekdayName, weekdayNumber, day), Themes.mint());
     }
 
     function dateOf(weekdayName as String?, weekdayNumber as Number, day as Number) as String {
@@ -163,6 +168,36 @@ module FaceModelTest {
         Test.assertEqual(y1, line.y1);
         Test.assertEqual(x2, line.x2);
         Test.assertEqual(y2, line.y2);
+    }
+
+    function aodAt(hour as Number, minute as Number) as AodFrame {
+        return FaceModel.computeAod(new Snapshot(hour, minute), Themes.mint());
+    }
+
+    function aodOnDate(weekdayName as String?, weekdayNumber as Number, day as Number)
+            as AodFrame {
+        return FaceModel.computeAod(snapshotOnDate(weekdayName, weekdayNumber, day),
+            Themes.mint());
+    }
+
+    // The AOD burn-in offset [x, y] for each minute of the hour, 0-59.
+    function aodOffsets() as Array<Array<Number> > {
+        var offsets = new Array<Array<Number> >[60];
+        for (var m = 0; m < 60; m++) {
+            var aod = aodAt(10, m);
+            offsets[m] = [aod.offsetX, aod.offsetY] as Array<Number>;
+        }
+        return offsets;
+    }
+
+    function absOf(value as Number) as Number {
+        return value < 0 ? -value : value;
+    }
+
+    // Consecutive offsets move by at least 3 px in x and in y.
+    function assertMovesAtLeast3PxOnBothAxes(a as Array<Number>, b as Array<Number>) as Void {
+        Test.assert(absOf(a[0] - b[0]) >= 3);
+        Test.assert(absOf(a[1] - b[1]) >= 3);
     }
 
     (:test)
@@ -1361,6 +1396,159 @@ module FaceModelTest {
         Test.assertEqual("1.000", bottomAt(1000, null).number);
         Test.assertEqual("1.050", bottomAt(1050, null).number);
         Test.assertEqual("1.000.000", bottomAt(1000000, null).number);
+        return true;
+    }
+
+    // Q13: each accent channel x 0.55, rounded half up. Mint 8E E3 B8 gives
+    // 142 x 0.55 = 78.1 -> 4E, 227 x 0.55 = 124.85 -> 7D, 184 x 0.55 = 101.2
+    // -> 65.
+    (:test)
+    function aodColorIsMintDimmedTo55Percent(logger as Test.Logger) as Boolean {
+        var aod = aodAt(8, 42);
+        Test.assertEqual(0x4E7D65, aod.timeColor);
+        Test.assertEqual(0x4E7D65, aod.dateColor);
+        Test.assertEqual(0x4E7D65, aod.datePill.color);
+        return true;
+    }
+
+    // Story 39, Q28: every minute's offset is within +-4 px.
+    (:test)
+    function aodOffsetsStayWithin4Px(logger as Test.Logger) as Boolean {
+        var offsets = aodOffsets();
+        for (var m = 0; m < 60; m++) {
+            Test.assert(absOf(offsets[m][0]) <= 4);
+            Test.assert(absOf(offsets[m][1]) <= 4);
+        }
+        return true;
+    }
+
+    // A fixed cycle of N >= 4 distinct offsets, indexed by the minute modulo
+    // N, with N dividing 60 so the hour wraps onto the cycle.
+    (:test)
+    function aodOffsetsFollowACycleOfAtLeast4DistinctOffsets(logger as Test.Logger) as Boolean {
+        var offsets = aodOffsets();
+        // The cycle length: the smallest shift that maps every minute's
+        // offset onto the offset that many minutes later.
+        var n = 1;
+        while (n < 60) {
+            var repeats = true;
+            for (var m = 0; m < 60 && repeats; m++) {
+                var other = offsets[(m + n) % 60];
+                repeats = offsets[m][0] == other[0] && offsets[m][1] == other[1];
+            }
+            if (repeats) {
+                break;
+            }
+            n++;
+        }
+        // n divides 60 by construction: a repeat across the wrap at 60
+        // minutes. A cycle that does not divide 60 shows up as fewer than n
+        // distinct offsets below.
+        Test.assert(n >= 4);
+        for (var i = 0; i < n; i++) {
+            for (var j = i + 1; j < n; j++) {
+                Test.assert(offsets[i][0] != offsets[j][0] || offsets[i][1] != offsets[j][1]);
+            }
+        }
+        return true;
+    }
+
+    // Each minute moves the time and date by at least 3 px in x and in y,
+    // including from minute 59 back to minute 0.
+    (:test)
+    function aodOffsetMovesAtLeast3PxEachMinute(logger as Test.Logger) as Boolean {
+        var offsets = aodOffsets();
+        for (var m = 0; m < 60; m++) {
+            assertMovesAtLeast3PxOnBothAxes(offsets[m], offsets[(m + 1) % 60]);
+        }
+        return true;
+    }
+
+    // The wrap at the top of the hour, stated on its own.
+    (:test)
+    function aodOffsetMovesFromMinute59ToMinute0(logger as Test.Logger) as Boolean {
+        var last = aodAt(10, 59);
+        var first = aodAt(11, 0);
+        assertMovesAtLeast3PxOnBothAxes([last.offsetX, last.offsetY] as Array<Number>,
+            [first.offsetX, first.offsetY] as Array<Number>);
+        return true;
+    }
+
+    // Any 3 consecutive offsets are pairwise distinct and not on one line,
+    // so the shift never steps back and forth or along one diagonal. Checked
+    // cyclically, including the triples 58-59-0 and 59-0-1.
+    (:test)
+    function threeConsecutiveAodOffsetsAreDistinctAndNotCollinear(logger as Test.Logger) as Boolean {
+        var offsets = aodOffsets();
+        for (var m = 0; m < 60; m++) {
+            var a = offsets[m];
+            var b = offsets[(m + 1) % 60];
+            var c = offsets[(m + 2) % 60];
+            Test.assert(a[0] != c[0] || a[1] != c[1]);
+            Test.assert(a[0] != b[0] || a[1] != b[1]);
+            var cross = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]);
+            Test.assert(cross != 0);
+        }
+        return true;
+    }
+
+    // Story 37: the AOD time keeps the normal time's position and size
+    // (08:42 is 4 x 28 + 14 = 126 px wide, from x 208 - 63 = 145; baseline
+    // 135 - base 56 = line top 79), moved by the minute's offset.
+    (:test)
+    function aodTimeSitsWhereTheNormalTimeIsMovedByTheOffset(logger as Test.Logger) as Boolean {
+        var aod = aodAt(8, 42);
+        Test.assertEqual("08:42", aod.time);
+        Test.assertEqual(145 + aod.offsetX, aod.timeX);
+        Test.assertEqual(79 + aod.offsetY, aod.timeY);
+        return true;
+    }
+
+    // Story 37: the AOD date is the normal date text at the normal position
+    // ("THU 12" is 67 px wide, from x 208 - 33 = 175; baseline 160 - base 18
+    // = line top 142), moved by the minute's offset.
+    (:test)
+    function aodDateSitsWhereTheNormalDateIsMovedByTheOffset(logger as Test.Logger) as Boolean {
+        var aod = aodOnDate("Thu", 5, 12);
+        Test.assertEqual("THU 12", aod.date);
+        Test.assertEqual(175 + aod.offsetX, aod.dateX);
+        Test.assertEqual(142 + aod.offsetY, aod.dateY);
+        return true;
+    }
+
+    // The AOD date follows the same folding and short forms as the normal
+    // date (Q21).
+    (:test)
+    function aodDateUsesTheVietnameseShortForm(logger as Test.Logger) as Boolean {
+        var thu5 = fromCodePoints([0x54, 0x68, 0x1EE9, 0x20, 0x35] as Array<Number>);
+        Test.assertEqual("T5 12", aodOnDate(thu5, 5, 12).date);
+        return true;
+    }
+
+    // Story 38: the pill as a 2 px outline, inset 1 px from the normal pill
+    // (160, 140, 96, 28) so its outer edge stays on the pill's edge: (161,
+    // 141, 94, 26), radius 13, moved by the minute's offset.
+    (:test)
+    function aodPillIsA2PxOutlineInset1PxFromTheNormalPill(logger as Test.Logger) as Boolean {
+        var aod = aodOnDate("Thu", 5, 12);
+        var pill = aod.datePill;
+        Test.assertEqual(161 + aod.offsetX, pill.x);
+        Test.assertEqual(141 + aod.offsetY, pill.y);
+        Test.assertEqual(94, pill.width);
+        Test.assertEqual(26, pill.height);
+        Test.assertEqual(13, pill.radius);
+        Test.assertEqual(2, aod.datePillPen);
+        return true;
+    }
+
+    // A longer name grows the AOD pill as it grows the normal one:
+    // "WEDNESDAY 28" is 125 + 30 = 155 px, a pill of 155 + 2 x 14 = 183 from
+    // x 208 - 91 = 117, so the outline is 181 wide from x 118.
+    (:test)
+    function aodPillFollowsTheNormalPillWidth(logger as Test.Logger) as Boolean {
+        var aod = aodOnDate("Wednesday", 4, 28);
+        Test.assertEqual(181, aod.datePill.width);
+        Test.assertEqual(118 + aod.offsetX, aod.datePill.x);
         return true;
     }
 }
