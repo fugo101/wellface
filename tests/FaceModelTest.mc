@@ -235,7 +235,7 @@ module FaceModelTest {
     // The FR265's real Vietnamese Thursday (ticket 02): "Th", U+1EE9, " 5".
     (:test)
     function vietnamesePrecomposedWeekdayFoldsToBaseLetters(logger as Test.Logger) as Boolean {
-        Test.assertEqual("THU 5 12", dateOf(fromCodePoints([0x54, 0x68, 0x1EE9, 0x20, 0x35]), 5, 12));
+        Test.assertEqual("T5 12", dateOf(fromCodePoints([0x54, 0x68, 0x1EE9, 0x20, 0x35]), 5, 12));
         return true;
     }
 
@@ -271,7 +271,7 @@ module FaceModelTest {
     (:test)
     function vietnameseCombiningMarksAreDropped(logger as Test.Logger) as Boolean {
         var name = fromCodePoints([0x54, 0x68, 0x75, 0x031B, 0x0301, 0x20, 0x35]);
-        Test.assertEqual("THU 5 12", dateOf(name, 5, 12));
+        Test.assertEqual("T5 12", dateOf(name, 5, 12));
         // A mark from the supplement block (U+1DC4, macron-acute) on "a".
         Test.assertEqual("SA 1", dateOf(fromCodePoints([0x53, 0x61, 0x1DC4]), 7, 1));
         return true;
@@ -361,6 +361,31 @@ module FaceModelTest {
     (:test)
     function pillOnePixelWiderThanTheBandFallsBack(logger as Test.Logger) as Boolean {
         Test.assertEqual("THU 12", dateOf("MMMMMMMMMMMMN", 5, 12));
+        return true;
+    }
+
+    // Q21: "Thứ 2" ... "Thứ 7" are shown as T2 ... T7.
+    (:test)
+    function vietnameseWeekdaysUseTheShortForm(logger as Test.Logger) as Boolean {
+        Test.assertEqual("T2 9", dateOf(fromCodePoints([0x54, 0x68, 0x1EE9, 0x20, 0x32]), 2, 9));
+        Test.assertEqual("T7 14", dateOf(fromCodePoints([0x54, 0x68, 0x1EE9, 0x20, 0x37]), 7, 14));
+        return true;
+    }
+
+    // Q21: Sunday "Chủ nhật" (U+1EE7, U+1EAD) is shown as CN.
+    (:test)
+    function vietnameseSundayIsCN(logger as Test.Logger) as Boolean {
+        var name = fromCodePoints([0x43, 0x68, 0x1EE7, 0x20, 0x6E, 0x68, 0x1EAD, 0x74]);
+        Test.assertEqual("CN 15", dateOf(name, 1, 15));
+        Test.assertEqual("CN 15", dateOf("CN", 1, 15));
+        return true;
+    }
+
+    // Only "THU" + one digit 2-7 is shortened.
+    (:test)
+    function otherNamesAreNotShortened(logger as Test.Logger) as Boolean {
+        Test.assertEqual("THU 8 3", dateOf("Thu 8", 5, 3));
+        Test.assertEqual("THU 12", dateOf("Thu", 5, 12));
         return true;
     }
 }

@@ -259,6 +259,9 @@ module FaceModel {
     function dateText(snapshot as Snapshot) as String {
         var day = " " + snapshot.day;
         var name = foldWeekday(snapshot.weekdayName);
+        if (name != null) {
+            name = shortenVietnamese(name);
+        }
         if (name != null && name.length() > 0) {
             var text = name + day;
             if (datePillWidth(textWidth(text, GlyphWidths.DATE)) <= Layout.DATE_PILL_MAX_WIDTH) {
@@ -266,6 +269,22 @@ module FaceModel {
             }
         }
         return ENGLISH_WEEKDAYS[snapshot.weekdayNumber - 1] + day;
+    }
+
+    // Vietnamese weekdays in their usual short form (Q21): "THU 2" ... "THU 7"
+    // (folded from "Thứ 2" ... "Thứ 7") become "T2" ... "T7", and "CHU NHAT"
+    // (Sunday) becomes "CN". Every other name is returned as it is.
+    function shortenVietnamese(name as String) as String {
+        if (name.equals("CHU NHAT")) {
+            return "CN";
+        }
+        if (name.length() == 5 && "THU ".equals(name.substring(0, 4))) {
+            var digit = name.toCharArray()[4];
+            if (digit >= '2' && digit <= '7') {
+                return "T" + digit;
+            }
+        }
+        return name;
     }
 
     // max(minimum, text width + 2 x pad), where the pad gives "THU 12"

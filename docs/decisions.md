@@ -38,7 +38,7 @@ Vocabulary follows `GLOSSARY.md`. These rows extend Q1–Q17; where one changes 
 | Q18 | Build order | Start with a tracer bullet (background, time band, time in a system font) that goes the whole way: build → sign → simulator → sideload to the watch. Then add elements one by one |
 | Q19 | Process | Short spec plus one ticket per step under `.scratch/mvp/` before coding |
 | Q20 | Git | Commit straight to `master`, no feature branches (changed 2026-11-12; was one `feat/<slug>` branch per ticket). Commit only with the user's approval |
-| Q21 | Date language | Weekday name follows the watch language, upper-cased with diacritics stripped. If a character is still missing from the font (Cyrillic, CJK…), fall back to English. The watch is currently set to English |
+| Q21 | Date language | Weekday name follows the watch language, upper-cased with diacritics stripped. If a character is still missing from the font (Cyrillic, CJK…), fall back to English. Vietnamese weekdays use their short form: "Thứ 2"…"Thứ 7" → `T2`…`T7`, Sunday → `CN` (2026-11-13). The watch is currently set to English |
 | Q22 | Time format | Always 24 h with a leading zero (`08:42`), whatever the watch's 12/24 h setting |
 | Q23 | Date pill width | At least 96 px, grows to fit longer weekday names, stays centered, never wider than the time band |
 | Q24 | Bottom field, goal not reached | If the step text doesn't fit, the step number shrinks from 22 to 18. If it still doesn't fit, the foot icon is hidden |
