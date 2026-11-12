@@ -54,6 +54,8 @@ It shows up on the watch as its own face, "Wellface data spike", next to Wellfac
 3. Copy `bin/wellface-release.prg` into `GARMIN/APPS` on the watch (the FR265 spells the folder `Apps`). Keep the MTP client closed afterwards: while it runs, it holds the watch's USB connection, so no other tool can reach it.
 4. Unplug the watch and choose Wellface from the watch-face list (menu names may differ slightly).
 
-To update, copy the new `.prg` over the old one. To remove the face, delete it from `GARMIN/APPS`.
+To update, copy the new `.prg` into `GARMIN/Apps` again. The watch installs a sideloaded PRG and then deletes the file, so an empty `Apps` folder does not mean the face is gone.
+
+To remove the face, use Garmin Express on the computer (it also connects over MTP): open the watch's Connect IQ apps section, filter by watch faces and remove Wellface (user report, menu names may differ slightly). Fully quit Garmin Express afterwards, before copying a PRG with another MTP tool.
 
 While the MVP is in progress, Always On shows a black screen until the AOD ticket lands.
