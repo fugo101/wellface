@@ -3,4 +3,6 @@
     <font id="TimeFilled" filename="time57.fnt" antialias="true" filter="0123456789:"/>
     <font id="TimeOutline" filename="time57outline.fnt" antialias="true" filter="0123456789:"/>
     <font id="Date" filename="date17.fnt" antialias="true" filter="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "/>
+    <font id="Number48" filename="number48.fnt" antialias="true" filter="0123456789-"/>
+    <font id="Icons" filename="icons24.fnt" antialias="true" filter="\uE000"/>
 </fonts>

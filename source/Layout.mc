@@ -1,9 +1,69 @@
 import Toybox.Lang;
 
-// Fixed geometry from the final design, on the 416x416 canvas.
+// The geometry of a round field: its circle, the gauge ring inside it, and
+// where its icon and number go. A field is only a place; the metric shown in
+// it decides what is drawn there (Q29).
+class RoundField {
+    // The field's circle; its well is a circle of radius + Layout.WELL.
+    public var x as Number;
+    public var y as Number;
+    public var radius as Number;
+    // The gauge ring's centerline radius and pen.
+    public var gaugeRadius as Number;
+    public var gaugePen as Number;
+    // The icon's top-left corner (icons are 24 px square).
+    public var iconX as Number;
+    public var iconY as Number;
+    // The number is centered on x, its digits vertically centered on this y.
+    public var numberY as Number;
+
+    function initialize(x as Number, y as Number, radius as Number, gaugeRadius as Number,
+            gaugePen as Number, iconX as Number, iconY as Number, numberY as Number) {
+        self.x = x;
+        self.y = y;
+        self.radius = radius;
+        self.gaugeRadius = gaugeRadius;
+        self.gaugePen = gaugePen;
+        self.iconX = iconX;
+        self.iconY = iconY;
+        self.numberY = numberY;
+    }
+}
+
+// Fixed geometry from the final design, on the 416x416 canvas, and the
+// static MVP mapping of metrics to fields.
 module Layout {
+    // The one place that says which metric each field shows (Q29). Fields
+    // will become switchable later; only these lines change then.
+    const LEFT_METRIC = METRIC_STRESS;
+    const CENTER_METRIC = METRIC_BODY_BATTERY;
+    const RIGHT_METRIC = METRIC_HEART_RATE;
+    const BOTTOM_METRIC = METRIC_STEPS;
+    // The bezel ring only takes a goal metric: one with a goal read from the
+    // watch (FaceModel.goalOf). Steps is the only one in the MVP.
+    const BEZEL_METRIC = METRIC_STEPS;
+
     const CENTER_X = 208;
     const CENTER_Y = 208;
+
+    // The center field.
+    const CENTER_FIELD_X = 208;
+    const CENTER_FIELD_Y = 246;
+    const CENTER_FIELD_RADIUS = 60;
+    // The design's gauge centerline is r 55.5. With pen 9, r 56 lands on
+    // about r 50.4-59.5 in the simulator (design 51-60); r 55 lands 1 px
+    // further in.
+    const CENTER_GAUGE_RADIUS = 56;
+    const CENTER_GAUGE_PEN = 9;
+    const CENTER_ICON_X = 196;
+    const CENTER_ICON_Y = 203;
+    const CENTER_NUMBER_Y = 258;
+
+    function centerField() as RoundField {
+        return new RoundField(CENTER_FIELD_X, CENTER_FIELD_Y, CENTER_FIELD_RADIUS,
+            CENTER_GAUGE_RADIUS, CENTER_GAUGE_PEN, CENTER_ICON_X, CENTER_ICON_Y,
+            CENTER_NUMBER_Y);
+    }
 
     // The bezel ring, on the screen's edge.
     const BEZEL_RADIUS = 204;

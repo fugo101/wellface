@@ -9,9 +9,11 @@ repository), renders the bitmap fonts the face uses and writes:
 - resources/fonts/OFL-<family>.txt: the license of every source font used;
 - source/GlyphWidths.mc: the glyph-width tables FaceModel measures text with,
   holding exactly the xadvance values written to each .fnt, plus each font's
-  base and cap height and any pad derived from a sample text.
+  base and cap height and any pad derived from a sample text, and the code
+  point of every icon.
 
-Run it with scripts/gen-fonts.sh. To add a font, add an entry to FONTS.
+Run it with scripts/gen-fonts.sh. To add a font, add an entry to FONTS; to add
+an icon, add an entry to ICONS.
 """
 
 from __future__ import annotations
@@ -26,7 +28,9 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
+from fontTools.pens.basePen import BasePen
 from fontTools.pens.boundsPen import BoundsPen
+from fontTools.svgLib.path import parse_path
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 from PIL import Image, ImageChops, ImageDraw, ImageFont
@@ -219,6 +223,27 @@ FONTS = [
     # "THU 12" the design's 96 px pill (Layout.DATE_PILL_MIN_WIDTH; keep both equal).
     FontSpec("Date", "date17", "DATE", "manrope-800", 17,
              LETTERS + DIGITS + " ", tracking=2, pad=("THU 12", 96)),
+    # The center field's number.
+    FontSpec("Number48", "number48", "NUMBER_48", "manrope-800", 48, DIGITS + "-"),
+]
+
+
+# --- Icons ----------------------------------------------------------------------
+
+@dataclass
+class Icon:
+    name: str        # GlyphWidths.ICON_<name>, the code point
+    code_point: int  # in the Private Use Area
+    path: str        # SVG path on the design's 24-unit grid (IC in the design's source)
+
+
+# The icon font: every icon is one glyph, ICON_SIZE px square, drawn from its
+# box's top-left corner (the glyph keeps its place inside the box).
+ICON_FONT_ID = "Icons"  # Rez.Fonts.Icons
+ICON_FONT_FILE = "icons24"
+ICON_SIZE = 24
+ICONS = [
+    Icon("BOLT", 0xE000, "M13.5 2 L5 13.5 H11 L10 22 L19 10 H13 Z"),
 ]
 
 
@@ -305,6 +330,66 @@ def render_font(spec: FontSpec, src: SourceFont) -> tuple[list[Glyph], Metrics]:
     return glyphs, metrics
 
 
+class PolygonPen(BasePen):
+    """Collects every contour as a polygon, curves flattened into short lines."""
+
+    CURVE_STEPS = 16
+
+    def __init__(self) -> None:
+        super().__init__(None)
+        self.polygons: list[list[tuple[float, float]]] = []
+
+    def _moveTo(self, pt):
+        self.polygons.append([pt])
+
+    def _lineTo(self, pt):
+        self.polygons[-1].append(pt)
+
+    def _curveToOne(self, pt1, pt2, pt3):
+        (x0, y0), n = self.polygons[-1][-1], self.CURVE_STEPS
+        for i in range(1, n + 1):
+            t = i / n
+            a, b, c, d = (1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t * t, t ** 3
+            self.polygons[-1].append((a * x0 + b * pt1[0] + c * pt2[0] + d * pt3[0],
+                                      a * y0 + b * pt1[1] + c * pt2[1] + d * pt3[1]))
+
+    def _closePath(self):
+        pass
+
+    def _endPath(self):
+        pass
+
+
+def render_icons() -> tuple[list[Glyph], Metrics]:
+    """Each icon filled at ICON_SIZE px, supersampled like the text fonts.
+    Contours are filled one by one and merged, which equals the nonzero rule
+    as long as no contour cuts a hole into another (true for every icon)."""
+    ss = SUPERSAMPLE
+    glyphs = []
+    for icon in ICONS:
+        if not 0xE000 <= icon.code_point <= 0xF8FF:
+            raise SystemExit(f"icon {icon.name}: U+{icon.code_point:04X} is not in the PUA")
+        pen = PolygonPen()
+        parse_path(icon.path, pen)
+        side = ICON_SIZE + 2 * MARGIN
+        big = Image.new("L", (side * ss, side * ss), 0)
+        draw = ImageDraw.Draw(big)
+        for polygon in pen.polygons:
+            draw.polygon([((MARGIN + x) * ss, (MARGIN + y) * ss) for x, y in polygon], fill=255)
+        image = big.reduce(ss)
+        bbox = image.getbbox()
+        if bbox is None:
+            raise SystemExit(f"icon {icon.name} renders empty")
+        glyphs.append(Glyph(
+            char=chr(icon.code_point),
+            image=image.crop(bbox),
+            xoffset=bbox[0] - MARGIN,
+            yoffset=bbox[1] - MARGIN,
+            xadvance=ICON_SIZE,
+        ))
+    return glyphs, Metrics(line_height=ICON_SIZE, base=ICON_SIZE, cap_height=ICON_SIZE)
+
+
 def erode(image: Image.Image, radius: int) -> Image.Image:
     """Grayscale erosion with a disc: each pixel becomes the minimum of its
     neighbourhood, so the shape shrinks by `radius` px on every side."""
@@ -338,15 +423,15 @@ def pack(glyphs: list[Glyph]) -> Image.Image:
 
 # --- Output ---------------------------------------------------------------------
 
-def write_fnt(spec: FontSpec, src: SourceFont, glyphs: list[Glyph], metrics: Metrics,
+def write_fnt(file: str, face: str, size: int, glyphs: list[Glyph], metrics: Metrics,
               page: Image.Image) -> None:
     """Text BMFont with single spaces only: the compiler splits tokens on one space."""
     lines = [
-        f'info face="{src.face}" size={spec.size} bold=0 italic=0 charset="" unicode=1 '
+        f'info face="{face}" size={size} bold=0 italic=0 charset="" unicode=1 '
         f"stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing={SPACING},{SPACING} outline=0",
         f"common lineHeight={metrics.line_height} base={metrics.base} "
         f"scaleW={page.width} scaleH={page.height} pages=1 packed=0",
-        f'page id=0 file="{spec.file}.png"',
+        f'page id=0 file="{file}.png"',
         f"chars count={len(glyphs)}",
     ]
     for g in glyphs:
@@ -354,8 +439,8 @@ def write_fnt(spec: FontSpec, src: SourceFont, glyphs: list[Glyph], metrics: Met
             f"char id={ord(g.char)} x={g.x} y={g.y} width={g.image.width} "
             f"height={g.image.height} xoffset={g.xoffset} yoffset={g.yoffset} "
             f"xadvance={g.xadvance} page=0 chnl=15")
-    (FONT_DIR / f"{spec.file}.fnt").write_text("\n".join(lines) + "\n")
-    page.save(FONT_DIR / f"{spec.file}.png", optimize=True)
+    (FONT_DIR / f"{file}.fnt").write_text("\n".join(lines) + "\n")
+    page.save(FONT_DIR / f"{file}.png", optimize=True)
 
 
 def filter_attr(glyphs: str) -> str:
@@ -372,9 +457,11 @@ def filter_attr(glyphs: str) -> str:
 
 def write_fonts_xml() -> None:
     lines = ["<!-- Generated by tools/fontgen/generate.py. Do not edit. -->", "<fonts>"]
-    for spec in FONTS:
-        lines.append(f'    <font id="{spec.resource_id}" filename="{spec.file}.fnt" '
-                     f'antialias="true" filter="{filter_attr(spec.glyphs)}"/>')
+    fonts = [(spec.resource_id, spec.file, spec.glyphs) for spec in FONTS]
+    fonts.append((ICON_FONT_ID, ICON_FONT_FILE, "".join(chr(icon.code_point) for icon in ICONS)))
+    for resource_id, file, glyphs in fonts:
+        lines.append(f'    <font id="{resource_id}" filename="{file}.fnt" '
+                     f'antialias="true" filter="{filter_attr(glyphs)}"/>')
     lines.append("</fonts>")
     (FONT_DIR / "fonts.xml").write_text("\n".join(lines) + "\n")
 
@@ -414,9 +501,11 @@ def write_tables(results: list[tuple[FontSpec, SourceFont, list[Glyph], Metrics]
         "// Per font: the BMFont base (line top to baseline, px), the cap height",
         "// (px), and every glyph's xadvance exactly as written to its .fnt, so",
         "// measured and drawn widths agree. A _PAD gives its sample text a box of",
-        "// the design's minimum width.",
+        "// the design's minimum width. Icons are one glyph each in the icon font,",
+        f"// {ICON_SIZE} px square, at these Private Use Area code points.",
         "module GlyphWidths {",
     ]
+    lines += [f"    const ICON_{icon.name} = 0x{icon.code_point:04X};" for icon in ICONS]
     for spec, src, glyphs, metrics in results:
         entries = ", ".join(f"{monkey_char(g.char)} => {g.xadvance}" for g in glyphs)
         lines += [
@@ -447,8 +536,10 @@ def main() -> None:
             src = sources[spec.source]
             glyphs, metrics = render_font(spec, src)
             page = pack(glyphs)
-            write_fnt(spec, src, glyphs, metrics, page)
+            write_fnt(spec.file, src.face, spec.size, glyphs, metrics, page)
             results.append((spec, src, glyphs, metrics))
+        icons, icon_metrics = render_icons()
+        write_fnt(ICON_FONT_FILE, ICON_FONT_ID, ICON_SIZE, icons, icon_metrics, pack(icons))
 
         for src in sources.values():
             (FONT_DIR / f"OFL-{src.license_name}.txt").write_bytes(src.license_text)
@@ -466,6 +557,9 @@ def main() -> None:
             print(f"{spec.file}: base {metrics.base}, lineHeight {metrics.line_height}, "
                   f"cap {metrics.cap_height}"
                   f"{ink}{padding}; {advances}")
+        for icon, glyph in zip(ICONS, icons):
+            print(f"{ICON_FONT_FILE}: {icon.name} U+{icon.code_point:04X}, ink "
+                  f"{glyph.image.width}x{glyph.image.height} at ({glyph.xoffset}, {glyph.yoffset})")
 
 
 if __name__ == "__main__":

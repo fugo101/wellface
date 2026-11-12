@@ -75,6 +75,22 @@ module FaceModelTest {
         return dot as Circle;
     }
 
+    function frameWithBodyBattery(bodyBattery as Number?) as Frame {
+        var snapshot = new Snapshot(8, 42);
+        snapshot.bodyBattery = bodyBattery;
+        return FaceModel.compute(snapshot, Themes.mint());
+    }
+
+    function centerAt(bodyBattery as Number?) as FieldFrame {
+        return frameWithBodyBattery(bodyBattery).centerField;
+    }
+
+    // The gauge arc of a field, asserted to be there.
+    function gaugeOf(field as FieldFrame) as Arc {
+        Test.assertEqual(1, field.arcs.size());
+        return field.arcs[0];
+    }
+
     function assertLine(line as Line, x1 as Number, y1 as Number, x2 as Number,
             y2 as Number) as Void {
         Test.assertEqual(x1, line.x1);
@@ -569,6 +585,165 @@ module FaceModelTest {
         Test.assertEqual(0, frame.bezelProgress.sweep);
         Test.assert(frame.bezelHead == null);
         Test.assert(!frame.stepGoalReached);
+        return true;
+    }
+
+    // Story 10: the center gauge fills clockwise from 12 o'clock; 100 is a
+    // full circle (start == end) around the center field (208, 246), pen 9.
+    (:test)
+    function bodyBattery100IsAFullCircle(logger as Test.Logger) as Boolean {
+        var gauge = gaugeOf(centerAt(100));
+        Test.assertEqual(360, gauge.sweep);
+        Test.assertEqual(90, gauge.start);
+        Test.assertEqual(90, gauge.end);
+        Test.assertEqual(208, gauge.x);
+        Test.assertEqual(246, gauge.y);
+        Test.assert(gauge.radius == 55 || gauge.radius == 56);
+        Test.assertEqual(9, gauge.pen);
+        return true;
+    }
+
+    // Design frame 1: 56 sweeps 201 deg (56 x 360 / 100, rounded down), so
+    // from ciq 90 clockwise to ciq 249, in the accent.
+    (:test)
+    function bodyBattery56SweepsFrom12OClock(logger as Test.Logger) as Boolean {
+        var gauge = gaugeOf(centerAt(56));
+        Test.assertEqual(201, gauge.sweep);
+        Test.assertEqual(90, gauge.start);
+        Test.assertEqual(249, gauge.end);
+        Test.assertEqual(0x8EE3B8, gauge.color);
+        return true;
+    }
+
+    (:test)
+    function bodyBattery0DrawsNoArc(logger as Test.Logger) as Boolean {
+        Test.assertEqual(0, centerAt(0).arcs.size());
+        return true;
+    }
+
+    // Story 9: the value as a large white number.
+    (:test)
+    function bodyBatteryIsAWhiteNumber(logger as Test.Logger) as Boolean {
+        var field = centerAt(56);
+        Test.assertEqual("56", field.number);
+        Test.assertEqual(0xFFFFFF, field.numberColor);
+        return true;
+    }
+
+    // Story 13, Q26: missing Body Battery is "--" in gray, track only.
+    (:test)
+    function missingBodyBatteryIsGrayDashesWithNoArc(logger as Test.Logger) as Boolean {
+        var field = centerAt(null);
+        Test.assertEqual("--", field.number);
+        Test.assertEqual(0x8C8C8C, field.numberColor);
+        Test.assertEqual(0, field.arcs.size());
+        return true;
+    }
+
+    // Story 11: 25 and up is no warning: accent gauge, white number.
+    (:test)
+    function bodyBattery25IsNoWarning(logger as Test.Logger) as Boolean {
+        var field = centerAt(25);
+        Test.assertEqual(0x8EE3B8, gaugeOf(field).color);
+        Test.assertEqual(0xFFFFFF, field.numberColor);
+        return true;
+    }
+
+    // Story 11: 15-24 turns the gauge and number orange.
+    (:test)
+    function bodyBattery15To24IsOrange(logger as Test.Logger) as Boolean {
+        var values = [15, 24] as Array<Number>;
+        for (var i = 0; i < values.size(); i++) {
+            var field = centerAt(values[i]);
+            Test.assertEqual(0xFF8A3D, gaugeOf(field).color);
+            Test.assertEqual(0xFF8A3D, field.numberColor);
+        }
+        return true;
+    }
+
+    // Story 11: below 15 turns the gauge and number red.
+    (:test)
+    function bodyBatteryBelow15IsRed(logger as Test.Logger) as Boolean {
+        var field = centerAt(14);
+        Test.assertEqual(0xFF4D4D, gaugeOf(field).color);
+        Test.assertEqual(0xFF4D4D, field.numberColor);
+        Test.assertEqual(0xFF4D4D, centerAt(0).numberColor);
+        return true;
+    }
+
+    // Story 12: the bolt (U+E000 in the icon font) at (196, 203), gray
+    // without a warning, including when the value is missing.
+    (:test)
+    function bodyBatteryIconIsAGrayBoltWithoutWarning(logger as Test.Logger) as Boolean {
+        var values = [56, 25, null] as Array<Number?>;
+        for (var i = 0; i < values.size(); i++) {
+            var field = centerAt(values[i]);
+            Test.assertEqual((0xE000).toChar().toString(), field.icon);
+            Test.assertEqual(196, field.iconX);
+            Test.assertEqual(203, field.iconY);
+            Test.assertEqual(0x8C8C8C, field.iconColor);
+        }
+        return true;
+    }
+
+    // Story 11: in warning the icon takes the warning color too.
+    (:test)
+    function bodyBatteryIconTakesTheWarningColor(logger as Test.Logger) as Boolean {
+        Test.assertEqual(0xFF8A3D, centerAt(24).iconColor);
+        Test.assertEqual(0xFF8A3D, centerAt(15).iconColor);
+        Test.assertEqual(0xFF4D4D, centerAt(14).iconColor);
+        return true;
+    }
+
+    // Story 9: Manrope ExtraBold 48, centered on x 208 by its measured width
+    // ("5" 28 + "6" 30 px in the generated font).
+    (:test)
+    function bodyBatteryNumberIsCenteredOnX208(logger as Test.Logger) as Boolean {
+        var field = centerAt(56);
+        Test.assertEqual(NUMBER_FONT_48, field.numberFont);
+        Test.assertEqual(58, field.numberWidth);
+        assertCenteredOn208(field.numberX, field.numberWidth);
+        var dashes = centerAt(null);
+        assertCenteredOn208(dashes.numberX, dashes.numberWidth);
+        return true;
+    }
+
+    // The digits are vertically centered on y 258: with a 35 px cap height
+    // the baseline sits on 258 + 17 = 275. The renderer draws from the line
+    // top, `base` above the baseline.
+    (:test)
+    function bodyBatteryBaselineSitsOnY275(logger as Test.Logger) as Boolean {
+        Test.assertEqual(275, centerAt(56).numberY + GlyphWidths.NUMBER_48_BASE);
+        Test.assertEqual(275, centerAt(null).numberY + GlyphWidths.NUMBER_48_BASE);
+        return true;
+    }
+
+    // The center field sits in a black well of r 60 + 6 around (208, 246).
+    (:test)
+    function centerFieldHasABlackWell(logger as Test.Logger) as Boolean {
+        var wells = mintLayer().fieldWells;
+        Test.assertEqual(1, wells.size());
+        Test.assertEqual(208, wells[0].x);
+        Test.assertEqual(246, wells[0].y);
+        Test.assertEqual(66, wells[0].radius);
+        Test.assertEqual(0x000000, wells[0].color);
+        return true;
+    }
+
+    // The gauge track is a full circle in the gauge-track color, exactly
+    // under the gauge (same center, radius and pen).
+    (:test)
+    function centerGaugeTrackIsAFullCircleUnderTheGauge(logger as Test.Logger) as Boolean {
+        var tracks = mintLayer().gaugeTracks;
+        Test.assertEqual(1, tracks.size());
+        var track = tracks[0];
+        var gauge = gaugeOf(centerAt(100));
+        Test.assertEqual(360, track.sweep);
+        Test.assertEqual(0x2E3330, track.color);
+        Test.assertEqual(gauge.x, track.x);
+        Test.assertEqual(gauge.y, track.y);
+        Test.assertEqual(gauge.radius, track.radius);
+        Test.assertEqual(gauge.pen, track.pen);
         return true;
     }
 }

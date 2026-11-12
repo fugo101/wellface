@@ -21,7 +21,7 @@ The scripts never print the key or its path. If the VS Code extension generated 
 | `scripts/build-test.sh` | `bin/wellface-test.prg` | build with the `(:test)` code |
 | `scripts/run-tests.sh [test name]` | `bin/test.log` | build the tests, start the simulator, run them |
 | `scripts/build-release.sh` | `bin/wellface-release.prg` | sideload to the watch (`-r --build-stats 0`) |
-| `scripts/gen-fonts.sh` | `resources/fonts/`, `source/GlyphWidths.mc` | regenerate the bitmap fonts and glyph-width tables |
+| `scripts/gen-fonts.sh` | `resources/fonts/`, `source/GlyphWidths.mc` | regenerate the bitmap fonts, the icon font and the glyph-width tables |
 | `scripts/build-spike.sh` | `bin/wfspike.prg` | data spike (ticket 02), a separate debug-only face |
 | `scripts/run-spike.sh` | `bin/wfspike.prg` | data spike, start the simulator and load it |
 
@@ -31,7 +31,7 @@ Every build fails on any compiler warning. Type checking is strict, set in each 
 
 ## Fonts
 
-`scripts/gen-fonts.sh` runs the font generator (`tools/fontgen/generate.py`). It downloads the source fonts fresh from Google Fonts (the google/fonts repository, so it needs the network) and rewrites everything in `resources/fonts/` (BMFont `.fnt` + PNG pages, `fonts.xml`, the OFL license files) and `source/GlyphWidths.mc`. Never edit those files by hand; change the `FONTS` list in the generator and run the script again. Commit the generated files.
+`scripts/gen-fonts.sh` runs the font generator (`tools/fontgen/generate.py`). It downloads the source fonts fresh from Google Fonts (the google/fonts repository, so it needs the network) and rewrites everything in `resources/fonts/` (BMFont `.fnt` + PNG pages, `fonts.xml`, the OFL license files) and `source/GlyphWidths.mc`. Never edit those files by hand; change the `FONTS` list (or `ICONS`, for the icon font) in the generator and run the script again. Commit the generated files.
 
 The first run creates a gitignored `.venv/` with Python 3.15 (override with `PYTHON=<interpreter>`) and the pinned versions in `tools/fontgen/requirements.txt`. The generator fails if a requested glyph is missing from a source font, or if the time font's `0` is not 46 px ± 1 tall.
 

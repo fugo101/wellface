@@ -4,8 +4,10 @@ import Toybox.Lang;
 // Per font: the BMFont base (line top to baseline, px), the cap height
 // (px), and every glyph's xadvance exactly as written to its .fnt, so
 // measured and drawn widths agree. A _PAD gives its sample text a box of
-// the design's minimum width.
+// the design's minimum width. Icons are one glyph each in the icon font,
+// 24 px square, at these Private Use Area code points.
 module GlyphWidths {
+    const ICON_BOLT = 0xE000;
     // TimeFilled: BigShouldersDisplay-ExtraBold 57 px.
     const TIME_BASE = 56;
     const TIME_CAP_HEIGHT = 46;
@@ -20,4 +22,8 @@ module GlyphWidths {
     // (96 - width of "THU 12") / 2.
     const DATE_PAD = 14;
     const DATE = { 'A' => 14, 'B' => 13, 'C' => 15, 'D' => 14, 'E' => 12, 'F' => 11, 'G' => 15, 'H' => 14, 'I' => 7, 'J' => 11, 'K' => 13, 'L' => 11, 'M' => 17, 'N' => 14, 'O' => 15, 'P' => 13, 'Q' => 15, 'R' => 13, 'S' => 13, 'T' => 12, 'U' => 14, 'V' => 13, 'W' => 19, 'X' => 13, 'Y' => 13, 'Z' => 14, '0' => 13, '1' => 10, '2' => 12, '3' => 12, '4' => 12, '5' => 12, '6' => 13, '7' => 11, '8' => 13, '9' => 13, ' ' => 5 } as Dictionary<Char, Number>;
+    // Number48: Manrope-ExtraBold 48 px.
+    const NUMBER_48_BASE = 51;
+    const NUMBER_48_CAP_HEIGHT = 35;
+    const NUMBER_48 = { '0' => 32, '1' => 22, '2' => 29, '3' => 28, '4' => 30, '5' => 28, '6' => 30, '7' => 26, '8' => 30, '9' => 30, '-' => 20 } as Dictionary<Char, Number>;
 }

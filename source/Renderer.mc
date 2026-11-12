@@ -48,6 +48,8 @@ class Renderer {
             drawArc(dc, lit[i]);
         }
 
+        paintField(dc, frame.centerField);
+
         // FaceModel places the time by its measured width and the font's base.
         dc.setColor(frame.timeColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(frame.timeX, frame.timeY, _fonts.time, frame.time,
@@ -57,6 +59,20 @@ class Renderer {
         fillRoundedRect(dc, frame.datePill);
         dc.setColor(frame.dateColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(frame.dateX, frame.dateY, _fonts.date, frame.date,
+            Graphics.TEXT_JUSTIFY_LEFT);
+    }
+
+    // A field's arcs, icon and number, over its well and track in the static
+    // layer.
+    private function paintField(dc as Dc, field as FieldFrame) as Void {
+        for (var i = 0; i < field.arcs.size(); i++) {
+            drawArc(dc, field.arcs[i]);
+        }
+        dc.setColor(field.iconColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(field.iconX, field.iconY, _fonts.icons, field.icon,
+            Graphics.TEXT_JUSTIFY_LEFT);
+        dc.setColor(field.numberColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(field.numberX, field.numberY, _fonts.number(field.numberFont), field.number,
             Graphics.TEXT_JUSTIFY_LEFT);
     }
 
@@ -118,6 +134,13 @@ class Renderer {
         dc.setColor(layer.timeBandColor, layer.timeBandColor);
         dc.fillRoundedRectangle(Layout.BAND_X, Layout.BAND_Y,
             Layout.BAND_W, Layout.BAND_H, Layout.BAND_RADIUS);
+
+        for (var i = 0; i < layer.fieldWells.size(); i++) {
+            fillCircle(dc, layer.fieldWells[i]);
+        }
+        for (var i = 0; i < layer.gaugeTracks.size(); i++) {
+            drawArc(dc, layer.gaugeTracks[i]);
+        }
     }
 
     private function fillCircle(dc as Dc, circle as Circle) as Void {

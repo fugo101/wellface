@@ -22,6 +22,9 @@ class Snapshot {
     // entered by hand).
     public var steps as Number? = null;
     public var stepGoal as Number? = null;
+    // Body Battery, 0-100 (the data reader drops non-Number and negative
+    // values).
+    public var bodyBattery as Number? = null;
 
     function initialize(hour as Number, minute as Number) {
         self.hour = hour;
@@ -61,6 +64,39 @@ class Frame {
     // Goal reached: the goal is above 0, the steps are known and at least
     // the goal. The bottom field switches style on it (ticket 10).
     public var stepGoalReached as Boolean = false;
+    // The center field's content.
+    public var centerField as FieldFrame = new FieldFrame();
+
+    function initialize() {
+    }
+}
+
+// The generated fonts a field's number can be drawn in. The renderer maps
+// each to its loaded font, FaceModel to its glyph-width table.
+enum NumberFont {
+    NUMBER_FONT_48
+}
+
+// What a field draws over its static well and track: the lit arcs, the icon
+// and the number. Which arcs, colors and strings depends on the metric shown.
+class FieldFrame {
+    // Drawn over the track. A gauge has one arc, or none when the value is
+    // missing or 0.
+    public var arcs as Array<Arc> = [] as Array<Arc>;
+    // The metric's icon (one glyph in the icon font), its top-left corner
+    // and its color.
+    public var icon as String = "";
+    public var iconX as Number = 0;
+    public var iconY as Number = 0;
+    public var iconColor as Number = 0;
+    // The value as text, its color and font, its measured width and the
+    // top-left corner to draw it from (left-justified, line top).
+    public var number as String = "";
+    public var numberColor as Number = 0;
+    public var numberFont as NumberFont = NUMBER_FONT_48;
+    public var numberWidth as Number = 0;
+    public var numberX as Number = 0;
+    public var numberY as Number = 0;
 
     function initialize() {
     }
@@ -78,6 +114,9 @@ class StaticLayer {
     public var batteryCaps as Array<Circle> = [] as Array<Circle>;
     // The ten battery segments, all unlit, leftmost first.
     public var batteryTrack as Array<Arc> = [] as Array<Arc>;
+    // The black wells of the round fields, and the tracks of their gauges.
+    public var fieldWells as Array<Circle> = [] as Array<Circle>;
+    public var gaugeTracks as Array<Arc> = [] as Array<Arc>;
 
     function initialize() {
     }
@@ -189,14 +228,22 @@ module FaceModel {
         frame.timeY = Layout.TIME_BASELINE_Y - GlyphWidths.TIME_BASE;
         frame.timeColor = theme.ink;
         frame.batteryLit = batteryLit(snapshot.battery, theme);
-        var sweep = bezelSweep(snapshot.steps, snapshot.stepGoal);
+
+        // The bezel ring: progress of its goal metric toward the goal.
+        var bezelValue = metricValue(Layout.BEZEL_METRIC, snapshot);
+        var bezelGoal = goalOf(Layout.BEZEL_METRIC, snapshot);
+        var sweep = bezelSweep(bezelValue, bezelGoal);
         frame.bezelProgress = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.BEZEL_RADIUS,
             Layout.BEZEL_PEN, 0, sweep, theme.accent);
-        frame.stepGoalReached = goalReached(snapshot.steps, snapshot.stepGoal);
-        if (hasStepProgress(snapshot.steps, snapshot.stepGoal)) {
+        if (hasGoalProgress(bezelValue, bezelGoal)) {
             frame.bezelHead = circleAt(sweep, Layout.BEZEL_RADIUS, Layout.BEZEL_HEAD_RADIUS,
                 theme.text);
         }
+        frame.stepGoalReached = goalReached(metricValue(Layout.BOTTOM_METRIC, snapshot),
+            goalOf(Layout.BOTTOM_METRIC, snapshot));
+
+        frame.centerField = roundField(Layout.centerField(), Layout.CENTER_METRIC, snapshot,
+            theme);
         frame.date = dateText(snapshot);
         frame.dateWidth = textWidth(frame.date, GlyphWidths.DATE);
         frame.dateX = Layout.CENTER_X - frame.dateWidth / 2;
@@ -207,6 +254,95 @@ module FaceModel {
         frame.datePill = new RoundedRect(Layout.CENTER_X - pillWidth / 2, Layout.DATE_PILL_Y,
             pillWidth, Layout.DATE_PILL_HEIGHT, Layout.DATE_PILL_RADIUS, theme.ink);
         return frame;
+    }
+
+    // A round field showing `metric`. The metric decides the style; every
+    // MVP metric in a round field so far is a gauge.
+    function roundField(field as RoundField, metric as Metric, snapshot as Snapshot,
+            theme as Theme) as FieldFrame {
+        return gaugeField(field, metric, metricValue(metric, snapshot), theme);
+    }
+
+    // A gauge: an arc from 12 o'clock, clockwise, over the field's track. In
+    // warning, the arc and number take the warning color.
+    function gaugeField(field as RoundField, metric as Metric, value as Number?,
+            theme as Theme) as FieldFrame {
+        var content = new FieldFrame();
+        var icon = iconOf(metric);
+        content.icon = icon != null ? icon.toChar().toString() : "";
+        content.iconX = field.iconX;
+        content.iconY = field.iconY;
+        content.iconColor = theme.secondary;
+        content.number = "--";
+        content.numberColor = theme.secondary;
+        if (value != null) {
+            content.number = value.toString();
+            content.numberColor = theme.text;
+            var arcColor = theme.accent;
+            var warning = warningColor(metric, value, theme);
+            if (warning != null) {
+                content.iconColor = warning;
+                content.numberColor = warning;
+                arcColor = warning;
+            }
+            var sweep = gaugeSweep(value);
+            if (sweep > 0) {
+                content.arcs = [arc(field.x, field.y, field.gaugeRadius, field.gaugePen, 0, sweep,
+                    arcColor)] as Array<Arc>;
+            }
+        }
+        // The center field's number is always 48 px; the left and right
+        // fields pick a size by length (ticket 08).
+        content.numberFont = NUMBER_FONT_48;
+        content.numberWidth = textWidth(content.number, GlyphWidths.NUMBER_48);
+        content.numberX = field.x - content.numberWidth / 2;
+        // Digits only, so their cap height is centered on numberY.
+        content.numberY = field.numberY + GlyphWidths.NUMBER_48_CAP_HEIGHT / 2
+            - GlyphWidths.NUMBER_48_BASE;
+        return content;
+    }
+
+    // The code point of a metric's icon in the icon font.
+    // The code point of a metric's icon in the icon font, null if the icon
+    // font has none for it yet (stress, heart and foot come with tickets
+    // 08-10).
+    function iconOf(metric as Metric) as Number? {
+        return metric == METRIC_BODY_BATTERY ? GlyphWidths.ICON_BOLT : null;
+    }
+
+    // The warning color for a metric's value, null when there is no warning.
+    function warningColor(metric as Metric, value as Number, theme as Theme) as Number? {
+        if (metric == METRIC_BODY_BATTERY) {
+            // Red below 15, orange at 15-24.
+            if (value < 15) {
+                return theme.warningLevel2;
+            }
+            return value < 25 ? theme.warningLevel1 : null;
+        }
+        return null;
+    }
+
+    // clamp(value, 0, 100) x 360 / 100, rounded down.
+    function gaugeSweep(value as Number) as Number {
+        return clamp(value, 0, 100) * 360 / 100;
+    }
+
+    // The current value of a metric, null when missing.
+    function metricValue(metric as Metric, snapshot as Snapshot) as Number? {
+        switch (metric) {
+            case METRIC_BODY_BATTERY:
+                return snapshot.bodyBattery;
+            case METRIC_STEPS:
+                return snapshot.steps;
+        }
+        return null; // stress and heart rate come with tickets 08 and 09
+    }
+
+    // The goal of a goal metric (one whose goal is read from the watch),
+    // null when missing or when the metric has no goal. Only a goal metric
+    // goes on the bezel ring (Layout.BEZEL_METRIC).
+    function goalOf(metric as Metric, snapshot as Snapshot) as Number? {
+        return metric == METRIC_STEPS ? snapshot.stepGoal : null;
     }
 
     // The static layer for a theme.
@@ -231,6 +367,16 @@ module FaceModel {
             track[i] = batterySegment(i, theme.gaugeTrack);
         }
         layer.batteryTrack = track;
+
+        var center = Layout.centerField();
+        layer.fieldWells = [
+            new Circle(center.x, center.y, center.radius + Layout.WELL, theme.ink)
+        ] as Array<Circle>;
+        // Every metric in a round field so far is a gauge, so every round
+        // field has a full-circle track.
+        layer.gaugeTracks = [
+            arc(center.x, center.y, center.gaugeRadius, center.gaugePen, 0, 360, theme.gaugeTrack)
+        ] as Array<Arc>;
         return layer;
     }
 
@@ -249,14 +395,14 @@ module FaceModel {
         return segments;
     }
 
-    // min(steps, goal) x 360 / goal, multiplication first and rounded down,
+    // min(value, goal) x 360 / goal, multiplication first and rounded down,
     // so the ring closes only when the goal is reached.
-    function bezelSweep(steps as Number?, goal as Number?) as Number {
-        // The null checks repeat hasStepProgress for the type checker.
-        if (steps == null || goal == null || !hasStepProgress(steps, goal)) {
+    function bezelSweep(value as Number?, goal as Number?) as Number {
+        // The null checks repeat hasGoalProgress for the type checker.
+        if (value == null || goal == null || !hasGoalProgress(value, goal)) {
             return 0;
         }
-        return (steps < goal ? steps : goal) * 360 / goal;
+        return (value < goal ? value : goal) * 360 / goal;
     }
 
     // The black notches across the bezel ring at 3, 6 and 9 o'clock (one per
@@ -276,15 +422,16 @@ module FaceModel {
         return notches;
     }
 
-    // goal > 0, steps known and steps >= goal.
-    function goalReached(steps as Number?, goal as Number?) as Boolean {
-        return steps != null && goal != null && hasStepProgress(steps, goal) && steps >= goal;
+    // goal > 0, value known and value >= goal.
+    function goalReached(value as Number?, goal as Number?) as Boolean {
+        return value != null && goal != null && hasGoalProgress(value, goal) && value >= goal;
     }
 
-    // Progress toward the goal can be shown: the goal is above 0 and the
-    // steps are known (0 steps included; a negative count is no reading).
-    function hasStepProgress(steps as Number?, goal as Number?) as Boolean {
-        return steps != null && goal != null && goal > 0 && steps >= 0;
+    // Progress of a goal metric can be shown: the goal is above 0 and the
+    // value is known (0 included; a negative value, such as a negative step
+    // count, is no reading).
+    function hasGoalProgress(value as Number?, goal as Number?) as Boolean {
+        return value != null && goal != null && goal > 0 && value >= 0;
     }
 
     // Red at 10% or less, orange at 20% or less, otherwise the accent.

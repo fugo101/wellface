@@ -4,8 +4,10 @@
         <iq:products>
             <iq:product id="fr265"/>
         </iq:products>
-        <!-- No permissions yet. Later tickets add only the ones they need. -->
-        <iq:permissions/>
+        <!-- Only what is used. Complications: reading Body Battery. -->
+        <iq:permissions>
+            <iq:uses-permission id="ComplicationSubscriber"/>
+        </iq:permissions>
         <iq:languages>
             <iq:language>eng</iq:language>
         </iq:languages>

@@ -1,4 +1,5 @@
 import Toybox.ActivityMonitor;
+import Toybox.Complications;
 import Toybox.Lang;
 import Toybox.System;
 import Toybox.Time;
@@ -12,6 +13,8 @@ class DataReader {
     // Minute of the day the sensors were last read, -1 before the first read.
     private var _sensorMinute as Number = -1;
     private var _wasHighPower as Boolean = false;
+    private var _bodyBatteryId as Complications.Id =
+        new Complications.Id(Complications.COMPLICATION_TYPE_BODY_BATTERY);
 
     // Called on every update that is not OFF. Reads the clock and date
     // every time, from one moment so they always agree (no 23:59 with the
@@ -68,5 +71,21 @@ class DataReader {
         var activity = ActivityMonitor.getInfo();
         _snapshot.steps = activity.steps;
         _snapshot.stepGoal = activity.stepGoal;
+
+        _snapshot.bodyBattery = readComplication(_bodyBatteryId);
+    }
+
+    // A complication's value, polled (ticket 02 showed polling refreshes on
+    // the FR265). Null when it throws or is not a non-negative Number.
+    private function readComplication(id as Complications.Id) as Number? {
+        try {
+            var value = Complications.getComplication(id).value;
+            if (value instanceof Number && value >= 0) {
+                return value;
+            }
+        } catch (e instanceof Lang.Exception) {
+            // Missing, like a null value.
+        }
+        return null;
     }
 }
