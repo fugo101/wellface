@@ -10,6 +10,7 @@ module GlyphWidths {
     const ICON_BOLT = 0xE000;
     const ICON_STRESS = 0xE001;
     const ICON_HEART = 0xE002;
+    const ICON_FOOT = 0xE003;
     // TimeFilled: BigShouldersDisplay-ExtraBold 57 px.
     const TIME_BASE = 56;
     const TIME_CAP_HEIGHT = 46;
@@ -40,4 +41,8 @@ module GlyphWidths {
     const NUMBER_18_BASE = 19;
     const NUMBER_18_CAP_HEIGHT = 13;
     const NUMBER_18 = { '0' => 12, '1' => 8, '2' => 11, '3' => 11, '4' => 11, '5' => 11, '6' => 11, '7' => 10, '8' => 11, '9' => 11, '.' => 6, '-' => 8 } as Dictionary<Char, Number>;
+    // Goal15: Manrope-Bold 15 px.
+    const GOAL_15_BASE = 16;
+    const GOAL_15_CAP_HEIGHT = 11;
+    const GOAL_15 = { '0' => 10, '1' => 7, '2' => 9, '3' => 9, '4' => 9, '5' => 9, '6' => 9, '7' => 8, '8' => 9, '9' => 9, '.' => 5, '/' => 6, ' ' => 3 } as Dictionary<Char, Number>;
 }

@@ -95,6 +95,10 @@ module FaceModelTest {
         return frameWithStress(stress).leftField;
     }
 
+    function bottomAt(steps as Number?, goal as Number?) as BottomFieldFrame {
+        return frameWithSteps(steps, goal).bottomField;
+    }
+
     // The wearer's HR_ZONE_SPORT_GENERIC zones as the FR265 returned them
     // (ticket 02): indices 0-4 are the lower bounds of zones 1-5, 5 is max.
     function zones() as Array<Number> {
@@ -1095,6 +1099,268 @@ module FaceModelTest {
         }
         Test.assertEqual(86, segments[0].start);
         Test.assertEqual(22, segments[0].end);
+        return true;
+    }
+
+    // Story 22, design frame 1: "1.147" (22 px, 53 wide) right-aligned at
+    // x 228, "/ 3.110" (Bold 15, 47 wide) left-aligned at x 233, the foot
+    // at (140, 328). It fits: 175 >= 164 and 280 <= 286.
+    (:test)
+    function stepsAndGoalSitAtTheirAnchors(logger as Test.Logger) as Boolean {
+        var field = bottomAt(1147, 3110);
+        Test.assertEqual("1.147", field.number);
+        Test.assertEqual(NUMBER_FONT_22, field.numberFont);
+        Test.assertEqual(175, field.numberX);
+        Test.assertEqual("/ 3.110", field.goal);
+        Test.assertEqual(233, field.goalX);
+        Test.assertEqual((0xE003).toChar().toString(), field.icon);
+        Test.assertEqual(140, field.iconX);
+        Test.assertEqual(328, field.iconY);
+        return true;
+    }
+
+    // Story 28: "10.000" is 77 px at 22 (would start at 151 < 164), so it
+    // drops to 18 px (62 wide) at the same anchor: 228 - 62 = 166. The goal
+    // "/ 11.111" (49) ends at 282 <= 286, so the foot and goal stay.
+    (:test)
+    function fiveDigitStepsShrinkTo18(logger as Test.Logger) as Boolean {
+        var field = bottomAt(10000, 11111);
+        Test.assertEqual(NUMBER_FONT_18, field.numberFont);
+        Test.assertEqual(166, field.numberX);
+        Test.assertEqual("/ 11.111", field.goal);
+        Test.assertEqual(233, field.goalX);
+        Test.assertEqual((0xE003).toChar().toString(), field.icon);
+        return true;
+    }
+
+    // The number's left edge on the limit: "2.004" (64 px) starts at 164
+    // and stays at 22 px; "2.000" (65 px) would start at 163, so it drops to
+    // 18 px (53 wide): 228 - 53 = 175.
+    (:test)
+    function numberStartingAt164StaysAt22(logger as Test.Logger) as Boolean {
+        var fits = bottomAt(2004, null);
+        Test.assertEqual(NUMBER_FONT_22, fits.numberFont);
+        Test.assertEqual(164, fits.numberX);
+        var shrunk = bottomAt(2000, null);
+        Test.assertEqual(NUMBER_FONT_18, shrunk.numberFont);
+        Test.assertEqual(175, shrunk.numberX);
+        return true;
+    }
+
+    // The goal's right edge on the limit: "/ 10.117" (53 px) ends at 286 and
+    // stays beside the foot; "/ 10.112" (54 px) would end at 287, so the
+    // foot hides and the text is centered.
+    (:test)
+    function goalEndingAt286KeepsTheFoot(logger as Test.Logger) as Boolean {
+        var fits = bottomAt(1147, 10117);
+        Test.assertEqual((0xE003).toChar().toString(), fits.icon);
+        Test.assertEqual(233, fits.goalX);
+        Test.assertEqual("", bottomAt(1147, 10112).icon);
+        return true;
+    }
+
+    // The centered group on the limit: "100.000" (74 at 18) + 5 +
+    // "/ 111.117" (57) = 136 keeps the goal, number at 208 - 68 = 140 and
+    // goal at 140 + 74 + 5 = 219; "/ 111.112" (58) makes 137, so the goal
+    // is dropped.
+    (:test)
+    function centeredGroupOf136KeepsTheGoal(logger as Test.Logger) as Boolean {
+        var fits = bottomAt(100000, 111117);
+        Test.assertEqual("/ 111.117", fits.goal);
+        Test.assertEqual(140, fits.numberX);
+        Test.assertEqual(219, fits.goalX);
+        Test.assertEqual("", bottomAt(100000, 111112).goal);
+        return true;
+    }
+
+    // Q24: "/ 10.000" (61 px) would end at 294 > 286 whatever the number's
+    // size, so the foot hides and "1.147" (18 px, 43) + 5 + 61 = 109 px is
+    // centered on 208: number at 208 - 54 = 154, goal at 154 + 43 + 5 = 202.
+    (:test)
+    function aFiveDigitGoalHidesTheFootAndCentersTheText(logger as Test.Logger) as Boolean {
+        var field = bottomAt(1147, 10000);
+        Test.assertEqual("", field.icon);
+        Test.assertEqual(NUMBER_FONT_18, field.numberFont);
+        Test.assertEqual("/ 10.000", field.goal);
+        Test.assertEqual(154, field.numberX);
+        Test.assertEqual(202, field.goalX);
+        return true;
+    }
+
+    // "12.345" (58 at 18) + 5 + "/ 20.000" (63) = 126 px, centered:
+    // number at 208 - 63 = 145, goal at 145 + 58 + 5 = 208.
+    (:test)
+    function fiveDigitStepsAndGoalCenterWithoutTheFoot(logger as Test.Logger) as Boolean {
+        var field = bottomAt(12345, 20000);
+        Test.assertEqual("", field.icon);
+        Test.assertEqual(145, field.numberX);
+        Test.assertEqual(208, field.goalX);
+        return true;
+    }
+
+    // Q34: "100.000" (74 at 18) + 5 + "/ 200.000" (73) = 152 > 136, so
+    // "/ goal" is dropped and the number alone is centered: 208 - 37 = 171.
+    (:test)
+    function sixDigitStepsDropTheGoal(logger as Test.Logger) as Boolean {
+        var field = bottomAt(100000, 200000);
+        Test.assertEqual("100.000", field.number);
+        Test.assertEqual("", field.goal);
+        Test.assertEqual("", field.icon);
+        Test.assertEqual(NUMBER_FONT_18, field.numberFont);
+        Test.assertEqual(171, field.numberX);
+        return true;
+    }
+
+    // Q25, design frame 7 changed: goal reached shows the foot and "3.512"
+    // (22 px, 56 wide) centered as a group of 24 + 4 + 56 = 84 px: foot at
+    // 208 - 42 = 166, number at 166 + 28 = 194; no "/ goal".
+    (:test)
+    function goalReachedCentersFootAndNumber(logger as Test.Logger) as Boolean {
+        var field = bottomAt(3512, 3110);
+        Test.assertEqual(166, field.iconX);
+        Test.assertEqual(328, field.iconY);
+        Test.assertEqual(NUMBER_FONT_22, field.numberFont);
+        Test.assertEqual(194, field.numberX);
+        Test.assertEqual("", field.goal);
+        return true;
+    }
+
+    // Five digits reached: 24 + 4 + 70 = 98 px fits within 136 at 22 px:
+    // foot at 208 - 49 = 159, number at 187.
+    (:test)
+    function goalReachedWithFiveDigitsStaysAt22(logger as Test.Logger) as Boolean {
+        var field = bottomAt(12345, 10000);
+        Test.assertEqual(NUMBER_FONT_22, field.numberFont);
+        Test.assertEqual(159, field.iconX);
+        Test.assertEqual(187, field.numberX);
+        Test.assertEqual("", field.goal);
+        return true;
+    }
+
+    // Reached, on the limit: "1.000.014" (108 px) makes a 24 + 4 + 108 = 136
+    // group and stays at 22 px (foot at 140, number at 168); "1.000.001"
+    // (109) would make 137, so it drops to 18 px (88 wide): a 116 px group,
+    // foot at 208 - 58 = 150, number at 178.
+    (:test)
+    function reachedGroupOf136StaysAt22(logger as Test.Logger) as Boolean {
+        var fits = bottomAt(1000014, 3110);
+        Test.assertEqual(NUMBER_FONT_22, fits.numberFont);
+        Test.assertEqual(140, fits.iconX);
+        Test.assertEqual(168, fits.numberX);
+        var shrunk = bottomAt(1000001, 3110);
+        Test.assertEqual(NUMBER_FONT_18, shrunk.numberFont);
+        Test.assertEqual(150, shrunk.iconX);
+        Test.assertEqual(178, shrunk.numberX);
+        return true;
+    }
+
+    // Story 26: reached is the accent pill with a black foot and number.
+    (:test)
+    function goalReachedIsAnAccentPillWithBlackText(logger as Test.Logger) as Boolean {
+        var field = bottomAt(3512, 3110);
+        Test.assertEqual(0x8EE3B8, field.pill.color);
+        Test.assertEqual(0x000000, field.iconColor);
+        Test.assertEqual(0x000000, field.numberColor);
+        return true;
+    }
+
+    // The pill is (126, 320, 164, 40) with radius 20, reached or not.
+    (:test)
+    function bottomFieldPillIsTheDesignedRoundedRect(logger as Test.Logger) as Boolean {
+        var values = [1147, 3512] as Array<Number>;
+        for (var i = 0; i < values.size(); i++) {
+            var pill = bottomAt(values[i], 3110).pill;
+            Test.assertEqual(126, pill.x);
+            Test.assertEqual(320, pill.y);
+            Test.assertEqual(164, pill.width);
+            Test.assertEqual(40, pill.height);
+            Test.assertEqual(20, pill.radius);
+        }
+        return true;
+    }
+
+    // Not reached: a black pill, a white number, a gray goal and foot.
+    (:test)
+    function notReachedIsABlackPillWithWhiteStepsAndGrayGoal(logger as Test.Logger) as Boolean {
+        var field = bottomAt(1147, 3110);
+        Test.assertEqual(0x000000, field.pill.color);
+        Test.assertEqual(0xFFFFFF, field.numberColor);
+        Test.assertEqual(0x8C8C8C, field.goalColor);
+        Test.assertEqual(0x8C8C8C, field.iconColor);
+        return true;
+    }
+
+    // Story 30: missing steps are "--" in gray (18 px wide, at 228 - 18 =
+    // 210), still with "/ goal" when the goal is known.
+    (:test)
+    function missingStepsAreGrayDashesWithTheGoal(logger as Test.Logger) as Boolean {
+        var field = bottomAt(null, 3110);
+        Test.assertEqual("--", field.number);
+        Test.assertEqual(0x8C8C8C, field.numberColor);
+        Test.assertEqual(210, field.numberX);
+        Test.assertEqual("/ 3.110", field.goal);
+        Test.assertEqual(233, field.goalX);
+        return true;
+    }
+
+    // A negative step count is no reading: "--" like a missing one.
+    (:test)
+    function negativeStepsShowGrayDashes(logger as Test.Logger) as Boolean {
+        var field = bottomAt(-5, 3110);
+        Test.assertEqual("--", field.number);
+        Test.assertEqual(0x8C8C8C, field.numberColor);
+        return true;
+    }
+
+    // Story 29: goal 0 or missing shows the steps without "/ goal", in the
+    // not-reached style.
+    (:test)
+    function noGoalShowsStepsWithoutGoal(logger as Test.Logger) as Boolean {
+        var goals = [0, null] as Array<Number?>;
+        for (var i = 0; i < goals.size(); i++) {
+            var field = bottomAt(1147, goals[i]);
+            Test.assertEqual("1.147", field.number);
+            Test.assertEqual(0xFFFFFF, field.numberColor);
+            Test.assertEqual("", field.goal);
+            Test.assertEqual(175, field.numberX);
+            Test.assertEqual(0x000000, field.pill.color);
+        }
+        return true;
+    }
+
+    // Steps and goal both missing: "--" in gray only.
+    (:test)
+    function stepsAndGoalMissingShowGrayDashesOnly(logger as Test.Logger) as Boolean {
+        var field = bottomAt(null, null);
+        Test.assertEqual("--", field.number);
+        Test.assertEqual(0x8C8C8C, field.numberColor);
+        Test.assertEqual("", field.goal);
+        Test.assertEqual(210, field.numberX);
+        Test.assertEqual((0xE003).toChar().toString(), field.icon);
+        Test.assertEqual(140, field.iconX);
+        return true;
+    }
+
+    // Digits centered on y 340: baseline 340 + 16 / 2 = 348 at 22 px and
+    // 340 + 13 / 2 = 346 at 18 px. The goal (Bold 15, cap 11) on y 341:
+    // baseline 341 + 5 = 346.
+    (:test)
+    function stepTextSitsOnItsBaselines(logger as Test.Logger) as Boolean {
+        var field = bottomAt(1147, 3110);
+        Test.assertEqual(348, field.numberY + GlyphWidths.NUMBER_22_BASE);
+        Test.assertEqual(346, field.goalY + GlyphWidths.GOAL_15_BASE);
+        Test.assertEqual(346, bottomAt(10000, 11111).numberY + GlyphWidths.NUMBER_18_BASE);
+        return true;
+    }
+
+    // Story 22: a dot every three digits, with the groups zero-padded.
+    (:test)
+    function stepsUseADotThousandsSeparator(logger as Test.Logger) as Boolean {
+        Test.assertEqual("0", bottomAt(0, null).number);
+        Test.assertEqual("999", bottomAt(999, null).number);
+        Test.assertEqual("1.000", bottomAt(1000, null).number);
+        Test.assertEqual("1.050", bottomAt(1050, null).number);
+        Test.assertEqual("1.000.000", bottomAt(1000000, null).number);
         return true;
     }
 }

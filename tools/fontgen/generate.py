@@ -192,6 +192,7 @@ def manrope(gf: GoogleFonts, weight: int) -> SourceFont:
 SOURCES = {
     "big-shoulders-display-800": big_shoulders_display_extrabold,
     "manrope-800": lambda gf: manrope(gf, 800),
+    "manrope-700": lambda gf: manrope(gf, 700),
 }
 
 
@@ -230,6 +231,8 @@ FONTS = [
     FontSpec("Number26", "number26", "NUMBER_26", "manrope-800", 26, DIGITS + "-"),
     FontSpec("Number22", "number22", "NUMBER_22", "manrope-800", 22, DIGITS + ".-"),
     FontSpec("Number18", "number18", "NUMBER_18", "manrope-800", 18, DIGITS + ".-"),
+    # The bottom field's "/ goal", for example "/ 3.110".
+    FontSpec("Goal15", "goal15", "GOAL_15", "manrope-700", 15, DIGITS + "./ "),
 ]
 
 
@@ -257,6 +260,9 @@ ICONS = [
     Icon("HEART", 0xE002, "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3"
          "c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5"
          "c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"),
+    Icon("FOOT", 0xE003, "M8 2.5c2 0 3.2 2.3 3.2 5.2S10 13 8 13 4.8 10.6 4.8 7.7 6 2.5 8 2.5z "
+         "M16 7c2 0 3.2 2.3 3.2 5.2S18 17.5 16 17.5s-3.2-2.4-3.2-5.3S14 7 16 7z "
+         "M6 14.5h4v2.5a2 2 0 0 1-4 0z M14 19h4v1a2 2 0 0 1-4 0z"),
 ]
 
 

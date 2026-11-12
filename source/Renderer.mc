@@ -51,6 +51,7 @@ class Renderer {
         paintField(dc, frame.leftField);
         paintField(dc, frame.centerField);
         paintField(dc, frame.rightField);
+        paintBottomField(dc, frame.bottomField);
 
         // FaceModel places the time by its measured width and the font's base.
         dc.setColor(frame.timeColor, Graphics.COLOR_TRANSPARENT);
@@ -76,6 +77,25 @@ class Renderer {
         dc.setColor(field.numberColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(field.numberX, field.numberY, _fonts.number(field.numberFont), field.number,
             Graphics.TEXT_JUSTIFY_LEFT);
+    }
+
+    // The pill (its own well), then the foot if shown, the number and
+    // "/ goal" if any.
+    private function paintBottomField(dc as Dc, field as BottomFieldFrame) as Void {
+        fillRoundedRect(dc, field.pill);
+        if (field.icon.length() > 0) {
+            dc.setColor(field.iconColor, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(field.iconX, field.iconY, _fonts.icons, field.icon,
+                Graphics.TEXT_JUSTIFY_LEFT);
+        }
+        dc.setColor(field.numberColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(field.numberX, field.numberY, _fonts.number(field.numberFont), field.number,
+            Graphics.TEXT_JUSTIFY_LEFT);
+        if (field.goal.length() > 0) {
+            dc.setColor(field.goalColor, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(field.goalX, field.goalY, _fonts.goal, field.goal,
+                Graphics.TEXT_JUSTIFY_LEFT);
+        }
     }
 
     // The whole screen black.

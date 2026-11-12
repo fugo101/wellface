@@ -70,8 +70,10 @@ class Frame {
     // show progress toward or the steps are missing.
     public var bezelHead as Circle? = null;
     // Goal reached: the goal is above 0, the steps are known and at least
-    // the goal. The bottom field switches style on it (ticket 10).
+    // the goal. The bottom field switches style on it.
     public var stepGoalReached as Boolean = false;
+    // The bottom field's content.
+    public var bottomField as BottomFieldFrame = new BottomFieldFrame();
     // The round fields' content.
     public var leftField as FieldFrame = new FieldFrame();
     public var centerField as FieldFrame = new FieldFrame();
@@ -101,6 +103,33 @@ class FontMetrics {
         self.widths = widths;
         self.base = base;
         self.capHeight = capHeight;
+    }
+}
+
+// What the bottom field draws: its pill (which is its own well), the foot,
+// the step number and "/ goal", each placed from the glyph-width tables.
+class BottomFieldFrame {
+    public var pill as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
+    // The metric's icon (the foot for steps), "" when hidden to make room.
+    public var icon as String = "";
+    public var iconX as Number = 0;
+    public var iconY as Number = 0;
+    public var iconColor as Number = 0;
+    // The step count with a dot thousands separator, or "--". Drawn from
+    // its top-left corner (left-justified, line top), like every text.
+    public var number as String = "";
+    public var numberFont as NumberFont = NUMBER_FONT_22;
+    public var numberWidth as Number = 0;
+    public var numberX as Number = 0;
+    public var numberY as Number = 0;
+    public var numberColor as Number = 0;
+    // "/ " and the goal, in the goal font; "" when there is no goal to show.
+    public var goal as String = "";
+    public var goalX as Number = 0;
+    public var goalY as Number = 0;
+    public var goalColor as Number = 0;
+
+    function initialize() {
     }
 }
 
@@ -268,8 +297,10 @@ module FaceModel {
             frame.bezelHead = circleAt(sweep, Layout.BEZEL_RADIUS, Layout.BEZEL_HEAD_RADIUS,
                 theme.text);
         }
-        frame.stepGoalReached = goalReached(metricValue(Layout.BOTTOM_METRIC, snapshot),
-            goalOf(Layout.BOTTOM_METRIC, snapshot));
+        var bottomValue = metricValue(Layout.BOTTOM_METRIC, snapshot);
+        var bottomGoal = goalOf(Layout.BOTTOM_METRIC, snapshot);
+        frame.stepGoalReached = goalReached(bottomValue, bottomGoal);
+        frame.bottomField = bottomField(Layout.BOTTOM_METRIC, bottomValue, bottomGoal, theme);
 
         frame.leftField = roundField(Layout.leftField(), Layout.LEFT_METRIC, snapshot, theme);
         frame.centerField = roundField(Layout.centerField(), Layout.CENTER_METRIC, snapshot,
@@ -279,12 +310,121 @@ module FaceModel {
         frame.dateWidth = textWidth(frame.date, GlyphWidths.DATE);
         frame.dateX = Layout.CENTER_X - frame.dateWidth / 2;
         // Upper case only, so the capitals are centered, as in the design.
-        frame.dateY = Layout.DATE_CENTER_Y + GlyphWidths.DATE_CAP_HEIGHT / 2 - GlyphWidths.DATE_BASE;
+        frame.dateY = digitsTop(Layout.DATE_CENTER_Y, GlyphWidths.DATE_CAP_HEIGHT,
+            GlyphWidths.DATE_BASE);
         frame.dateColor = theme.text;
         var pillWidth = datePillWidth(frame.dateWidth);
         frame.datePill = new RoundedRect(Layout.CENTER_X - pillWidth / 2, Layout.DATE_PILL_Y,
             pillWidth, Layout.DATE_PILL_HEIGHT, Layout.DATE_PILL_RADIUS, theme.ink);
         return frame;
+    }
+
+    // The bottom field for a goal metric's value and goal (Q24, Q25, Q34).
+    // Goal not reached: the metric's icon, the number right-aligned and
+    // "/ goal" left-aligned at their anchors, if that fits; else the same
+    // with the number at 18 px; else the icon hidden and number + gap +
+    // "/ goal" centered on the face; else "/ goal" dropped too. Goal reached:
+    // the accent pill, and the icon and number (22 px, or 18 if that does
+    // not fit) centered as a group in ink, without "/ goal".
+    function bottomField(metric as Metric, value as Number?, goal as Number?, theme as Theme)
+            as BottomFieldFrame {
+        var content = new BottomFieldFrame();
+        var reached = goalReached(value, goal);
+        content.pill = new RoundedRect(Layout.BOTTOM_X, Layout.BOTTOM_Y, Layout.BOTTOM_W,
+            Layout.BOTTOM_H, Layout.BOTTOM_RADIUS, reached ? theme.accent : theme.ink);
+        var icon = iconOf(metric);
+        content.icon = icon != null ? icon.toChar().toString() : "";
+        content.iconY = Layout.BOTTOM_ICON_Y;
+        var known = value != null && value >= 0;
+        content.number = value != null && known ? formatThousands(value) : "--";
+
+        if (reached) {
+            content.iconColor = theme.ink;
+            content.numberColor = theme.ink;
+            var room = Layout.BOTTOM_GROUP_RIGHT - Layout.BOTTOM_GROUP_LEFT;
+            var font = NUMBER_FONT_22;
+            if (groupWidth(content.number, font) > room) {
+                font = NUMBER_FONT_18;
+            }
+            content.iconX = Layout.CENTER_X - groupWidth(content.number, font) / 2;
+            placeBottomNumber(content, font,
+                content.iconX + Layout.ICON_SIZE + Layout.BOTTOM_REACHED_GAP);
+            return content;
+        }
+
+        content.iconX = Layout.BOTTOM_ICON_X;
+        content.iconColor = theme.secondary;
+        content.numberColor = known ? theme.text : theme.secondary;
+        var goalWidth = 0;
+        if (goal != null && goal > 0) {
+            content.goal = "/ " + formatThousands(goal);
+            goalWidth = textWidth(content.goal, GlyphWidths.GOAL_15);
+            content.goalColor = theme.secondary;
+            content.goalY = digitsTop(Layout.BOTTOM_GOAL_Y, GlyphWidths.GOAL_15_CAP_HEIGHT,
+                GlyphWidths.GOAL_15_BASE);
+        }
+
+        // At the anchors, 22 px and then 18 px.
+        var fonts = [NUMBER_FONT_22, NUMBER_FONT_18] as Array<NumberFont>;
+        for (var i = 0; i < fonts.size(); i++) {
+            var left = Layout.BOTTOM_NUMBER_RIGHT
+                - textWidth(content.number, numberMetrics(fonts[i]).widths);
+            if (left >= Layout.BOTTOM_NUMBER_MIN_LEFT && (content.goal.length() == 0
+                    || Layout.BOTTOM_GOAL_LEFT + goalWidth <= Layout.BOTTOM_GOAL_MAX_RIGHT)) {
+                placeBottomNumber(content, fonts[i], left);
+                content.goalX = Layout.BOTTOM_GOAL_LEFT;
+                return content;
+            }
+        }
+
+        // Centered on the face without the icon; without "/ goal" as a
+        // last resort.
+        content.icon = "";
+        var numberWidth = textWidth(content.number, numberMetrics(NUMBER_FONT_18).widths);
+        var width = numberWidth;
+        if (content.goal.length() > 0) {
+            width += Layout.BOTTOM_GOAL_LEFT - Layout.BOTTOM_NUMBER_RIGHT + goalWidth;
+            if (width > Layout.BOTTOM_GROUP_RIGHT - Layout.BOTTOM_GROUP_LEFT) {
+                content.goal = "";
+                width = numberWidth;
+            }
+        }
+        placeBottomNumber(content, NUMBER_FONT_18, Layout.CENTER_X - width / 2);
+        content.goalX = content.numberX + numberWidth + Layout.BOTTOM_GOAL_LEFT
+            - Layout.BOTTOM_NUMBER_RIGHT;
+        return content;
+    }
+
+    // The icon's box, the gap and the number in this font, side by side.
+    function groupWidth(number as String, font as NumberFont) as Number {
+        return Layout.ICON_SIZE + Layout.BOTTOM_REACHED_GAP
+            + textWidth(number, numberMetrics(font).widths);
+    }
+
+    // The bottom field's number in `font`, starting at x `left`, its digits
+    // centered on Layout.BOTTOM_NUMBER_Y.
+    function placeBottomNumber(content as BottomFieldFrame, font as NumberFont, left as Number)
+            as Void {
+        var metrics = numberMetrics(font);
+        content.numberFont = font;
+        content.numberWidth = textWidth(content.number, metrics.widths);
+        content.numberX = left;
+        content.numberY = digitsTop(Layout.BOTTOM_NUMBER_Y, metrics.capHeight, metrics.base);
+    }
+
+    // The line top to draw text from so that its capitals (or digits) are
+    // vertically centered on `centerY`: the baseline sits half a cap height
+    // below it, and the line top `base` above the baseline.
+    function digitsTop(centerY as Number, capHeight as Number, base as Number) as Number {
+        return centerY + capHeight / 2 - base;
+    }
+
+    // A non-negative number with a dot every three digits: 1147 -> "1.147".
+    function formatThousands(value as Number) as String {
+        if (value < 1000) {
+            return value.toString();
+        }
+        return formatThousands(value / 1000) + "." + (value % 1000).format("%03d");
     }
 
     // A round field showing `metric`: its icon and number, plus the metric's
@@ -319,7 +459,7 @@ module FaceModel {
         content.numberWidth = textWidth(content.number, metrics.widths);
         content.numberX = field.x - content.numberWidth / 2;
         // Digits only, so their cap height is centered on numberY.
-        content.numberY = field.numberY + metrics.capHeight / 2 - metrics.base;
+        content.numberY = digitsTop(field.numberY, metrics.capHeight, metrics.base);
         return content;
     }
 
@@ -391,7 +531,7 @@ module FaceModel {
     }
 
     // The code point of a metric's icon in the icon font, null if the icon
-    // font has none for it yet (the foot comes with ticket 10).
+    // font has none for it.
     function iconOf(metric as Metric) as Number? {
         switch (metric) {
             case METRIC_BODY_BATTERY:
@@ -400,6 +540,8 @@ module FaceModel {
                 return GlyphWidths.ICON_STRESS;
             case METRIC_HEART_RATE:
                 return GlyphWidths.ICON_HEART;
+            case METRIC_STEPS:
+                return GlyphWidths.ICON_FOOT;
         }
         return null;
     }

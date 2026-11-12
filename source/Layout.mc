@@ -90,6 +90,38 @@ module Layout {
     const ZONE_GAP = 4;
     const ZONE_SWEEP = 64;
 
+    // Icons are square glyphs in the icon font.
+    const ICON_SIZE = 24;
+
+    // The bottom field: a pill, black or (goal reached) the accent, that is
+    // its own well.
+    const BOTTOM_X = 126;
+    const BOTTOM_Y = 320;
+    const BOTTOM_W = 164;
+    const BOTTOM_H = 40;
+    const BOTTOM_RADIUS = 20;
+    // Goal not reached: the icon's top-left, the number right-aligned on
+    // BOTTOM_NUMBER_RIGHT and "/ goal" left-aligned on BOTTOM_GOAL_LEFT (a
+    // 5 px gap). The digits are centered on BOTTOM_NUMBER_Y, the goal on
+    // BOTTOM_GOAL_Y.
+    const BOTTOM_ICON_X = 140;
+    const BOTTOM_ICON_Y = 328;
+    const BOTTOM_NUMBER_RIGHT = 228;
+    const BOTTOM_GOAL_LEFT = 233;
+    const BOTTOM_NUMBER_Y = 340;
+    const BOTTOM_GOAL_Y = 341;
+    // The anchored text fits when the number starts at or after
+    // BOTTOM_NUMBER_MIN_LEFT (4 px past the foot's ink, which ends at x 160)
+    // and the goal ends at or before BOTTOM_GOAL_MAX_RIGHT (4 px inside the
+    // pill's rounded end).
+    const BOTTOM_NUMBER_MIN_LEFT = 164;
+    const BOTTOM_GOAL_MAX_RIGHT = 286;
+    // A centered group (icon hidden, or goal reached) stays within these.
+    const BOTTOM_GROUP_LEFT = 140;
+    const BOTTOM_GROUP_RIGHT = 276;
+    // Goal reached: the gap between the icon's 24 px box and the number.
+    const BOTTOM_REACHED_GAP = 4;
+
     // The center field.
     const CENTER_FIELD_X = 208;
     const CENTER_FIELD_Y = 246;
