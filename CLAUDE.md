@@ -31,7 +31,7 @@ The name "Wellface": "well" means both a well (every element sits inside a black
 - Requirements: the latest stable JDK (the SDK needs 11 or higher; 17, 25 and 27 tested; use the arm64 build on Apple Silicon), the Connect IQ SDK and the FR265 device files, both downloaded through the Connect IQ SDK Manager (needs a Garmin account).
 - Developer key: an RSA 4096 private key in DER format, kept **outside the repo**. Every build is signed with it (`monkeyc -y <key>`). If the VS Code extension generated it, its path is in the `monkeyC.developerKeyPath` user setting; otherwise ask the user. **Never commit, copy or print the key.**
 - Editor: VS Code/Cursor with the official extension `garmin.monkey-c` (not on Open VSX, so Cursor needs the .vsix). Claude builds with the SDK CLI.
-- Installing on the watch: copy the `.prg` file into `GARMIN/APPS`. The watch uses MTP, so macOS needs OpenMTP, and Garmin Express must be fully quit.
+- Installing on the watch: `scripts/sideload.sh` builds the release PRG and copies it to `GARMIN/Apps` over MTP with libmtp (see `docs/build.md`). Garmin Express and OpenMTP must be fully quit; OpenMTP is the manual fallback.
 
 ## Testing
 - **A single test seam: `FaceModel`**, pure logic. Input: a snapshot of the data (time, date, BB, stress, HR, HR zones, steps/goal, battery) and the mode (normal/AOD/current minute for the burn-in shift). Output: what to draw (strings, colors, arc angles, number of lit battery segments, AOD offset), the text layout of the date pill and bottom field, and which long-press target a touch point hits. Tested with Monkey C unit tests (`(:test)`) run in the simulator.

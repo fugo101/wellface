@@ -20,12 +20,15 @@ The scripts never print the key or its path. If the VS Code extension generated 
 | `scripts/run-sim.sh` | `bin/wellface.prg` | debug build, start the simulator and load the face |
 | `scripts/build-test.sh` | `bin/wellface-test.prg` | build with the `(:test)` code |
 | `scripts/run-tests.sh [test name]` | `bin/test.log` | build the tests, start the simulator, run them |
-| `scripts/build-release.sh` | `bin/wellface-release.prg` | sideload to the watch (`-r --build-stats 0`) |
+| `scripts/build-release.sh` | `bin/wellface-release.prg` | release build for the watch (`-r --build-stats 0`) |
+| `scripts/sideload.sh [file.prg]` | `GARMIN/Apps/WELLFACE.PRG` on the watch | release build, then copy it to the watch over USB (or copy the given PRG) |
 | `scripts/gen-fonts.sh` | `resources/fonts/`, `source/GlyphWidths.mc` | regenerate the bitmap fonts, the icon font and the glyph-width tables |
 | `scripts/build-spike.sh` | `bin/wfspike.prg` | data spike (ticket 02), a separate debug-only face |
 | `scripts/run-spike.sh` | `bin/wfspike.prg` | data spike, start the simulator and load it |
 
 Every build fails on any compiler warning. Type checking is strict, set in each jungle (`monkey.jungle`, `spikes/data/monkey.jungle`).
+
+`sideload.sh` exits 0 when exactly one full-size copy is confirmed on the watch, 1 when the copy is not confirmed and 2 when it could not run (no watch, an MTP app holding it, missing tools, failed build).
 
 `run-tests.sh` exits 0 when all tests pass, 1 when a test fails and 2 when the tests could not run (the build failed, or there is no `RESULTS` block because the simulator was not reachable, the app crashed or the run timed out). It ignores `monkeydo`'s exit code, which is 1 even when every test passes (SDK 9.3.0).
 
@@ -51,11 +54,16 @@ It shows up on the watch as its own face, "Wellface data spike", next to Wellfac
 
 ## Sideload to the watch
 
-1. Run `scripts/build-release.sh`.
-2. Fully quit Garmin Express, connect the watch with the cable and open it with an MTP client (on macOS: OpenMTP).
-3. Copy `bin/wellface-release.prg` into `GARMIN/APPS` on the watch (the FR265 spells the folder `Apps`). Keep the MTP client closed afterwards: while it runs, it holds the watch's USB connection, so no other tool can reach it.
-4. Unplug the watch and choose Wellface from the watch-face list (menu names may differ slightly).
+One-time setup: install libmtp (on macOS: `brew install libmtp`). A C compiler is needed too (on macOS: the Xcode Command Line Tools). `sideload.sh` finds libmtp through `pkg-config` or Homebrew, so no path is configured.
 
-To update, copy the new `.prg` into `GARMIN/Apps` again. The watch installs a sideloaded PRG and then deletes the file, so an empty `Apps` folder does not mean the face is gone.
+1. Fully quit Garmin Express and any MTP client (OpenMTP): only one program can hold the watch's USB connection.
+2. Connect the watch with the cable and run `scripts/sideload.sh`. It builds the release PRG, compiles the MTP helper `bin/mtp-push` from `tools/sideload/mtp_push.c` the first time (or after the source changes), removes any `WELLFACE.PRG` still waiting in `GARMIN/Apps`, sends the new one, and checks in a fresh MTP session that exactly one full-size copy is there.
+3. Unplug the watch and choose Wellface from the watch-face list (menu names may differ slightly).
 
-To remove the face, use Garmin Express on the computer (it also connects over MTP): open the watch's Connect IQ apps section, filter by watch faces and remove Wellface (user report, menu names may differ slightly). Fully quit Garmin Express afterwards, before copying a PRG with another MTP tool.
+The helper works around three FR265 MTP quirks: the watch rejects storage id 0 (so the stock `mtp-sendfile` fails), an uncached session made it store a sent file twice, and its object list can be stale within a session, so every check opens a new one.
+
+Without the script, an MTP client works too: open the watch in OpenMTP, copy `bin/wellface-release.prg` into `GARMIN/Apps` (the FR265 spells the folder `Apps`), then quit OpenMTP.
+
+To update, run `scripts/sideload.sh` again. The watch installs a sideloaded PRG and then deletes the file, so an empty `Apps` folder does not mean the face is gone.
+
+To remove the face, use Garmin Express on the computer (it also connects over MTP): open the watch's Connect IQ apps section, filter by watch faces and remove Wellface (user report, menu names may differ slightly). Fully quit Garmin Express afterwards, before running `scripts/sideload.sh`.
