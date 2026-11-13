@@ -11,7 +11,7 @@
 <helmet>
 <meta name="design_doc_mode" content="canvas">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Big+Shoulders+Display:wght@800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Big+Shoulders:opsz,wght@10..72,100..900&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
 <style>
 html{background:#141414}body{margin:0;background:#141414;color:#E6E6E6;font-family:"Barlow Semi Condensed",sans-serif;-webkit-font-smoothing:antialiased}
 a{color:#8EE3B8}a:hover{color:#B9F0D3}
@@ -19,9 +19,9 @@ a{color:#8EE3B8}a:hover{color:#B9F0D3}
 </helmet>
 <section style="padding:72px 80px 120px;display:flex;flex-direction:column;gap:48px">
   <div style="display:flex;flex-direction:column;gap:10px;max-width:1240px">
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8C8C8C;letter-spacing:1px">GARMIN FORERUNNER 265 · AMOLED 416×416 · CONNECT IQ · BẢN CUỐI</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8C8C8C;letter-spacing:1px">GARMIN FORERUNNER 265 · AMOLED 416×416 · CONNECT IQ · BẢN CUỐI · KHỚP MVP 13/11/2026</div>
     <div style="font-size:44px;font-weight:700;color:#FFFFFF">Mặt đồng hồ Dash</div>
-    <div style="font-size:18px;color:#A8A8A8;text-wrap:pretty">Nền toàn cục #1A1D1B, mỗi thành phần nằm trong giếng đen 6 px theo đúng hình của nó. Giờ Big Shoulders Display trên dải mint. Body Battery là tâm điểm, ô trái tự đổi nội dung (stress, điểm ngủ, hồi phục, hoặc SpO₂ / độ cao theo cài đặt), nhịp tim hiện vùng 1–5, vòng bước chân quanh viền, pin 10 đoạn ở trên. Mint chỉ dùng cho dải giờ và phần tiến độ; icon xám, đổi màu khi cảnh báo. Khung hiển thị tỉ lệ 1:1.</div>
+    <div style="font-size:18px;color:#A8A8A8;text-wrap:pretty">Nền toàn cục #1A1D1B, mỗi thành phần nằm trong giếng đen 6 px theo đúng hình của nó. Giờ Big Shoulders (số tabular) trên dải mint. Body Battery là tâm điểm, ô trái hiện stress, nhịp tim hiện vùng 1–5 theo màu của từng vùng, vòng bước chân quanh viền, pin 10 đoạn ở trên. Mint dùng cho dải giờ và phần tiến độ; icon xám, đổi màu khi cảnh báo. Đã cập nhật khớp bản MVP; khung mờ ghi “SAU MVP” là tính năng chưa làm. Khung hiển thị tỉ lệ 1:1.</div>
   </div>
   <div style="display:flex;flex-direction:column">
     <sc-for list="{{ options }}" as="o" hint-placeholder-count="1">
@@ -98,8 +98,10 @@ const h = React.createElement;
 const FONT = '"Barlow Semi Condensed", sans-serif';
 const HEART = 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z';
 const K = { track: '#1E1E1E', white: '#FFFFFF', grey: '#8C8C8C', black: '#000000', orange: '#FF8A3D', red: '#FF4D4D', zone: '#6EA8FF' };
-const NORMAL = { time: '0842', bb: 56, st: 27, hr: 62, steps: 1147, goal: 3110, bat: 78, date: 'THU 12' };
+const NORMAL = { time: '0842', bb: 56, st: 27, hr: 62, steps: 1147, goal: 3110, bat: 78, date: 'T5 12' };
 const HRZ = [95, 114, 133, 152, 171];
+const ZC = ['#B4B4B4', '#4DA6FF', '#4CD964', '#FF8A3D', '#FF4D4D'];
+const TADV = c => c === ':' ? 14 : 28;
 const SCREEN_PX = Math.round(Math.PI * 208 * 208);
 function shade(hex, k) {
   const n = parseInt(hex.slice(1), 16);
@@ -114,9 +116,10 @@ function gauge(ops, cx, cy, R, w, val, color, track) {
   ops.push({ t: 'ring', cx, cy, r, w, color: track || K.track });
   if (val != null) ops.push({ t: 'arc', cx, cy, r, w, a0: 0, a1: Math.max(0, Math.min(100, val)) * 3.6, color });
 }
+const prog = v => (v.steps != null && v.goal > 0) ? Math.min(1, v.steps / v.goal) : null;
 function stepRing(ops, v, acc) {
   ops.push({ t: 'ring', cx: 208, cy: 208, r: 204, w: 8, color: K.track });
-  ops.push({ t: 'arc', cx: 208, cy: 208, r: 204, w: 8, a0: 0, a1: Math.min(1, v.steps / v.goal) * 360, color: acc });
+  if (prog(v) != null) ops.push({ t: 'arc', cx: 208, cy: 208, r: 204, w: 8, a0: 0, a1: prog(v) * 360, color: acc });
 }
 const sw = (hex, role) => ({ hex, role });
 function arcD(cx, cy, r, a0, a1) {
@@ -137,7 +140,7 @@ function toSvg(ops, id, zones) {
       if (o.clip) { cp = `${id}-c${i}`; defs.push(h('clipPath', { id: cp }, h('rect', { x: o.clip[0], y: o.clip[1], width: o.clip[2], height: o.clip[3] }))); }
       els.push(h('circle', { cx: o.cx, cy: o.cy, r: o.r, fill: o.fill, clipPath: cp ? `url(#${cp})` : undefined }));
     } else if (o.t === 'rect') els.push(h('rect', { x: o.x, y: o.y, width: o.w, height: o.h, rx: o.r, fill: o.fill || 'none', stroke: o.stroke, strokeWidth: o.sw }));
-    else if (o.t === 'text') els.push(h('text', { x: o.x, y: o.y, fill: o.outline ? 'none' : o.color, stroke: o.outline ? o.color : undefined, strokeWidth: o.outline, strokeLinejoin: 'round', fontSize: o.size, fontWeight: o.weight, fontFamily: o.font || FONT, textAnchor: o.anchor || 'middle', dominantBaseline: o.base === 'alpha' ? undefined : 'central', style: o.ls ? { letterSpacing: o.ls + 'px' } : undefined }, o.str));
+    else if (o.t === 'text') els.push(h('text', { x: o.x, y: o.y, fill: o.outline ? 'none' : o.color, stroke: o.outline ? o.color : undefined, strokeWidth: o.outline, strokeLinejoin: 'round', fontSize: o.size, fontWeight: o.weight, fontFamily: o.font || FONT, textAnchor: o.anchor || 'middle', dominantBaseline: o.base === 'alpha' ? undefined : 'central', style: { letterSpacing: o.ls ? o.ls + 'px' : undefined, fontVariationSettings: o.fvs } }, o.str));
     else if (o.t === 'line') els.push(h('line', { x1: o.x1, y1: o.y1, x2: o.x2, y2: o.y2, stroke: o.color, strokeWidth: o.w }));
     else if (o.t === 'path') els.push(h('path', { d: o.d, fill: o.stroke ? 'none' : o.color, stroke: o.stroke ? o.color : undefined, strokeWidth: o.stroke, strokeLinejoin: 'round', strokeLinecap: 'round', transform: `translate(${o.x} ${o.y}) scale(${o.size / 24})` }));
     else if (o.t === 'heart') els.push(h('path', { d: HEART, fill: o.color, transform: `translate(${o.x} ${o.y}) scale(${o.size / 24})` }));
@@ -211,13 +214,19 @@ const IC = {
   foot: 'M8 2.5c2 0 3.2 2.3 3.2 5.2S10 13 8 13 4.8 10.6 4.8 7.7 6 2.5 8 2.5z M16 7c2 0 3.2 2.3 3.2 5.2S18 17.5 16 17.5s-3.2-2.4-3.2-5.3S14 7 16 7z M6 14.5h4v2.5a2 2 0 0 1-4 0z M14 19h4v1a2 2 0 0 1-4 0z',
 };
 const SEC = 'Manrope, sans-serif';
+let _mc = null;
+function tw(str, size, weight) {
+  _mc = _mc || document.createElement('canvas').getContext('2d');
+  _mc.font = `${weight} ${size}px ${SEC}`;
+  return _mc.measureText(str).width;
+}
 const WNAME = { 600: 'SemiBold', 700: 'Bold', 800: 'ExtraBold' };
-const TF8 = { 'Big Shoulders Display': 800 };
-function tf8(name, M8) { const m = M8 && M8[name]; return { family: name, w: TF8[name], css: `"${name}", sans-serif`, size: m ? m.size : 64 }; }
+const TF8 = { 'Big Shoulders': 800 };
+const TFVS = '"opsz" 72';
+function tf8(name, M8) { return { family: name, w: TF8[name], css: `"${name}", sans-serif`, size: 57, fvs: TFVS }; }
 function measureFont(name) {
   const c = document.createElement('canvas').getContext('2d'), w = TF8[name], css = `"${name}", sans-serif`;
-  c.font = `${w} 100px ${css}`;
-  const size = Math.round(46 * 100 / c.measureText('0').actualBoundingBoxAscent);
+  const size = 57;
   c.font = `${w} ${size}px ${css}`;
   const m0 = c.measureText('0'), m1 = c.measureText('1');
   return { size, capH: m0.actualBoundingBoxAscent, digitW: m0.width, tabular: Math.abs(m0.width - m1.width) < 0.5, colonW: c.measureText(':').width, fullW: c.measureText('08:42').width, stripW: c.measureText('0123456789:').width };
@@ -236,19 +245,18 @@ function slot8(kind, val, P) {
 }
 function fontStrip(P, M) {
   const tf = P.tf, capH = M && M.capH ? M.capH : tf.size * 0.7;
-  const H = Math.round(capH + 40), W = Math.round((M && M.stripW ? M.stripW : tf.size * 6) + 40);
-  const mk = (col, ol) => h('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, style: { display: 'block', background: '#000', borderRadius: 10 } },
-    h('text', { x: 20, y: 20 + capH, fill: ol ? 'none' : col, stroke: ol ? col : undefined, strokeWidth: ol, strokeLinejoin: 'round', fontSize: tf.size, fontWeight: tf.w, fontFamily: tf.css }, '0123456789:'));
+  const H = Math.round(capH + 40), W = 10 * 28 + 14 + 40;
+  const glyphs = (col, ol) => { let x = 20; return '0123456789:'.split('').map((ch, i) => { const a = TADV(ch), el = h('text', { key: i, x: x + a / 2, y: 20 + capH, textAnchor: 'middle', fill: ol ? 'none' : col, stroke: ol ? col : undefined, strokeWidth: ol, strokeLinejoin: 'round', fontSize: tf.size, fontWeight: tf.w, fontFamily: tf.css, style: { fontVariationSettings: tf.fvs } }, ch); x += a; return el; }); };
+  const mk = (col, ol) => h('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, style: { display: 'block', background: '#000', borderRadius: 10 } }, ...glyphs(col, ol));
   return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } }, mk(P.acc), mk(P.aod, P.sw),
     h('div', { style: { fontSize: 13, color: '#8C8C8C' } }, 'Trên: màu nhấn · Dưới: AOD ' + P.aod + ', viền ' + P.sw + ' px'));
 }
 function fontSpec(P, M) {
   const tf = P.tf, r = n => M && n ? Math.round(n) + ' px' : 'đang đo…';
   return [
-    { k: 'Font giờ', v: `${tf.family} ${WNAME[tf.w]} (${tf.w}), cỡ ${tf.size} px` },
-    { k: 'Cao chữ số (đo)', v: r(M && M.capH) },
-    { k: 'Rộng chữ số “0” (đo)', v: r(M && M.digitW) + ' · số dạng tabular: ' + (M ? (M.tabular ? 'có' : 'không, nên ép cùng bề rộng khi xuất') : '…') },
-    { k: 'Rộng “:” / “08:42” (đo)', v: r(M && M.colonW) + ' / ' + r(M && M.fullW) },
+    { k: 'Font giờ', v: `Big Shoulders (file biến thiên hiện tại) wght ${tf.w}, opsz 72, cỡ ${tf.size} px. File trên đồng hồ: time57.fnt và time57outline.fnt` },
+    { k: 'Cao chữ số', v: '46 px ± 1 (bộ tạo font kiểm tra khi xuất)' },
+    { k: 'Bề rộng (số tabular)', v: 'Mỗi chữ số 28 px, “:” 14 px · “08:42” rộng 126 px, căn giữa x 208, baseline y 135' },
     { k: 'Glyph cần xuất', v: '0 1 2 3 4 5 6 7 8 9 :' },
     { k: 'Màu', v: `Thường ${K.black} trên ${P.acc} · AOD ${P.aod} viền ${P.sw} px trên #000000, cùng vị trí và cỡ` },
     { k: 'Font phụ', v: 'Manrope ExtraBold 14 / 22 / 24 / 30 / 40, Bold 11 và 14. Glyph: 0–9, A–Z, “%”, “/”, “.”, “-”' },
@@ -258,38 +266,45 @@ function fontSpec(P, M) {
 function buildG(v, mode, P, tf, M, ext) {
   const E = ext || {}, ops = [], zones = [], aod = mode === 'aod', p = 6;
   const bg = E.sleep ? '#101211' : '#1A1D1B', WH = E.sleep ? '#9A9A9A' : K.white, IG = E.sleep ? '#6E6E6E' : K.grey;
-  const capH = M && M.capH ? M.capH : 46;
+  const capH = 46;
   const BAND = [72, 80, 272, 64, 20], DATE = [160, 140, 96, 28, 14];
   const ST = [88, 236, 38], BB = [208, 246, 60], HR = [328, 236, 38];
   const STEP = [126, 320, 164, 40, 20], sy = 340;
   const BR = 180, BA = 34, BW = 12, GAP = 1.6, SEGA = (2 * BA - 9 * GAP) / 10;
   const tY = Math.round(BAND[1] + BAND[3] / 2 + capH / 2);
   const pt = (a, r) => [+(208 + r * Math.sin(a * Math.PI / 180)).toFixed(1), +(208 - r * Math.cos(a * Math.PI / 180)).toFixed(1)];
-  const bbC = bbCol(v.bb, P.acc), stC = stCol(v.st, P.acc);
-  const done = v.steps >= v.goal, nv = x => x == null ? '--' : String(x);
+  const bbMiss = v.bb == null, bbWarn = !bbMiss && v.bb < 25;
+  const bbC = bbMiss ? K.grey : bbCol(v.bb, P.acc), stC = stCol(v.st, P.acc);
+  const pr = prog(v), done = pr != null && v.steps >= v.goal, nv = x => x == null ? '--' : String(x);
+  const dStr = v.date, dW = Math.min(272, Math.max(96, Math.round(tw(dStr, 17, 800) + 2 * (dStr.length - 1) + 28))), dX = 208 - dW / 2;
   if (!aod) {
     stepRing(ops, v, P.acc);
     [90, 180, 270].forEach(a => { const [x1, y1] = pt(a, 198), [x2, y2] = pt(a, 210); ops.push({ t: 'line', x1, y1, x2, y2, w: 3, color: K.black }); });
-    const [ex, ey] = pt(Math.min(1, v.steps / v.goal) * 360, 204); ops.push({ t: 'circle', cx: ex, cy: ey, r: 4, fill: K.white });
+    if (pr != null) { const [ex, ey] = pt(pr * 360, 204); ops.push({ t: 'circle', cx: ex, cy: ey, r: 4, fill: K.white }); }
     ops.push({ t: 'circle', cx: 208, cy: 208, r: 194, fill: bg });
     ops.push({ t: 'arc', cx: 208, cy: 208, r: BR, w: BW, a0: -BA - 2, a1: BA + 2, color: K.black });
     [-BA - 2, BA + 2].forEach(a => { const [x, y] = pt(a, BR); ops.push({ t: 'circle', cx: x, cy: y, r: BW / 2, fill: K.black }); });
-    const lit = Math.ceil(v.bat / 10), batC = v.bat <= 10 ? K.red : v.bat <= 20 ? K.orange : P.acc;
-    for (let i = 0; i < 10; i++) { const a0 = -BA + i * (SEGA + GAP); ops.push({ t: 'arc', cx: 208, cy: 208, r: BR, w: 4, a0, a1: a0 + SEGA, color: i < lit ? batC : P.track2 }); }
+    const lit = v.bat == null ? 0 : Math.ceil(v.bat / 10), batC = v.bat <= 10 ? K.red : v.bat <= 20 ? K.orange : P.acc;
+    for (let i = 0; i < 10; i++) { const a0 = -BA + 7 * i; ops.push({ t: 'arc', cx: 208, cy: 208, r: BR, w: 4, a0, a1: a0 + 5, color: i < lit ? batC : P.track2 }); }
     ops.push({ t: 'rect', x: BAND[0] - p, y: BAND[1] - p, w: BAND[2] + 2 * p, h: BAND[3] + 2 * p, r: BAND[4] + p, fill: K.black });
     ops.push({ t: 'rect', x: BAND[0], y: BAND[1], w: BAND[2], h: BAND[3], r: BAND[4], fill: P.acc });
     [ST, HR].forEach(([cx, cy, R]) => ops.push({ t: 'circle', cx, cy, r: R + p, fill: K.black }));
     ops.push({ t: 'rect', x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], r: STEP[4], fill: done ? P.acc : K.black });
     ops.push({ t: 'circle', cx: BB[0], cy: BB[1], r: BB[2] + p, fill: K.black });
   }
-  ops.push({ t: 'text', x: 208, y: tY, str: v.time.slice(0, 2) + ':' + v.time.slice(2), size: tf.size, weight: tf.w, font: tf.css, color: aod ? P.aod : K.black, base: 'alpha', outline: aod ? P.sw : undefined });
+  let tx = 208 - 63;
+  for (const ch of v.time.slice(0, 2) + ':' + v.time.slice(2)) {
+    const a = TADV(ch);
+    ops.push({ t: 'text', x: tx + a / 2, y: tY, str: ch, size: tf.size, weight: tf.w, font: tf.css, fvs: tf.fvs, color: aod ? P.aod : K.black, base: 'alpha', outline: aod ? P.sw : undefined });
+    tx += a;
+  }
   if (aod) {
     const s = P.sw;
-    ops.push({ t: 'rect', x: DATE[0] + s / 2, y: DATE[1] + s / 2, w: DATE[2] - s, h: DATE[3] - s, r: DATE[4] - s / 2, stroke: P.aod, sw: s });
-    ops.push({ t: 'text', x: 208, y: DATE[1] + 14, str: v.date, size: 17, weight: 800, font: SEC, color: P.aod, ls: 1.5 });
+    ops.push({ t: 'rect', x: dX + s / 2, y: DATE[1] + s / 2, w: dW - s, h: DATE[3] - s, r: DATE[4] - s / 2, stroke: P.aod, sw: s });
+    ops.push({ t: 'text', x: 209, y: DATE[1] + 14, str: dStr, size: 17, weight: 800, font: SEC, color: P.aod, ls: 2 });
   } else {
-    ops.push({ t: 'rect', x: DATE[0], y: DATE[1], w: DATE[2], h: DATE[3], r: DATE[4], fill: K.black });
-    ops.push({ t: 'text', x: 208, y: DATE[1] + 14, str: v.date, size: 17, weight: 800, font: SEC, color: WH, ls: 1.5 });
+    ops.push({ t: 'rect', x: dX, y: DATE[1], w: dW, h: DATE[3], r: DATE[4], fill: K.black });
+    ops.push({ t: 'text', x: 209, y: DATE[1] + 14, str: dStr, size: 17, weight: 800, font: SEC, color: WH, ls: 2 });
     if (v.slot) {
       const sl = v.slot;
       gauge(ops, ST[0], ST[1], ST[2], 6, sl.ring == null ? null : sl.ring * 100, sl.color, P.track2);
@@ -298,45 +313,66 @@ function buildG(v, mode, P, tf, M, ext) {
     } else {
       gauge(ops, ST[0], ST[1], ST[2], 6, v.st, stC, P.track2);
       ops.push({ t: 'path', d: IC.stress, stroke: 2.5, x: ST[0] - 12, y: ST[1] - 30, size: 24, color: v.st > 50 ? stC : IG });
-      ops.push({ t: 'text', x: ST[0], y: ST[1] + 14, str: nv(v.st), size: 26, weight: 800, font: SEC, ls: v.st == null ? 3 : 0, color: v.st > 50 ? stC : v.st == null ? K.grey : WH });
+      ops.push({ t: 'text', x: ST[0], y: ST[1] + 14, str: nv(v.st), size: 26, weight: 800, font: SEC, color: v.st > 50 ? stC : v.st == null ? K.grey : WH });
     }
     gauge(ops, BB[0], BB[1], BB[2], 9, v.bb, bbC, P.track2);
-    ops.push({ t: 'path', d: IC.bolt, x: BB[0] - 12, y: BB[1] - 43, size: 24, color: v.bb < 25 ? bbC : IG });
-    ops.push({ t: 'text', x: BB[0], y: BB[1] + 12, str: String(v.bb), size: 48, weight: 800, font: SEC, color: v.bb < 25 ? bbC : WH });
+    ops.push({ t: 'path', d: IC.bolt, x: BB[0] - 12, y: BB[1] - 43, size: 24, color: bbWarn ? bbC : IG });
+    ops.push({ t: 'text', x: BB[0], y: BB[1] + 12, str: nv(v.bb), size: 48, weight: 800, font: SEC, color: bbMiss ? K.grey : bbWarn ? bbC : WH });
     const z = HRZ.filter(t => v.hr != null && v.hr >= t).length;
-    for (let i = 0; i < 5; i++) ops.push({ t: 'arc', cx: HR[0], cy: HR[1], r: HR[2] - 3, w: 6, a0: i * 72 + 4, a1: (i + 1) * 72 - 4, color: i < z ? P.acc : P.track2 });
+    for (let i = 0; i < 5; i++) ops.push({ t: 'arc', cx: HR[0], cy: HR[1], r: HR[2] - 3, w: 6, a0: i * 72 + 4, a1: (i + 1) * 72 - 4, color: i < z ? ZC[i] : P.track2 });
     ops.push({ t: 'heart', x: HR[0] - 12, y: HR[1] - 30, size: 24, color: IG });
-    ops.push({ t: 'text', x: HR[0], y: HR[1] + 14, str: nv(v.hr), size: fitN(nv(v.hr)), weight: 800, font: SEC, ls: v.hr == null ? 3 : 0, color: v.hr == null ? K.grey : WH });
-    ops.push({ t: 'path', d: IC.foot, x: 140, y: sy - 12, size: 24, color: done ? K.black : IG });
-    ops.push({ t: 'text', x: 228, y: sy, str: fmt(v.steps), size: 22, weight: 800, font: SEC, color: done ? K.black : WH, anchor: 'end' });
-    ops.push({ t: 'text', x: 233, y: sy + 1, str: '/ ' + fmt(v.goal), size: 15, weight: 700, font: SEC, color: done ? K.black : K.grey, anchor: 'start' });
+    ops.push({ t: 'text', x: HR[0], y: HR[1] + 14, str: nv(v.hr), size: fitN(nv(v.hr)), weight: 800, font: SEC, color: v.hr == null ? K.grey : WH });
+    if (done) {
+      const s = fmt(v.steps);
+      let size = 22, w = tw(s, 22, 800);
+      if (28 + w > 136) { size = 18; w = tw(s, 18, 800); }
+      const gx = Math.round(208 - (28 + w) / 2);
+      ops.push({ t: 'path', d: IC.foot, x: gx, y: sy - 12, size: 24, color: K.black });
+      ops.push({ t: 'text', x: gx + 28, y: sy, str: s, size, weight: 800, font: SEC, color: K.black, anchor: 'start' });
+    } else {
+      const s = v.steps == null ? '--' : fmt(v.steps), numC = v.steps == null ? K.grey : WH;
+      const hasGoal = v.goal > 0, big = v.steps != null && v.steps >= 100000, g = hasGoal ? '/ ' + fmt(v.goal) : '';
+      const gw = hasGoal ? tw(g, 15, 700) : 0;
+      const fits = w => !big && 228 - w >= 164 && (!hasGoal || 233 + gw <= 286);
+      let size = 22, w = tw(s, 22, 800);
+      if (!fits(w)) { size = 18; w = tw(s, 18, 800); }
+      if (fits(w)) {
+        ops.push({ t: 'path', d: IC.foot, x: 140, y: sy - 12, size: 24, color: IG });
+        ops.push({ t: 'text', x: 228, y: sy, str: s, size, weight: 800, font: SEC, color: numC, anchor: 'end' });
+        if (hasGoal) ops.push({ t: 'text', x: 233, y: sy + 1, str: g, size: 15, weight: 700, font: SEC, color: K.grey, anchor: 'start' });
+      } else {
+        const showG = hasGoal && !big, x0 = 208 - (w + (showG ? 5 + gw : 0)) / 2;
+        ops.push({ t: 'text', x: x0, y: sy, str: s, size, weight: 800, font: SEC, color: numC, anchor: 'start' });
+        if (showG) ops.push({ t: 'text', x: x0 + w + 5, y: sy + 1, str: g, size: 15, weight: 700, font: SEC, color: K.grey, anchor: 'start' });
+      }
+    }
   }
   const cz = ([cx, cy, R], label, below) => zones.push({ x: cx - R - p, y: cy - R - p, w: 2 * (R + p), h: 2 * (R + p), label, lx: cx - R - p, ly: below ? cy + R + p + 2 : cy - R - p - 18 });
   cz(ST, 'Ô trái', true); cz(BB, 'Body Battery'); zones[zones.length - 1].lx = 166; zones[zones.length - 1].ly = 186; cz(HR, 'Nhịp tim', true);
   zones.push({ x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], label: 'Bước chân', ring: true, lx: 172, ly: STEP[1] + STEP[3] + 4 });
-  const tw = M && M.fullW ? Math.round(M.fullW) : 180;
+  const TW = 126;
   const well = ([cx, cy, R]) => `Giếng fillCircle(${cx}, ${cy}, ${R + p}).`;
   const icon = (n, x, y) => `Icon ${n} 24×24 tại (${x},${y})`;
   const cb = ([cx, cy, R]) => ({ x: cx - R - p, y: cy - R - p, w: 2 * (R + p), h: 2 * (R + p) });
   const spec = [
-    { name: 'Vòng bước chân', x: 0, y: 0, w: 416, h: 416, font: 'drawArc tâm (208,208), r giữa 204, nét 8, từ 12 giờ theo chiều kim. Khía: 3 × drawLine nét 3 #000000 tại 90°/180°/270°, r 198→210. Chấm đầu fillCircle r 4', colors: [sw(K.track, 'rãnh'), sw(P.acc, 'đã đi'), sw(K.white, 'chấm đầu')], data: 'steps / stepGoal, góc = min(1, tỉ lệ) × 360°', warn: '—' },
+    { name: 'Vòng bước chân', x: 0, y: 0, w: 416, h: 416, font: 'drawArc tâm (208,208), r giữa 204, nét 8, từ 12 giờ theo chiều kim. Khía: 3 × drawLine nét 3 #000000 tại 90°/180°/270°, r 198→210. Chấm đầu fillCircle r 4', colors: [sw(K.track, 'rãnh'), sw(P.acc, 'đã đi'), sw(K.white, 'chấm đầu')], data: 'steps / stepGoal, góc = min(1, tỉ lệ) × 360°. Thiếu số bước, thiếu mục tiêu hoặc mục tiêu = 0: không có tiến độ và chấm đầu', warn: '—' },
     { name: 'Nền toàn cục', x: 14, y: 14, w: 388, h: 388, font: 'fillCircle(208, 208, 194). Thứ tự: vòng → nền → giếng → nội dung', colors: [sw(bg, 'nền')], data: 'Tĩnh. Tắt ở AOD', warn: '—' },
-    { name: 'Pin (10 đoạn)', x: 96, y: 22, w: 224, h: 46, font: `Giếng: drawArc r ${BR}, nét ${BW}, −${BA + 2}° → +${BA + 2}°, + fillCircle r ${BW / 2} ở 2 đầu. Đoạn: 10 × drawArc r ${BR}, nét 4, dài ${SEGA.toFixed(2).replace('.', ',')}°, khe ${GAP.toString().replace('.', ',')}°, bắt đầu −${BA}°`, colors: [sw(K.black, 'giếng'), sw(P.acc, 'đoạn sáng'), sw(P.track2, 'đoạn tắt')], data: 'System.getSystemStats().battery. Đoạn sáng = ceil(pin / 10), từ trái sang', warn: '≤20%: đoạn sáng #FF8A3D. ≤10%: #FF4D4D' },
+    { name: 'Pin (10 đoạn)', x: 96, y: 22, w: 224, h: 46, font: `Giếng: drawArc r ${BR}, nét ${BW}, −${BA + 2}° → +${BA + 2}°, + fillCircle r ${BW / 2} ở 2 đầu. Đoạn: 10 × drawArc r ${BR}, nét 4, đoạn i từ −${BA} + 7i° đến −${BA - 5} + 7i° (dài 5°, khe 2°, độ nguyên)`, colors: [sw(K.black, 'giếng'), sw(P.acc, 'đoạn sáng'), sw(P.track2, 'đoạn tắt')], data: 'System.getSystemStats().battery. Đoạn sáng = ceil(pin / 10), từ trái sang. Không có dữ liệu: tắt cả 10 đoạn', warn: '≤20%: đoạn sáng #FF8A3D. ≤10%: #FF4D4D' },
     { name: 'Dải giờ', x: BAND[0], y: BAND[1], w: BAND[2], h: BAND[3], font: `Giếng fillRoundedRectangle(${BAND[0] - p}, ${BAND[1] - p}, ${BAND[2] + 2 * p}, ${BAND[3] + 2 * p}, ${BAND[4] + p}). Dải fillRoundedRectangle(${BAND.join(', ')})`, colors: [sw(K.black, 'giếng'), sw(P.acc, 'dải')], data: 'Tĩnh. Tắt ở AOD', warn: '—' },
-    { name: 'Giờ:phút', x: 208 - Math.round(tw / 2), y: Math.round(112 - capH / 2), w: tw, h: Math.round(capH), font: `${tf.family} ${WNAME[tf.w]} ${tf.size}px (chữ số cao 46 px), căn giữa x 208, baseline y ${tY}`, colors: [sw(K.black, 'chữ'), sw(P.aod, 'AOD, viền ' + P.sw + ' px')], data: 'System.getClockTime() hour:min, 24h. Không có giây', warn: '—' },
-    { name: 'Ngày (viên thuốc)', x: DATE[0], y: DATE[1], w: DATE[2], h: DATE[3], font: `fillRoundedRectangle bo ${DATE[4]}, đè mép dưới dải giờ. Manrope ExtraBold 17, giãn 1,5, tại (208,${DATE[1] + 14})`, colors: [sw(K.black, 'viên'), sw(K.white, 'chữ'), sw(P.aod, 'AOD: viền ' + P.sw + ' px + chữ')], data: 'Gregorian.info(now, FORMAT_MEDIUM): day_of_week viết hoa 3 ký tự + day', warn: '—' },
-    { name: 'Ô trái (mặc định stress)', ...cb(ST), font: `${well(ST)} Vòng r giữa ${ST[2] - 3}, nét 6. ${icon('sóng / trăng / đồng hồ cát / giọt / núi', ST[0] - 12, ST[1] - 30)}. Số Manrope ExtraBold tại y ${ST[1] + 14}, cỡ theo số ký tự: ≤3 → 26, 4 → 22, ≥5 → 18 (rộng tối đa 56 px)`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'rãnh'), sw(P.acc, 'vòng'), sw(K.grey, 'icon'), sw(K.white, 'số')], data: 'Stress mặc định. Điểm ngủ: số / 100. Hồi phục: “18h”, vòng = giờ / 96. SpO₂: “96%”, vòng (x−80)/20. Độ cao: số nguyên không dấu chấm, không chữ đơn vị, đơn vị theo cài đặt máy; vòng chỉ có rãnh', warn: 'Stress 51–75 / >75, điểm ngủ <60, SpO₂ <90: vòng + icon + số sang cam / đỏ' },
-    { name: 'Body Battery', ...cb(BB), font: `${well(BB)} Vòng r giữa ${BB[2] - 4.5}, nét 9. ${icon('tia sét', BB[0] - 12, BB[1] - 43)}. Số Manrope ExtraBold 48 tại y ${BB[1] + 12}`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'rãnh'), sw(P.acc, 'vòng ≥25'), sw(K.grey, 'icon'), sw(K.white, 'số')], data: 'SensorHistory.getBodyBatteryHistory() mới nhất 0–100. Vòng = giá trị × 3,6°', warn: '15–24: vòng, icon, số #FF8A3D. <15: #FF4D4D' },
-    { name: 'Nhịp tim', ...cb(HR), font: `${well(HR)} 5 đoạn drawArc r giữa ${HR[2] - 3}, nét 6, đoạn i: i×72°+4° → (i+1)×72°−4°. ${icon('tim', HR[0] - 12, HR[1] - 30)}. Số ExtraBold, cỡ theo số ký tự như ô trái`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'đoạn tắt'), sw(P.acc, 'đoạn sáng'), sw(K.grey, 'icon'), sw(K.white, 'số')], data: 'currentHeartRate. Đoạn sáng = số ngưỡng của UserProfile.getHeartRateZones() ≤ nhịp tim. Không có: “--” xám', warn: '—' },
-    { name: 'Số bước (viên thuốc)', x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], font: `fillRoundedRectangle bo ${STEP[4]}, cách giếng Body Battery 8 px (nền xám ở giữa). ${icon('bàn chân', 140, sy - 12)}. Số ExtraBold 22 căn phải x 228. “/ mục tiêu” Bold 15 căn trái x 233, tâm y ${sy}`, colors: [sw(K.black, 'viên'), sw(K.grey, 'icon + mục tiêu'), sw(K.white, 'số')], data: 'steps và stepGoal, phân cách nghìn bằng dấu chấm', warn: 'Đạt mục tiêu: nền viên ' + P.acc + ', icon + chữ #000000' },
-    { name: 'Quy tắc màu', x: '', y: '', w: '', h: '', font: '—', colors: [sw(P.acc, 'tiến độ'), sw(K.grey, 'icon'), sw(K.white, 'số')], data: 'Mint chỉ dùng cho dải giờ và phần tiến độ: vòng bước, vòng số liệu, đoạn pin, vùng nhịp tim. Icon xám, chỉ đổi màu khi cảnh báo', warn: 'Icon đổi cùng màu với vòng khi cảnh báo' },
-    { name: 'Ưu tiên ô trái', x: '', y: '', w: '', h: '', font: '—', colors: [], data: '1. Stress >75. 2. Điểm ngủ (05:00–10:00). 3. Hồi phục (sau tập). 4. Lựa chọn cài đặt. Giữ tay mở trang Garmin của nội dung đang hiện', warn: '—' },
-    { name: 'Cài đặt (properties.xml)', x: '', y: '', w: '', h: '', font: '—', colors: [], data: 'leftSlot {Stress, SpO₂, Độ cao} · morningSleep bool · showRecovery bool', warn: '—' },
-    { name: 'Chế độ ngủ', x: 0, y: 0, w: 416, h: 416, font: 'Cùng bố cục, chỉ thay màu', colors: [sw(shade(P.acc, 0.6), 'màu nhấn'), sw('#9A9A9A', 'chữ'), sw('#6E6E6E', 'icon'), sw('#101211', 'nền')], data: 'Trong khoảng sleepTime → wakeTime của UserProfile', warn: 'Màu cảnh báo giữ nguyên' },
+    { name: 'Giờ:phút', x: 208 - TW / 2, y: Math.round(112 - capH / 2), w: TW, h: Math.round(capH), font: `Big Shoulders (file biến thiên hiện tại) wght 800, opsz 72, chữ số cao 46 px. Số tabular: mỗi chữ số 28 px, “:” 14 px. Căn giữa x 208, baseline y ${tY}`, colors: [sw(K.black, 'chữ'), sw(P.aod, 'AOD, viền ' + P.sw + ' px')], data: 'System.getClockTime() hour:min, luôn 24h, có số 0 ở đầu. Không có giây', warn: '—' },
+    { name: 'Ngày (viên thuốc)', x: Math.round(dX), y: DATE[1], w: dW, h: DATE[3], font: `fillRoundedRectangle bo ${DATE[4]}, rộng = max(96, rộng chữ + 2 × 14), tối đa 272, căn giữa x 208, đè mép dưới dải giờ. Manrope ExtraBold 17, giãn 2 (gắn sẵn trong font bitmap), tâm y ${DATE[1] + 14}`, colors: [sw(K.black, 'viên'), sw(K.white, 'chữ'), sw(P.aod, 'AOD: viền ' + P.sw + ' px + chữ')], data: 'Thứ theo ngôn ngữ của đồng hồ, viết hoa không dấu + ngày. Tiếng Việt dùng dạng ngắn T2…T7, Chủ nhật CN (vd. “T5 12”). Tên quá dài hoặc font thiếu chữ (Cyrillic, CJK): dùng tiếng Anh', warn: '—' },
+    { name: 'Ô trái (stress)', ...cb(ST), font: `${well(ST)} Vòng r giữa ${ST[2] - 3}, nét 6. ${icon('sóng', ST[0] - 12, ST[1] - 30)}. Số Manrope ExtraBold 26 tại y ${ST[1] + 14}`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'rãnh'), sw(P.acc, 'vòng'), sw(K.grey, 'icon'), sw(K.white, 'số')], data: 'Luôn là stress. Không có: “--” xám (không giãn chữ), vòng chỉ còn rãnh. Điểm ngủ, hồi phục, SpO₂, độ cao: sau MVP', warn: 'Stress 51–75 / >75: vòng + icon + số sang cam / đỏ' },
+    { name: 'Body Battery', ...cb(BB), font: `${well(BB)} Vòng r giữa ${BB[2] - 4.5}, nét 9. ${icon('tia sét', BB[0] - 12, BB[1] - 43)}. Số Manrope ExtraBold 48 tại y ${BB[1] + 12}`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'rãnh'), sw(P.acc, 'vòng ≥25'), sw(K.grey, 'icon'), sw(K.white, 'số')], data: 'SensorHistory.getBodyBatteryHistory() mới nhất 0–100. Vòng = giá trị × 3,6°. Không có: “--” xám, chỉ còn rãnh', warn: '15–24: vòng, icon, số #FF8A3D. <15: #FF4D4D' },
+    { name: 'Nhịp tim', ...cb(HR), font: `${well(HR)} 5 đoạn drawArc r giữa ${HR[2] - 3}, nét 6, đoạn i: i×72°+4° → (i+1)×72°−4°, mỗi đoạn sáng theo màu vùng của nó. ${icon('tim', HR[0] - 12, HR[1] - 30)}. Số ExtraBold, cỡ theo số ký tự: ≤3 → 26, 4 → 22, ≥5 → 18`, colors: [sw(K.black, 'giếng'), sw(P.track2, 'đoạn tắt'), sw(ZC[0], 'vùng 1'), sw(ZC[1], 'vùng 2'), sw(ZC[2], 'vùng 3'), sw(ZC[3], 'vùng 4'), sw(ZC[4], 'vùng 5'), sw(K.grey, 'icon'), sw(K.white, 'số')], data: 'currentHeartRate, đọc lại mỗi giây khi màn hình sáng (các số liệu khác mỗi phút). Đoạn sáng = số ngưỡng của UserProfile.getHeartRateZones() ≤ nhịp tim. Không có: “--” xám (không giãn chữ)', warn: '—' },
+    { name: 'Số bước (viên thuốc)', x: STEP[0], y: STEP[1], w: STEP[2], h: STEP[3], font: `fillRoundedRectangle bo ${STEP[4]}, cách giếng Body Battery 8 px. ${icon('bàn chân', 140, sy - 12)}. Số ExtraBold 22 căn phải x 228. “/ mục tiêu” Bold 15 căn trái x 233, tâm y ${sy}. Số dài: giữ nguyên khi số bắt đầu ở x ≥ 164 và mục tiêu kết thúc ở x ≤ 286; nếu không, số giảm còn 18; vẫn không vừa thì ẩn bàn chân, số + 5 px + “/ mục tiêu” căn giữa x 208; từ 100.000 bước bỏ luôn “/ mục tiêu”`, colors: [sw(K.black, 'viên'), sw(K.grey, 'icon + mục tiêu'), sw(K.white, 'số')], data: 'steps và stepGoal, phân cách nghìn bằng dấu chấm. Thiếu số bước: “--” xám, vẫn có “/ mục tiêu” và bàn chân. Thiếu mục tiêu hoặc = 0: bỏ “/ mục tiêu”', warn: 'Đạt mục tiêu: nền viên ' + P.acc + ', bỏ “/ mục tiêu”. Bàn chân 24 px + 4 px + số ExtraBold 22 (18 nếu nhóm rộng hơn 136 px) căn giữa x 208, màu #000000' },
+    { name: 'Always On', x: '', y: '', w: '', h: '', font: 'Chỉ giờ + ngày, cùng vị trí và cỡ, viền không tô', colors: [sw(P.aod, 'viền ' + P.sw + ' px')], data: 'Chống lưu ảnh: giờ + ngày dịch cùng nhau mỗi phút qua 12 vị trí trong ±4 px, theo phút mod 12: (−4,−4), (1,−1), (4,4), (−4,−1), (−1,2), (4,−3), (−2,0), (1,3), (4,0), (−4,3), (−1,−4), (3,2). Độ sáng đỉnh 0,60% (mô phỏng 24 giờ)', warn: '—' },
+    { name: 'Quy tắc màu', x: '', y: '', w: '', h: '', font: '—', colors: [sw(P.acc, 'tiến độ'), sw(K.grey, 'icon'), sw(K.white, 'số')], data: 'Mint chỉ dùng cho dải giờ và phần tiến độ: vòng bước, vòng số liệu, đoạn pin. Đoạn nhịp tim dùng màu của từng vùng. Icon xám, chỉ đổi màu khi cảnh báo', warn: 'Icon đổi cùng màu với vòng khi cảnh báo' },
+    { name: 'Vùng giữ tay', x: '', y: '', w: '', h: '', font: '—', colors: [], data: 'Ba giếng tròn (R + 6), viên số bước và vòng viền bước chân; giữ tay mở trang Garmin tương ứng. Ở AOD, chạm đầu chỉ đánh thức màn hình, giữ tiếp mới mở trang', warn: '—' },
+    { name: 'Sau MVP (chưa làm)', x: '', y: '', w: '', h: '', font: '—', colors: [], data: 'Ô trái đổi sang điểm ngủ (FR265 API 5.2 không cho mặt đồng hồ đọc điểm ngủ), hồi phục, SpO₂, độ cao; font chưa có glyph “%” và “h”. Chế độ ngủ. Trang cài đặt (mặt đồng hồ cài tay không có)', warn: '—' },
   ];
   return { ops, zones, spec };
 }
-const TFN = 'Big Shoulders Display';
+const TFN = 'Big Shoulders';
 class Component extends DCLogic {
   state = {};
   palette() {
@@ -362,7 +398,7 @@ class Component extends DCLogic {
     const Psl = { ...P, acc: shade(P.acc, 0.6), track2: '#262A28' };
     const n = this.state.lit;
     const N = { ...NORMAL };
-    const fr = (label, sub, v, k, sl) => ({ label, sub, el: toSvg(buildG(v, 'normal', sl ? Psl : P, T, M, sl ? { sleep: true } : {}).ops, 'f' + k), stat: null });
+    const fr = (label, sub, v, k, sl, later) => { const svg = toSvg(buildG(v, 'normal', sl ? Psl : P, T, M, sl ? { sleep: true } : {}).ops, 'f' + k); return { label, sub, el: later ? h('div', { style: { opacity: 0.4 } }, svg) : svg, stat: null }; };
     const base = buildG(N, 'normal', P, T, M), aod = buildG(N, 'aod', P, T, M);
     return {
       options: [{
@@ -370,19 +406,20 @@ class Component extends DCLogic {
           fr('1 · Bình thường', '08:42 · Stress 27 · Body Battery 56 · Nhịp tim 62 · 1.147 / 3.110 bước · Pin 78% (8 đoạn)', N, 'n'),
           fr('2 · Cảnh báo cam', 'Body Battery 22 · Stress 68 · Pin 18%: vòng, icon, số và đoạn pin chuyển #FF8A3D', { ...N, bb: 22, st: 68, bat: 18 }, 'w'),
           fr('3 · Cảnh báo đỏ', 'Body Battery 12 · Stress 82 · Pin 9%: chuyển #FF4D4D', { ...N, bb: 12, st: 82, bat: 9 }, 'r'),
-          fr('4 · Buổi sáng · điểm ngủ', '05:00–10:00: ô trái hiện điểm giấc ngủ đêm qua (82). Dưới 60 chuyển cam', { ...N, time: '0645', bb: 88, steps: 214, hr: 51, slot: slot8('sleep', 82, P) }, 'm'),
-          fr('5 · Đang vận động', 'Nhịp tim 142 (vùng 3, sáng 3 đoạn) · Stress 74', { ...N, bb: 41, st: 74, hr: 142, steps: 2480, time: '1730', bat: 52 }, 'run'),
-          fr('6 · Sau buổi tập · hồi phục', 'Trong 12 giờ sau buổi tập: ô trái hiện giờ hồi phục còn lại', { ...N, time: '1915', bb: 30, hr: 78, steps: 2960, bat: 49, slot: slot8('rec', 18, P) }, 'rec'),
-          fr('7 · Đạt mục tiêu bước', '3.512 / 3.110: vòng kín, viên số bước nền mint', { ...N, steps: 3512, time: '1905', bb: 33 }, 'g'),
-          fr('8 · Chế độ ngủ', 'Trong giờ ngủ đã đặt: màu nhấn 60%, chữ và icon tối hơn, nền #101211', { ...N, time: '2315', bb: 34, st: 18, hr: 54, steps: 3512, bat: 61 }, 's', true),
-          fr('9 · Cài đặt: ô trái = SpO₂', 'SpO₂ 96%, vòng tính từ 80% đến 100%. Dưới 90% chuyển cam', { ...N, slot: slot8('spo2', 96, P) }, 'o2'),
-          fr('10 · Cài đặt: ô trái = Độ cao', '1245: số nguyên, không dấu chấm, không chữ “m”. Cỡ chữ tự giảm theo số ký tự', { ...N, slot: slot8('alt', 1245, P) }, 'alt'),
-          fr('11 · Thiếu dữ liệu', 'Không đeo hoặc chưa đo: stress và nhịp tim hiện “--” xám, vòng tắt', { ...N, st: null, hr: null }, 'x'),
-          { label: '12 · Always On (AOD)', sub: `Chỉ giờ + ngày, cùng vị trí và cỡ, màu ${P.aod}, viền ${P.sw} px không tô. Đếm mọi điểm ảnh khác đen trong vòng tròn`, el: toSvg(aod.ops, 'fa'), stat: n == null ? '…' : (n / SCREEN_PX * 100).toFixed(1).replace('.', ',') + '%', statDetail: n == null ? '' : `${fmt(n)} / ${fmt(SCREEN_PX)} px` },
-          { label: 'Chú thích · Vùng giữ tay', sub: 'Mỗi giếng là một vùng giữ tay, mở trang Garmin tương ứng (Complications.exitTo). Bước chân gồm cả vòng viền', el: toSvg(base.ops, 'fz', base.zones), stat: null },
+          fr('4 · Buổi sáng · điểm ngủ · SAU MVP', 'Chưa làm: FR265 (API 5.2) không cho mặt đồng hồ đọc điểm ngủ. Ô trái luôn là stress', { ...N, time: '0645', bb: 88, steps: 214, hr: 51, slot: slot8('sleep', 82, P) }, 'm', false, true),
+          fr('5 · Đang vận động', 'Nhịp tim 142 (vùng 3): 3 đoạn sáng xám, xanh dương, xanh lá · Stress 74', { ...N, bb: 41, st: 74, hr: 142, steps: 2480, time: '1730', bat: 52 }, 'run'),
+          fr('6 · Sau buổi tập · hồi phục · SAU MVP', 'Chưa làm (ngoài MVP). Font chưa có glyph “h”', { ...N, time: '1915', bb: 30, hr: 78, steps: 2960, bat: 49, slot: slot8('rec', 18, P) }, 'rec', false, true),
+          fr('7 · Đạt mục tiêu bước', '3.512: vòng kín, viên nền mint, bỏ “/ mục tiêu”, bàn chân + số căn giữa x 208', { ...N, steps: 3512, time: '1905', bb: 33 }, 'g'),
+          fr('8 · Chế độ ngủ · SAU MVP', 'Chưa làm (ngoài MVP): màu nhấn 60%, chữ và icon tối hơn, nền #101211', { ...N, time: '2315', bb: 34, st: 18, hr: 54, steps: 3512, bat: 61 }, 's', true, true),
+          fr('9 · Ô trái = SpO₂ · SAU MVP', 'Chưa làm (ngoài MVP; mặt đồng hồ cài tay không có trang cài đặt). Font chưa có glyph “%”', { ...N, slot: slot8('spo2', 96, P) }, 'o2', false, true),
+          fr('10 · Ô trái = Độ cao · SAU MVP', 'Chưa làm (ngoài MVP; mặt đồng hồ cài tay không có trang cài đặt)', { ...N, slot: slot8('alt', 1245, P) }, 'alt', false, true),
+          fr('11 · Thiếu dữ liệu', 'Stress, nhịp tim, Body Battery, số bước hiện “--” xám, vòng chỉ còn rãnh. Vòng viền không có tiến độ và chấm đầu. Pin tắt cả 10 đoạn', { ...N, st: null, hr: null, bb: null, steps: null, bat: null }, 'x'),
+          fr('11b · Số bước dài', '1.147 / 10.000 không vừa: ẩn bàn chân, số + “/ mục tiêu” căn giữa x 208', { ...N, goal: 10000 }, 'long'),
+          { label: '12 · Always On (AOD)', sub: `Chỉ giờ + ngày, cùng vị trí và cỡ, màu ${P.aod}, viền ${P.sw} px không tô. Mỗi phút dịch trong ±4 px chống lưu ảnh. Đếm mọi điểm ảnh khác đen trong vòng tròn`, el: toSvg(aod.ops, 'fa'), stat: n == null ? '…' : (n / SCREEN_PX * 100).toFixed(1).replace('.', ',') + '%', statDetail: n == null ? '' : `${fmt(n)} / ${fmt(SCREEN_PX)} px` },
+          { label: 'Chú thích · Vùng giữ tay', sub: 'Mỗi giếng là một vùng giữ tay, mở trang Garmin tương ứng (Complications.exitTo). Bước chân gồm cả vòng viền. Ở AOD, chạm đầu chỉ đánh thức màn hình', el: toSvg(base.ops, 'fz', base.zones), stat: null },
         ],
         fontStrip: fontStrip({ ...P, tf: T }, M),
-        fontSpec: fontSpec({ ...P, tf: T }, M).map(r => r.k === 'Font phụ' ? { k: 'Font phụ', v: 'Manrope ExtraBold 17 / 18 / 22 / 26 / 48, Bold 15. Glyph: 0–9, A–Z, “/”, “.”, “-”, “%”, “h”. Nhỏ nhất 15 px' } : r),
+        fontSpec: fontSpec({ ...P, tf: T }, M).map(r => r.k === 'Font phụ' ? { k: 'Font phụ', v: 'Manrope ExtraBold 17 (ngày, giãn 2 gắn sẵn) / 18 / 22 / 26 / 48, Bold 15. Glyph: 0–9, A–Z, “/”, “.”, “-”. Chưa có “%”, “h” (sau MVP). Nhỏ nhất 15 px' } : r),
         spec: base.spec
       }]
     };
