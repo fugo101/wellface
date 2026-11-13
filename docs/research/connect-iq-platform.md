@@ -286,7 +286,7 @@ This document collects what the Connect IQ platform offers and requires for Well
 
 **Rendering & AOD**
 
-9. Does the fr265 firmware enforce the 3-minute per-pixel rule, or only the luminance rule? Check with the heat map and on the watch with Always On enabled.
+9. Does the fr265 firmware enforce the 3-minute per-pixel rule, or only the luminance rule? Check with the heat map and on the watch with Always On enabled. **Partly answered (ticket 13, 2026-11-13, user report):** with this face (peak luminance 0.60% in the simulator, shifting each minute) the FR265 never turned the screen off during normal wear. Which rule the firmware enforces is still unknown.
 10. The repo `CLAUDE.md` states "each pixel lit ≤ 3 minutes" as fact for the FR265. Current SDK docs describe a luminance-based rule for post-Venu 2 devices. Should the wording be softened? Ask the user before editing.
 11. Is the `drawArc` stroke centred on r? How are negative angles handled?
 12. Does a 416×416 buffer with ALPHA_BLENDING_FULL cost 2 or 4 bytes per pixel? Is the second "frame" buffer worth it? **Answered in the simulator (ticket 04):** 4 bytes per pixel (692,360 bytes). Not yet checked on the watch. Whether a second buffer is worth it stays open.
