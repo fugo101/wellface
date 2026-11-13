@@ -61,10 +61,13 @@ if [[ ! -x "$HELPER" || "$SOURCE" -nt "$HELPER" ]]; then
 fi
 
 # libusb and libmtp print harmless notes for every session on the FR265
-# (kernel driver detach, extended association type); hide them.
-status=0
-"$HELPER" "$PRG" "$REMOTE" \
-    2> >(grep -v -E "libusb_detach_kernel_driver|extended association type" >&2) || status=$?
+# (device found, kernel driver detach, extended association type), libmtp's
+# on stdout and libusb's on stderr; hide them on both.
+NOISE='^Device [0-9]+ \(VID=|libusb_detach_kernel_driver|extended association type'
+set +e
+"$HELPER" "$PRG" "$REMOTE" 2> >(grep -v -E "$NOISE" >&2) | grep -v -E "$NOISE"
+status=${PIPESTATUS[0]}
+set -e
 if [[ $status -eq 0 ]]; then
     echo "unplug the watch: it installs the face and then removes the PRG from GARMIN/Apps"
 fi
