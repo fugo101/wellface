@@ -2,13 +2,13 @@ import Toybox.Lang;
 import Toybox.System;
 import Toybox.Test;
 
-// Golden values: what the default face draws today, recorded with the
-// FrameEquality descriptions before the settings-ready refactor, for a fixed
-// set of snapshots (missing data, each warning level, goal reached, zones
-// 0-5, short and long dates with the English fallback and the Vietnamese
-// short forms, steps at 100.000, twelve consecutive minutes of burn-in
-// offsets), plus the static layer, the bezel notches and the long-press
-// targets. Every later change must leave them equal.
+// Golden values: what the default face draws today in the mint theme,
+// recorded with the FrameEquality descriptions before the settings-ready
+// refactor, for a fixed set of snapshots (missing data, each warning level,
+// goal reached, zones 0-5, short and long dates with the English fallback
+// and the Vietnamese short forms, steps at 100.000, twelve consecutive
+// minutes of burn-in offsets), plus the static layer, the bezel notches and
+// the long-press targets. Every later change must leave them equal.
 //
 // A failing golden test prints each differing value as
 // "GOLDEN <group> <name>=<actual>". Re-record only for an intended change
@@ -207,9 +207,9 @@ module GoldenTest {
         return false;
     }
 
-    // The built-in face config: the mint theme and today's mapping.
+    // The built-in face config (today's mapping) with the mint theme.
     function config() as ResolvedFaceConfig {
-        return FaceModel.resolve(FaceConfigs.defaultConfig());
+        return TestConfigs.mintDefault();
     }
 
     (:test)

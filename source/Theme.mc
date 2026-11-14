@@ -90,6 +90,7 @@ module Themes {
         return null;
     }
 
+    // The default theme (Q9): an unknown name resolves to it.
     function mint() as Theme {
         return named(MINT) as Theme;
     }

@@ -10,10 +10,13 @@ class CaptureView extends WatchUi.WatchFace {
     private var _config as ResolvedFaceConfig;
     private var _renderer as Renderer;
 
-    // The built-in face config, set up as WellfaceView.applyConfig does.
+    // The built-in face config with the scenario's theme
+    // (CaptureScenario.THEME), set up as WellfaceView.applyConfig does.
     function initialize() {
         WatchFace.initialize();
-        _config = FaceModel.resolve(FaceConfigs.defaultConfig());
+        var config = FaceConfigs.defaultConfig();
+        config.themeName = CaptureScenario.THEME;
+        _config = FaceModel.resolve(config);
         _renderer = new Renderer(new Fonts());
         _renderer.setStatic(FaceModel.staticLayer(_config), FaceModel.bezelNotches(_config));
     }

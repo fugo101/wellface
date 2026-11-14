@@ -32,13 +32,15 @@ module FaceConfigTest {
         return FaceModel.resolve(new FaceConfig(theme, left, center, right, bottom, bezelRing));
     }
 
-    // Stories 1, 24: the built-in default is today's face: the mint theme;
-    // stress, Body Battery, heart rate, steps, steps.
+    // Stories 1, 24, 53: the built-in default is today's face: stress, Body
+    // Battery, heart rate, steps, steps, in a theme the face knows by name
+    // (whichever one the wearer picked there).
     (:test)
     function defaultConfigIsTodaysFace(logger as Test.Logger) as Boolean {
-        var config = FaceModel.resolve(FaceConfigs.defaultConfig());
-        assertMint(config.theme);
-        assertMetrics(DEFAULT_METRICS, config);
+        var defaults = FaceConfigs.defaultConfig();
+        Test.assertMessage(Themes.named(defaults.themeName) != null,
+            "unknown theme " + defaults.themeName);
+        assertMetrics(DEFAULT_METRICS, FaceModel.resolve(defaults));
         return true;
     }
 
@@ -57,9 +59,10 @@ module FaceConfigTest {
         return true;
     }
 
-    // An unknown theme name gives the default theme; the fields are kept.
+    // Story 54: an unknown theme name gives Mint, whatever theme the built-in
+    // config names; the fields are kept.
     (:test)
-    function unknownThemeGivesTheDefaultTheme(logger as Test.Logger) as Boolean {
+    function unknownThemeGivesMint(logger as Test.Logger) as Boolean {
         var names = ["", "Mint", "no such theme"] as Array<String>;
         for (var i = 0; i < names.size(); i++) {
             var config = resolve(names[i], METRIC_HEART_RATE, METRIC_STRESS, METRIC_BODY_BATTERY,

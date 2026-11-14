@@ -470,16 +470,16 @@ module FaceModel {
         return frame;
     }
 
-    // The face config to draw: the named theme, or the default theme for an
-    // unknown name, and in each field the metric asked for if the field
+    // The face config to draw: the named theme, or the default theme (Mint,
+    // Q9) for an unknown name, whatever theme the built-in config names, and
+    // in each field the metric asked for if the field
     // accepts it, else that field's default metric (Q40). Never an empty
     // field; duplicates are kept.
     function resolve(config as FaceConfig) as ResolvedFaceConfig {
         var defaults = FaceConfigs.defaultConfig();
         var theme = Themes.named(config.themeName);
         if (theme == null) {
-            // The default config names a built-in theme.
-            theme = Themes.named(defaults.themeName) as Theme;
+            theme = Themes.mint();
         }
         var fields = Layout.FIELDS;
         var metrics = new Array<Metric>[fields.size()];

@@ -9,6 +9,9 @@
 #   Writes <out dir>/<scenario>.png for every scenario. With --compare, also
 #   compares each capture with <dir>/<scenario>.png and reports the number of
 #   differing pixels (title bar and status bar excluded).
+#   The face is captured in the mint theme, whatever theme the built-in face
+#   config names, so captures stay comparable; CAPTURE_THEME=<theme name>
+#   (for example volt) captures another theme.
 #
 # Exit codes: 0 captured (and, with --compare, every capture identical),
 # 1 a capture differs, 2 could not run.
@@ -29,6 +32,11 @@ if [[ -n "$BEFORE" ]]; then
     [[ -d "$BEFORE" ]] || die "$BEFORE is not a folder"
     [[ -x "$PYTHON" ]] || die "no .venv with Pillow; run scripts/gen-fonts.sh once to create it"
 fi
+# An unknown name would silently capture mint (the fallback theme), so check
+# it against the theme names in source/Theme.mc.
+THEME="${CAPTURE_THEME:-mint}"
+grep -q "^    const [A-Z]* = \"$THEME\";" "$ROOT/source/Theme.mc" \
+    || die "unknown theme \"$THEME\" in CAPTURE_THEME (theme names are lowercase, as in source/Theme.mc)"
 mkdir -p "$OUT" "$SCENARIO_DIR"
 
 "$CIQ_SDK/bin/connectiq"   # starts the simulator, or focuses it if running
@@ -51,8 +59,8 @@ window_id() {
 }
 
 for scenario in "${SCENARIOS[@]}"; do
-    printf 'module CaptureScenario {\n    const NAME = "%s";\n}\n' "$scenario" \
-        >"$SCENARIO_DIR/Scenario.mc"
+    printf 'module CaptureScenario {\n    const NAME = "%s";\n    const THEME = "%s";\n}\n' \
+        "$scenario" "$THEME" >"$SCENARIO_DIR/Scenario.mc"
     compile "$PRG" >/dev/null
     log="$(mktemp)"
     loaded=0

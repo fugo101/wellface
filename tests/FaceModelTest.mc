@@ -7,11 +7,12 @@ module FaceModelTest {
 
     // Helpers stay unannotated: the (:test) module keeps them out of release builds.
 
-    // Frames are built from the built-in face config. Tests of a metric's
-    // look find its field through the config (fieldOf); tests of a field's
-    // own geometry go by position, whatever metric it shows.
+    // Frames are built from the built-in face config with the mint theme.
+    // Tests of a metric's look find its field through the config (fieldOf);
+    // tests of a field's own geometry go by position, whatever metric it
+    // shows.
     function config() as ResolvedFaceConfig {
-        return FaceModel.resolve(FaceConfigs.defaultConfig());
+        return TestConfigs.mintDefault();
     }
 
     function compute(snapshot as Snapshot) as Frame {
