@@ -8,20 +8,24 @@ A custom watch face for a round AMOLED Garmin watch. Every element sits inside a
 The black area that surrounds an element and separates it from the background. A black pill can be its own well.
 _Avoid_: Frame, outline, border
 
+**Contour texture**:
+The contour lines, like a topographic map, drawn on the background. Only visible in the gaps between wells; not drawn in AOD.
+_Avoid_: Pattern, background texture, topo
+
 **Well rim**:
 The thin edge, lighter than the background, around a well, so the well keeps its shape when the watch dims the screen. Not every well has one.
 _Avoid_: Border, outline, halo
 
 **Theme**:
-A named set of colors used to draw the face. The face has exactly one active theme.
+A named accent from which every themed color of the face is derived. Colors that do not depend on the theme (black, white and gray text and icons, unlit tracks and ticks, warning colors, zone colors) stay the same in every theme. The face has exactly one active theme.
 _Avoid_: Skin, color scheme
 
 **Accent**:
-The theme's main color, used only for the time band, for progress (rings, lit battery segments), for a field whose goal is reached, and (dimmed) for AOD.
-_Avoid_: Mint, primary color, highlight
+The theme's one color. Every other themed color (background, contour texture, well rims, the dimmer lit bezel ticks, AOD) is derived from it. Used as-is only for the time band, the weekday in the date pill, progress (gauges, lit battery segments, the brightest lit bezel ticks) and a field whose goal is reached.
+_Avoid_: Mint, primary color, main color, highlight
 
 **Zone color**:
-The color of one heart-rate zone, used only for that zone's lit segment: gray, blue, green, orange and red for zones 1 to 5, in Garmin's order. Part of the theme.
+The color of one heart-rate zone, used only for that zone's lit segment: gray, blue, green, orange and red for zones 1 to 5, in Garmin's order. The same in every theme.
 _Avoid_: HR color, heart-rate color
 
 **Warning color**:
@@ -81,8 +85,16 @@ The wide pill at the bottom.
 _Avoid_: Step pill, steps field
 
 **Bezel ring**:
-The ring around the edge of the face. It only shows a goal metric, as progress.
+The ring of 60 bezel ticks around the edge of the face. It only shows a goal metric, as progress.
 _Avoid_: Step ring, outer ring, progress ring
+
+**Bezel tick**:
+One of the 60 radial ticks of the bezel ring, one every 6 degrees, in three lengths like the minute track of a watch dial. A tick is lit once progress reaches it.
+_Avoid_: Notch, mark, segment
+
+**Lead tick**:
+The white, longer tick at the front of the lit bezel ticks. There is none before any progress or once the goal is reached.
+_Avoid_: Head, head dot, cursor
 
 **Face config**:
 The choices that set up the face: the active theme and the metric shown in each field. There is a built-in default; settings will later produce other face configs.
