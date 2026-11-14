@@ -1,6 +1,8 @@
 // Recorded by GoldenTest from the default face before the settings-ready
-// refactor (2026-11-14). Re-record only for an intended change to what is
-// drawn; see GoldenTest.
+// refactor (2026-11-14). Re-recorded for the themes derived from one accent
+// (Q42, 2026-11-15): only the static layer's background and well rims
+// changed. Re-record only for an intended change to what is drawn; see
+// GoldenTest.
 import Toybox.Lang;
 
 (:test)
@@ -529,9 +531,9 @@ module GoldenValues {
     } as Dictionary<String, String>;
 
     const STATIC_LAYER =
-        "background=2C332F|timeBandRim=R(64,70,288,100,30,4D5852)|" +
-        "fieldRims={C(208,256,68,4D5852)C(328,246,46,4D5852)C(88,246,46,4D5852)}|" +
-        "bottomFieldRim=R(124,328,168,44,22,4D5852)|" +
+        "background=22362C|timeBandRim=R(64,70,288,100,30,446D58)|" +
+        "fieldRims={C(208,256,68,446D58)C(328,246,46,446D58)C(88,246,46,446D58)}|" +
+        "bottomFieldRim=R(124,328,168,44,22,446D58)|" +
         "timeBandWell=R(66,72,284,96,28,000000)|timeBand=R(72,78,272,84,22,8EE3B8)|" +
         "bezelTrack=A(208,208,204,8,90,90,360,343B37)|" +
         "batteryWell=A(208,208,180,12,126,54,72,000000)|batteryCaps={C(102,62,6,000000)" +

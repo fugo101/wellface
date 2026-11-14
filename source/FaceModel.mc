@@ -327,8 +327,6 @@ module FaceModel {
     // multiplication sign, thorn, sharp s, IJ, OE). Letters with a stroke
     // fold to their base letter too (D for the Vietnamese D with stroke).
     const LATIN_1_BASE = "AAAAAA?CEEEEIIIIDNOOOOO?OUUUUY??AAAAAA?CEEEEIIIIDNOOOOO?OUUUUY?Y";
-    // Always On: the accent dimmed to this percentage (Q13).
-    const AOD_DIM_PERCENT = 75;
     // Always On: black, the pixels left off. A platform rule, not a theme
     // color.
     const AOD_BLACK = 0x000000;
@@ -459,7 +457,7 @@ module FaceModel {
         var dateFont = FontCatalog.entry(FONT_DATE);
         frame.dateY = digitsTop(Layout.DATE_CENTER_Y, dateFont.capHeight, dateFont.base)
             + frame.offsetY;
-        var color = aodColor(config.theme.accent);
+        var color = config.theme.aodColor;
         frame.timeColor = color;
         frame.dateColor = color;
         // The outline's outer edge is the normal pill's edge.
@@ -470,18 +468,6 @@ module FaceModel {
         frame.datePill = pill;
         frame.datePillInner = inset(pill, Layout.AOD_PILL_OUTLINE, AOD_BLACK);
         return frame;
-    }
-
-    // The AOD color, derived from the accent rather than stored in the theme
-    // (Q13): each channel x AOD_DIM_PERCENT / 100, rounded half up in
-    // integer math.
-    function aodColor(accent as Number) as Number {
-        var color = 0;
-        for (var shift = 16; shift >= 0; shift -= 8) {
-            var channel = (accent >> shift) & 0xFF;
-            color |= ((channel * AOD_DIM_PERCENT + 50) / 100) << shift;
-        }
-        return color;
     }
 
     // The face config to draw: the named theme, or the default theme for an
@@ -870,7 +856,7 @@ module FaceModel {
             Layout.BOTTOM_W, Layout.BOTTOM_H, Layout.BOTTOM_RADIUS, theme.ink),
             -Layout.WELL_RIM, theme.wellRim);
         layer.bezelTrack = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.BEZEL_RADIUS,
-            Layout.BEZEL_PEN, 0, 360, theme.bezelTrack);
+            Layout.BEZEL_PEN, 0, 360, theme.tickUnlit);
 
         var half = Layout.BATTERY_WELL_HALF;
         layer.batteryWell = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.BATTERY_RADIUS,

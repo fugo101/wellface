@@ -9,16 +9,6 @@ import Toybox.Test;
 module FaceConfigTest {
     const FIELDS = Layout.FIELDS;
 
-    // Every mint value, the mint AOD color (the accent at 75%) included.
-    const MINT_VALUES = [0x8EE3B8, 0x2C332F, 0x4D5852, 0x343B37, 0x2E3330, 0x000000, 0xFFFFFF,
-        0x8C8C8C, 0xFF8A3D, 0xFF4D4D, 0xB4B4B4, 0x4DA6FF, 0x4CD964, 0x6BAA8A] as Array<Number>;
-    // The test theme's roles, in constructor order, then its zones.
-    const TEST_VALUES = [0x103050, 0x202020, 0x303030, 0x404040, 0x505050, 0x606060, 0x707070,
-        0x808080, 0x909090, 0xA0A0A0, 0xB0B0B0, 0xC0C0C0, 0xD0D0D0, 0xE0E0E0, 0xF0F0F0]
-        as Array<Number>;
-    // The test accent at 75%, worked by hand: 0x10, 0x30, 0x50 -> 12, 36, 60.
-    const TEST_AOD = 0x0C243C;
-
     // Today's face, in field order.
     const DEFAULT_METRICS = [METRIC_STRESS, METRIC_BODY_BATTERY, METRIC_HEART_RATE,
         METRIC_STEPS, METRIC_STEPS] as Array<Metric>;
@@ -31,23 +21,10 @@ module FaceConfigTest {
         }
     }
 
-    // The mint theme, role by role.
+    // The mint theme, role by role: the derived roles and the fixed ones.
     function assertMint(theme as Theme) as Void {
-        Test.assertEqual(0x8EE3B8, theme.accent);
-        Test.assertEqual(0x2C332F, theme.background);
-        Test.assertEqual(0x4D5852, theme.wellRim);
-        Test.assertEqual(0x343B37, theme.bezelTrack);
-        Test.assertEqual(0x2E3330, theme.gaugeTrack);
-        Test.assertEqual(0x000000, theme.ink);
-        Test.assertEqual(0xFFFFFF, theme.text);
-        Test.assertEqual(0x8C8C8C, theme.secondary);
-        Test.assertEqual(0xFF8A3D, theme.warningLevel1);
-        Test.assertEqual(0xFF4D4D, theme.warningLevel2);
-        var zones = [0xB4B4B4, 0x4DA6FF, 0x4CD964, 0xFF8A3D, 0xFF4D4D] as Array<Number>;
-        Test.assertEqual(zones.size(), theme.zones.size());
-        for (var i = 0; i < zones.size(); i++) {
-            Test.assertEqual(zones[i], theme.zones[i]);
-        }
+        ThemeTest.assertDerived("mint", ThemeTest.ROLES[ThemeTest.MINT], theme);
+        ThemeTest.assertFixed("mint", theme);
     }
 
     function resolve(theme as String, left as Metric, center as Metric, right as Metric,
@@ -65,11 +42,18 @@ module FaceConfigTest {
         return true;
     }
 
-    // Story 20: the theme is looked up by its name.
+    // Stories 20, 55: the theme is looked up by its name, a non-default one
+    // too; the fields are kept.
     (:test)
     function themeIsLookedUpByName(logger as Test.Logger) as Boolean {
         assertMint(resolve("mint", METRIC_STRESS, METRIC_BODY_BATTERY, METRIC_HEART_RATE,
             METRIC_STEPS, METRIC_STEPS).theme);
+        var volt = resolve("volt", METRIC_HEART_RATE, METRIC_STRESS, METRIC_BODY_BATTERY,
+            METRIC_STEPS, METRIC_STEPS);
+        ThemeTest.assertDerived("volt", ThemeTest.ROLES[ThemeTest.VOLT], volt.theme);
+        ThemeTest.assertFixed("volt", volt.theme);
+        assertMetrics([METRIC_HEART_RATE, METRIC_STRESS, METRIC_BODY_BATTERY, METRIC_STEPS,
+            METRIC_STEPS] as Array<Metric>, volt);
         return true;
     }
 
@@ -159,13 +143,6 @@ module FaceConfigTest {
         return true;
     }
 
-    // A theme whose every role differs from mint's, and from each other.
-    function testTheme() as Theme {
-        return new Theme(0x103050, 0x202020, 0x303030, 0x404040, 0x505050, 0x606060, 0x707070,
-            0x808080, 0x909090, 0xA0A0A0,
-            [0xB0B0B0, 0xC0C0C0, 0xD0D0D0, 0xE0E0E0, 0xF0F0F0] as Array<Number>);
-    }
-
     function addArcs(colors as Array<Number>, arcs as Array<Arc>) as Void {
         for (var i = 0; i < arcs.size(); i++) {
             colors.add(arcs[i].color);
@@ -252,40 +229,60 @@ module FaceConfigTest {
         return snapshots;
     }
 
+    // Each color is one of the allowed ones and none of mint's themed colors.
     function assertThemeColors(colors as Array<Number>, allowed as Array<Number>,
             what as String) as Void {
+        var mint = ThemeTest.ROLES[ThemeTest.MINT];
         for (var i = 0; i < colors.size(); i++) {
             Test.assertMessage(allowed.indexOf(colors[i]) >= 0,
-                what + " color " + colors[i].format("%06X") + " is not the test theme's");
-            Test.assertMessage(MINT_VALUES.indexOf(colors[i]) < 0,
-                what + " color " + colors[i].format("%06X") + " is a mint value");
+                what + " color " + colors[i].format("%06X") + " is not an allowed color");
+            Test.assertMessage(mint.indexOf(colors[i]) < 0,
+                what + " color " + colors[i].format("%06X") + " is a themed color of mint");
         }
     }
 
-    // Story 20: every color of the frame, the AOD frame, the static layer and
-    // the bezel notches comes from the theme the config names. The AOD
-    // frame's only other color is the black of Always On (Q17).
+    // Stories 20, 51, 52: with a non-mint accent (orchid), every themed color
+    // of the frame, the static layer and the bezel notches (background, well
+    // rims, the accent's uses) differs from mint's and is orchid's derived
+    // value; every other color is one of the fixed roles. The AOD frame is
+    // drawn in orchid's AOD color and the black of Always On (Q17).
     (:test)
     function everyColorComesFromTheTheme(logger as Test.Logger) as Boolean {
-        var config = FaceModel.resolve(FaceConfigs.defaultConfig());
-        config.theme = testTheme();
+        var orchid = ThemeTest.ROLES[ThemeTest.ORCHID];
+        // The themed roles drawn today. The contour texture waits for its own
+        // ticket; the comet base is never drawn by itself.
+        var themed = [orchid[ThemeTest.ACCENT], orchid[ThemeTest.BACKGROUND],
+            orchid[ThemeTest.WELL_RIM]] as Array<Number>;
+        var allowed = themed.slice(0, null);
+        allowed.addAll(ThemeTest.FIXED);
+        var config = resolve(Themes.ORCHID, METRIC_STRESS, METRIC_BODY_BATTERY, METRIC_HEART_RATE,
+            METRIC_STEPS, METRIC_STEPS);
         var used = staticColors(FaceModel.staticLayer(config), FaceModel.bezelNotches(config));
-        assertThemeColors(used, TEST_VALUES, "static");
+        assertThemeColors(used, allowed, "static");
         var snapshots = themeSnapshots();
         for (var i = 0; i < snapshots.size(); i++) {
             var colors = frameColors(FaceModel.compute(snapshots[i], config));
-            assertThemeColors(colors, TEST_VALUES, "frame " + i);
+            assertThemeColors(colors, allowed, "frame " + i);
             used.addAll(colors);
 
             var aod = FaceModel.computeAod(snapshots[i], config);
             assertThemeColors([aod.timeColor, aod.dateColor, aod.datePill.color] as Array<Number>,
-                [TEST_AOD] as Array<Number>, "AOD " + i);
+                [orchid[ThemeTest.AOD]] as Array<Number>, "AOD " + i);
             Test.assertEqual(0x000000, aod.datePillInner.color);
         }
-        // The snapshots use every role, so none is left untested.
-        for (var i = 0; i < TEST_VALUES.size(); i++) {
-            Test.assertMessage(used.indexOf(TEST_VALUES[i]) >= 0,
-                "role " + i + " is not used");
+        // The snapshots use every role drawn today, so none is left
+        // untested. The every-5th and quarter unlit tick colors wait for the
+        // bezel ticks.
+        var drawn = themed;
+        var fixed = ThemeTest.FIXED;
+        for (var i = 0; i < fixed.size(); i++) {
+            if (i != ThemeTest.TICK_UNLIT_FIFTH && i != ThemeTest.TICK_UNLIT_QUARTER) {
+                drawn.add(fixed[i]);
+            }
+        }
+        for (var i = 0; i < drawn.size(); i++) {
+            Test.assertMessage(used.indexOf(drawn[i]) >= 0,
+                "color " + drawn[i].format("%06X") + " is not used");
         }
         return true;
     }

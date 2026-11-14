@@ -89,9 +89,9 @@ module FieldMappingTest {
         assertCircleAt(layer.fieldWells, 88, 246, 44, 0x000000);
         assertCircleAt(layer.fieldWells, 208, 256, 66, 0x000000);
         assertCircleAt(layer.fieldWells, 328, 246, 44, 0x000000);
-        assertCircleAt(layer.fieldRims, 88, 246, 46, 0x4D5852);
-        assertCircleAt(layer.fieldRims, 208, 256, 68, 0x4D5852);
-        assertCircleAt(layer.fieldRims, 328, 246, 46, 0x4D5852);
+        assertCircleAt(layer.fieldRims, 88, 246, 46, 0x446D58);
+        assertCircleAt(layer.fieldRims, 208, 256, 68, 0x446D58);
+        assertCircleAt(layer.fieldRims, 328, 246, 46, 0x446D58);
     }
 
     // `count` lit zone segments on the ring (x, y, radius, pen), each in its

@@ -360,9 +360,9 @@ module FaceModelTest {
     }
 
     (:test)
-    function mintBackgroundDiscIsDarkGreyInBlackWells(logger as Test.Logger) as Boolean {
+    function mintBackgroundDiscIsTintedInBlackWells(logger as Test.Logger) as Boolean {
         var layer = mintLayer();
-        Test.assertEqual(0x2C332F, layer.backgroundColor);
+        Test.assertEqual(0x22362C, layer.backgroundColor);
         Test.assertEqual(0x000000, layer.timeBandWell.color);
         for (var i = 0; i < layer.fieldWells.size(); i++) {
             Test.assertEqual(0x000000, layer.fieldWells[i].color);
@@ -370,14 +370,15 @@ module FaceModelTest {
         return true;
     }
 
-    // The mint theme's background, bezel track and well rim roles (Q39): the
-    // rims are lighter than the background, the bezel track in between.
+    // The mint theme's background and well rim (Q39, Q42: accent x 0.24 and
+    // x 0.48, the design's values) and the ordinary unlit tick color, which
+    // still draws the bezel track.
     (:test)
     function mintThemeHasTheRefreshedBackgroundColors(logger as Test.Logger) as Boolean {
         var theme = Themes.mint();
-        Test.assertEqual(0x2C332F, theme.background);
-        Test.assertEqual(0x343B37, theme.bezelTrack);
-        Test.assertEqual(0x4D5852, theme.wellRim);
+        Test.assertEqual(0x22362C, theme.background);
+        Test.assertEqual(0x343B37, theme.tickUnlit);
+        Test.assertEqual(0x446D58, theme.wellRim);
         return true;
     }
 
@@ -395,7 +396,7 @@ module FaceModelTest {
     // well: (64, 70, 288, 100), radius 30.
     (:test)
     function timeBandWellHasA2PxRim(logger as Test.Logger) as Boolean {
-        assertRoundedRect(mintLayer().timeBandRim, 64, 70, 288, 100, 30, 0x4D5852);
+        assertRoundedRect(mintLayer().timeBandRim, 64, 70, 288, 100, 30, 0x446D58);
         return true;
     }
 
@@ -406,9 +407,9 @@ module FaceModelTest {
     function roundFieldWellsHave2PxRims(logger as Test.Logger) as Boolean {
         var rims = mintLayer().fieldRims;
         Test.assertEqual(3, rims.size());
-        assertCircle(circleAt(rims, 88, 246), 88, 246, 46, 0x4D5852);
-        assertCircle(circleAt(rims, 208, 256), 208, 256, 68, 0x4D5852);
-        assertCircle(circleAt(rims, 328, 246), 328, 246, 46, 0x4D5852);
+        assertCircle(circleAt(rims, 88, 246), 88, 246, 46, 0x446D58);
+        assertCircle(circleAt(rims, 208, 256), 208, 256, 68, 0x446D58);
+        assertCircle(circleAt(rims, 328, 246), 328, 246, 46, 0x446D58);
         return true;
     }
 
@@ -429,7 +430,7 @@ module FaceModelTest {
     // well; its rim is the pill grown by 2 px: (124, 328, 168, 44), radius 22.
     (:test)
     function bottomFieldPillHasA2PxRim(logger as Test.Logger) as Boolean {
-        assertRoundedRect(mintLayer().bottomFieldRim, 124, 328, 168, 44, 22, 0x4D5852);
+        assertRoundedRect(mintLayer().bottomFieldRim, 124, 328, 168, 44, 22, 0x446D58);
         return true;
     }
 
@@ -1721,7 +1722,6 @@ module FaceModelTest {
     (:test)
     function aodColorIsMintDimmedTo75Percent(logger as Test.Logger) as Boolean {
         var aod = aodAt(8, 42);
-        Test.assertEqual(0x6BAA8A, FaceModel.aodColor(0x8EE3B8));
         Test.assertEqual(0x6BAA8A, aod.timeColor);
         Test.assertEqual(0x6BAA8A, aod.dateColor);
         Test.assertEqual(0x6BAA8A, aod.datePill.color);
