@@ -2,29 +2,25 @@
 import Toybox.Lang;
 
 // Per font: the BMFont base (line top to baseline, px), the cap height
-// (px), and every glyph's xadvance exactly as written to its .fnt, so
-// measured and drawn widths agree. A _PAD gives its sample text a box of
-// the design's minimum width. Icons are one glyph each in the icon font,
+// (px), every glyph's xadvance exactly as written to its .fnt, so
+// measured and drawn widths agree, and any baked-in letter spacing.
+// Icons are one glyph each in the icon font,
 // 24 px square, at these Private Use Area code points.
 module GlyphWidths {
     const ICON_BOLT = 0xE000;
     const ICON_STRESS = 0xE001;
     const ICON_HEART = 0xE002;
     const ICON_FOOT = 0xE003;
-    // TimeFilled: BigShouldersDisplay-ExtraBold 57 px.
-    const TIME_BASE = 56;
-    const TIME_CAP_HEIGHT = 46;
-    const TIME = { '0' => 28, '1' => 28, '2' => 28, '3' => 28, '4' => 28, '5' => 28, '6' => 28, '7' => 28, '8' => 28, '9' => 28, ':' => 14 } as Dictionary<Char, Number>;
-    // TimeOutline: BigShouldersDisplay-ExtraBold 57 px.
-    const TIME_OUTLINE_BASE = 56;
-    const TIME_OUTLINE_CAP_HEIGHT = 46;
-    const TIME_OUTLINE = { '0' => 28, '1' => 28, '2' => 28, '3' => 28, '4' => 28, '5' => 28, '6' => 28, '7' => 28, '8' => 28, '9' => 28, ':' => 14 } as Dictionary<Char, Number>;
+    // Time: BigShouldersDisplay-ExtraBold 78 px.
+    const TIME_BASE = 77;
+    const TIME_CAP_HEIGHT = 62;
+    const TIME = { '0' => 38, '1' => 38, '2' => 38, '3' => 38, '4' => 38, '5' => 38, '6' => 38, '7' => 38, '8' => 38, '9' => 38, ':' => 19 } as Dictionary<Char, Number>;
     // Date: Manrope-ExtraBold 17 px.
     const DATE_BASE = 18;
     const DATE_CAP_HEIGHT = 12;
-    // (96 - width of "THU 12") / 2.
-    const DATE_PAD = 14;
-    const DATE = { 'A' => 14, 'B' => 13, 'C' => 15, 'D' => 14, 'E' => 12, 'F' => 11, 'G' => 15, 'H' => 14, 'I' => 7, 'J' => 11, 'K' => 13, 'L' => 11, 'M' => 17, 'N' => 14, 'O' => 15, 'P' => 13, 'Q' => 15, 'R' => 13, 'S' => 13, 'T' => 12, 'U' => 14, 'V' => 13, 'W' => 19, 'X' => 13, 'Y' => 13, 'Z' => 14, '0' => 13, '1' => 10, '2' => 12, '3' => 12, '4' => 12, '5' => 12, '6' => 13, '7' => 11, '8' => 13, '9' => 13, ' ' => 5 } as Dictionary<Char, Number>;
+    // Letter spacing baked into every xadvance, the last glyph's too.
+    const DATE_TRACKING = 2;
+    const DATE = { 'A' => 14, 'B' => 13, 'C' => 15, 'D' => 14, 'E' => 12, 'F' => 11, 'G' => 15, 'H' => 14, 'I' => 7, 'J' => 11, 'K' => 13, 'L' => 11, 'M' => 17, 'N' => 14, 'O' => 15, 'P' => 13, 'Q' => 15, 'R' => 13, 'S' => 13, 'T' => 12, 'U' => 14, 'V' => 13, 'W' => 19, 'X' => 13, 'Y' => 13, 'Z' => 14, '0' => 13, '1' => 10, '2' => 12, '3' => 12, '4' => 12, '5' => 12, '6' => 13, '7' => 11, '8' => 13, '9' => 13, '/' => 10, ' ' => 5 } as Dictionary<Char, Number>;
     // Number48: Manrope-ExtraBold 48 px.
     const NUMBER_48_BASE = 51;
     const NUMBER_48_CAP_HEIGHT = 35;

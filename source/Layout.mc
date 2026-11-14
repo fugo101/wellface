@@ -65,13 +65,13 @@ module Layout {
     // The left field. Its gauge sits on the design's ring centerline,
     // r 38 - 6 / 2; the icon's top-left is (x - 12, y - 30).
     const LEFT_FIELD_X = 88;
-    const LEFT_FIELD_Y = 236;
+    const LEFT_FIELD_Y = 246;
     const LEFT_FIELD_RADIUS = 38;
     const LEFT_RING_RADIUS = 35;
     const LEFT_RING_PEN = 6;
     const LEFT_ICON_X = 76;
-    const LEFT_ICON_Y = 206;
-    const LEFT_NUMBER_Y = 250;
+    const LEFT_ICON_Y = 216;
+    const LEFT_NUMBER_Y = 260;
 
     function leftField() as RoundField {
         return new RoundField(LEFT_FIELD_X, LEFT_FIELD_Y, LEFT_FIELD_RADIUS, LEFT_RING_RADIUS,
@@ -80,13 +80,13 @@ module Layout {
 
     // The right field, laid out like the left one.
     const RIGHT_FIELD_X = 328;
-    const RIGHT_FIELD_Y = 236;
+    const RIGHT_FIELD_Y = 246;
     const RIGHT_FIELD_RADIUS = 38;
     const RIGHT_RING_RADIUS = 35;
     const RIGHT_RING_PEN = 6;
     const RIGHT_ICON_X = 316;
-    const RIGHT_ICON_Y = 206;
-    const RIGHT_NUMBER_Y = 250;
+    const RIGHT_ICON_Y = 216;
+    const RIGHT_NUMBER_Y = 260;
 
     function rightField() as RoundField {
         return new RoundField(RIGHT_FIELD_X, RIGHT_FIELD_Y, RIGHT_FIELD_RADIUS,
@@ -104,9 +104,9 @@ module Layout {
     const ICON_SIZE = 24;
 
     // The bottom field: a pill, black or (goal reached) the accent, that is
-    // its own well.
+    // its own well, 8 px below the center field's well.
     const BOTTOM_X = 126;
-    const BOTTOM_Y = 320;
+    const BOTTOM_Y = 330;
     const BOTTOM_W = 164;
     const BOTTOM_H = 40;
     const BOTTOM_RADIUS = 20;
@@ -115,11 +115,11 @@ module Layout {
     // 5 px gap). The digits are centered on BOTTOM_NUMBER_Y, the goal on
     // BOTTOM_GOAL_Y.
     const BOTTOM_ICON_X = 140;
-    const BOTTOM_ICON_Y = 328;
+    const BOTTOM_ICON_Y = 338;
     const BOTTOM_NUMBER_RIGHT = 228;
     const BOTTOM_GOAL_LEFT = 233;
-    const BOTTOM_NUMBER_Y = 340;
-    const BOTTOM_GOAL_Y = 341;
+    const BOTTOM_NUMBER_Y = 350;
+    const BOTTOM_GOAL_Y = 351;
     // The anchored text fits when the number starts at or after
     // BOTTOM_NUMBER_MIN_LEFT (4 px past the foot's ink, which ends at x 160)
     // and the goal ends at or before BOTTOM_GOAL_MAX_RIGHT (4 px inside the
@@ -134,7 +134,7 @@ module Layout {
 
     // The center field.
     const CENTER_FIELD_X = 208;
-    const CENTER_FIELD_Y = 246;
+    const CENTER_FIELD_Y = 256;
     const CENTER_FIELD_RADIUS = 60;
     // The design's gauge centerline is r 55.5. With pen 9, r 56 lands on
     // about r 50.4-59.5 in the simulator (design 51-60); r 55 lands 1 px
@@ -142,8 +142,8 @@ module Layout {
     const CENTER_RING_RADIUS = 56;
     const CENTER_RING_PEN = 9;
     const CENTER_ICON_X = 196;
-    const CENTER_ICON_Y = 203;
-    const CENTER_NUMBER_Y = 258;
+    const CENTER_ICON_Y = 213;
+    const CENTER_NUMBER_Y = 268;
 
     function centerField() as RoundField {
         return new RoundField(CENTER_FIELD_X, CENTER_FIELD_Y, CENTER_FIELD_RADIUS,
@@ -170,29 +170,33 @@ module Layout {
 
     // Width of the black well around an element.
     const WELL = 6;
+    // Width of the well rim just outside a well (Q39): around the time band's
+    // well, the round fields' wells and the bottom field's pill. The battery
+    // bar and the date pill have none.
+    const WELL_RIM = 2;
 
     // The time band: a rounded rect filled with the accent.
     const BAND_X = 72;
-    const BAND_Y = 80;
+    const BAND_Y = 78;
     const BAND_W = 272;
-    const BAND_H = 64;
-    const BAND_RADIUS = 20;
+    const BAND_H = 84;
+    const BAND_RADIUS = 22;
 
     // The date pill, overlapping the bottom edge of the time band: centered
-    // on CENTER_X, from DATE_PILL_MIN_WIDTH up to the band's width (Q23, Q33).
-    // The date's capitals are vertically centered on DATE_CENTER_Y.
-    const DATE_PILL_Y = 140;
+    // on CENTER_X, the text's width plus DATE_PILL_PAD on each side, from
+    // DATE_PILL_MIN_WIDTH up to the band's width (Q23, Q33). The date's
+    // capitals are vertically centered on DATE_CENTER_Y.
+    const DATE_PILL_Y = 156;
     const DATE_PILL_HEIGHT = 28;
     const DATE_PILL_RADIUS = 14;
-    // Also in tools/fontgen/generate.py, which derives GlyphWidths.DATE_PAD
-    // from it; change both and regenerate.
+    const DATE_PILL_PAD = 14;
     const DATE_PILL_MIN_WIDTH = 96;
     const DATE_PILL_MAX_WIDTH = BAND_W;
-    const DATE_CENTER_Y = 154;
+    const DATE_CENTER_Y = 170;
 
-    // Always On: the pen of the AOD outlines (Q12): the date pill's outline here, the
-    // time's outline baked into the outline time font.
-    const AOD_PEN = 2;
+    // Always On: the width of the date pill's outline (Q12), inside the
+    // normal pill's edge. The time is filled.
+    const AOD_PILL_OUTLINE = 3;
     // The burn-in shift (Q28): the AOD time and date move by one [x, y]
     // offset (px) per minute, offset (minute of the hour mod 12). 12 divides
     // 60, so minute 59 steps to minute 0 like any other minute. Each step
@@ -205,7 +209,7 @@ module Layout {
 
     // The time: centered on this x, with its baseline on this y.
     const TIME_CENTER_X = CENTER_X;
-    const TIME_BASELINE_Y = 135;
+    const TIME_BASELINE_Y = 149;
 
     // The battery bar, in design degrees (0 = 12 o'clock, clockwise).
     // Segment i spans BATTERY_FIRST + i * BATTERY_STEP for BATTERY_SEGMENT

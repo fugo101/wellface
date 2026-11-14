@@ -9,8 +9,7 @@ repository), renders the bitmap fonts the face uses and writes:
 - resources/fonts/OFL-<family>.txt: the license of every source font used;
 - source/GlyphWidths.mc: the glyph-width tables FaceModel measures text with,
   holding exactly the xadvance values written to each .fnt, plus each font's
-  base and cap height and any pad derived from a sample text, and the code
-  point of every icon.
+  base and cap height, and the code point of every icon.
 
 Run it with scripts/gen-fonts.sh. To add a font, add an entry to FONTS; to add
 an icon, add an entry to ICONS.
@@ -33,7 +32,7 @@ from fontTools.pens.boundsPen import BoundsPen
 from fontTools.svgLib.path import parse_path
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
-from PIL import Image, ImageChops, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
 FONT_DIR = ROOT / "resources" / "fonts"
@@ -43,7 +42,7 @@ REPO_API = "https://api.github.com/repos/google/fonts"
 RAW = "https://raw.githubusercontent.com/google/fonts"
 
 # Glyphs are rendered at this multiple of the target size and box-filtered
-# down, so the fill and the outline come from the same unhinted geometry.
+# down, from the font's unhinted geometry.
 SUPERSAMPLE = 4
 # Empty pixels kept around each glyph while rendering (1x).
 MARGIN = 4
@@ -206,24 +205,25 @@ class FontSpec:
     source: str       # key in SOURCES
     size: int         # pixels per em
     glyphs: str
-    tabular_digits: bool = False
-    outline: int = 0  # > 0: keep only this many px inside the edge (fill minus erosion)
+    # Every digit gets this advance (px), its glyph centered in the cell;
+    # None keeps the font's own advances.
+    tabular_advance: int | None = None
     tracking: int = 0  # px added to every xadvance (baked-in letter spacing)
     digit_height: float | None = None  # asserted height of "0" in px, +-1
-    # (sample, min_width): emits <table>_PAD = (min_width - width(sample)) / 2,
-    # the padding that gives `sample` a box exactly min_width wide.
-    pad: tuple[str, int] | None = None
+    # Asserted xadvances (px) of these glyphs, as the design measures them.
+    advances: dict[str, int] | None = None
 
 
 FONTS = [
-    FontSpec("TimeFilled", "time57", "TIME", "big-shoulders-display-800", 57,
-             DIGITS + ":", tabular_digits=True, digit_height=46),
-    FontSpec("TimeOutline", "time57outline", "TIME_OUTLINE", "big-shoulders-display-800", 57,
-             DIGITS + ":", tabular_digits=True, outline=2, digit_height=46),
-    # The date: the design's 1.5 px tracking rounded to 2 px. The pad gives
-    # "THU 12" the design's 96 px pill (Layout.DATE_PILL_MIN_WIDTH; keep both equal).
+    # The time, filled, in both normal mode and Always On (Q12).
+    # The source digits are proportional (20.5-38.5 px at 78 px); the design
+    # gives every digit a 38 px cell, so "08:42" is 171 px wide.
+    FontSpec("Time", "time78", "TIME", "big-shoulders-display-800", 78,
+             DIGITS + ":", tabular_advance=38, digit_height=63,
+             advances={"0": 38, ":": 19}),
+    # The date, for example "THU 12/11" (Q38): letter spacing 2 px.
     FontSpec("Date", "date17", "DATE", "manrope-800", 17,
-             LETTERS + DIGITS + " ", tracking=2, pad=("THU 12", 96)),
+             LETTERS + DIGITS + "/ ", tracking=2),
     # The center field's number.
     FontSpec("Number48", "number48", "NUMBER_48", "manrope-800", 48, DIGITS + "-"),
     # The left and right numbers by character count (<= 3, 4, >= 5); 22 and
@@ -312,7 +312,6 @@ def render_font(spec: FontSpec, src: SourceFont) -> tuple[list[Glyph], Metrics]:
                              f"expected {spec.digit_height} +-1")
 
     advances = {c: round(tt["hmtx"][cmap[ord(c)]][0] * scale) for c in spec.glyphs}
-    widest_digit = max((advances[c] for c in spec.glyphs if c in DIGITS), default=0)
 
     ss = SUPERSAMPLE
     font = ImageFont.truetype(str(src.path), spec.size * ss,
@@ -326,8 +325,6 @@ def render_font(spec: FontSpec, src: SourceFont) -> tuple[list[Glyph], Metrics]:
         origin_x, origin_y = MARGIN + spec.size // 2, MARGIN + base
         ImageDraw.Draw(big).text((origin_x * ss, origin_y * ss), c, font=font,
                                  fill=255, anchor="ls")
-        if spec.outline:
-            big = ImageChops.subtract(big, erode(big, spec.outline * ss))
         image = big.reduce(ss)
 
         bbox = image.getbbox()
@@ -336,9 +333,17 @@ def render_font(spec: FontSpec, src: SourceFont) -> tuple[list[Glyph], Metrics]:
                 raise SystemExit(f"{spec.file}: glyph {c!r} renders empty")
             bbox = (origin_x, origin_y - base, origin_x, origin_y - base)  # 0x0 glyph
         shift = 0
-        if spec.tabular_digits and c in DIGITS:
-            shift = (widest_digit - advance) // 2
-            advance = widest_digit
+        if spec.tabular_advance is not None and c in DIGITS:
+            ink = bbox[2] - bbox[0]
+            if ink > spec.tabular_advance:
+                raise SystemExit(f"{spec.file}: {c!r} ink is {ink} px, wider than its "
+                                 f"{spec.tabular_advance} px cell")
+            shift = (spec.tabular_advance - advance) // 2
+            advance = spec.tabular_advance
+            left = bbox[0] - origin_x + shift
+            if left < 0 or left + ink > advance:
+                raise SystemExit(f"{spec.file}: {c!r} ink spans {left}..{left + ink} px, "
+                                 f"outside its {advance} px cell")
         glyphs.append(Glyph(
             char=c,
             image=image.crop(bbox),
@@ -346,6 +351,10 @@ def render_font(spec: FontSpec, src: SourceFont) -> tuple[list[Glyph], Metrics]:
             yoffset=bbox[1] - (origin_y - base),
             xadvance=advance + spec.tracking,
         ))
+    for c, expected in (spec.advances or {}).items():
+        actual = next(g.xadvance for g in glyphs if g.char == c)
+        if actual != expected:
+            raise SystemExit(f"{spec.file}: {c!r} advances {actual} px, expected {expected}")
     return glyphs, metrics
 
 
@@ -438,20 +447,6 @@ def render_icons() -> tuple[list[Glyph], Metrics]:
     return glyphs, Metrics(line_height=ICON_SIZE, base=ICON_SIZE, cap_height=ICON_SIZE)
 
 
-def erode(image: Image.Image, radius: int) -> Image.Image:
-    """Grayscale erosion with a disc: each pixel becomes the minimum of its
-    neighbourhood, so the shape shrinks by `radius` px on every side."""
-    pad = radius + 1
-    padded = Image.new("L", (image.width + 2 * pad, image.height + 2 * pad), 0)
-    padded.paste(image, (pad, pad))
-    result = padded
-    for dy in range(-radius, radius + 1):
-        for dx in range(-radius, radius + 1):
-            if (dx or dy) and dx * dx + dy * dy <= radius * radius:
-                result = ImageChops.darker(result, ImageChops.offset(padded, dx, dy))
-    return result.crop((pad, pad, pad + image.width, pad + image.height))
-
-
 def pack(glyphs: list[Glyph]) -> Image.Image:
     """Row packing onto one page, SPACING px between glyphs."""
     x = y = row_height = 0
@@ -522,34 +517,15 @@ def monkey_char(c: str) -> str:
     return f"(0x{ord(c):04X}).toChar()"
 
 
-def text_width(glyphs: list[Glyph], text: str) -> int:
-    """The sum of xadvances, as FaceModel.textWidth measures it."""
-    advances = {g.char: g.xadvance for g in glyphs}
-    missing = [c for c in text if c not in advances]
-    if missing:
-        raise SystemExit(f"sample {text!r} uses glyphs not in the font: {missing!r}")
-    return sum(advances[c] for c in text)
-
-
-def pad_for(spec: FontSpec, glyphs: list[Glyph]) -> int | None:
-    if spec.pad is None:
-        return None
-    sample, min_width = spec.pad
-    pad = (min_width - text_width(glyphs, sample)) // 2
-    if pad < 0:
-        raise SystemExit(f"{spec.file}: {sample!r} is wider than {min_width} px")
-    return pad
-
-
 def write_tables(results: list[tuple[FontSpec, SourceFont, list[Glyph], Metrics]]) -> None:
     lines = [
         "// Generated by tools/fontgen/generate.py. Do not edit; run scripts/gen-fonts.sh.",
         "import Toybox.Lang;",
         "",
         "// Per font: the BMFont base (line top to baseline, px), the cap height",
-        "// (px), and every glyph's xadvance exactly as written to its .fnt, so",
-        "// measured and drawn widths agree. A _PAD gives its sample text a box of",
-        "// the design's minimum width. Icons are one glyph each in the icon font,",
+        "// (px), every glyph's xadvance exactly as written to its .fnt, so",
+        "// measured and drawn widths agree, and any baked-in letter spacing.",
+        "// Icons are one glyph each in the icon font,",
         f"// {ICON_SIZE} px square, at these Private Use Area code points.",
         "module GlyphWidths {",
     ]
@@ -561,12 +537,10 @@ def write_tables(results: list[tuple[FontSpec, SourceFont, list[Glyph], Metrics]
             f"    const {spec.table}_BASE = {metrics.base};",
             f"    const {spec.table}_CAP_HEIGHT = {metrics.cap_height};",
         ]
-        pad = pad_for(spec, glyphs)
-        if pad is not None:
-            sample, min_width = spec.pad
+        if spec.tracking:
             lines += [
-                f"    // ({min_width} - width of \"{sample}\") / 2.",
-                f"    const {spec.table}_PAD = {pad};",
+                "    // Letter spacing baked into every xadvance, the last glyph's too.",
+                f"    const {spec.table}_TRACKING = {spec.tracking};",
             ]
         lines.append(f"    const {spec.table} = {{ {entries} }} as Dictionary<Char, Number>;")
     lines.append("}")
@@ -600,11 +574,9 @@ def main() -> None:
             advances = " ".join(f"{g.char}={g.xadvance}" for g in glyphs)
             zero = next((g for g in glyphs if g.char == "0"), None)
             ink = f", '0' ink {zero.image.height} px" if zero else ""
-            pad = pad_for(spec, glyphs)
-            padding = f", pad {pad} (sample {text_width(glyphs, spec.pad[0])} px)" if spec.pad else ""
             print(f"{spec.file}: base {metrics.base}, lineHeight {metrics.line_height}, "
                   f"cap {metrics.cap_height}"
-                  f"{ink}{padding}; {advances}")
+                  f"{ink}; {advances}")
         for icon, glyph in zip(ICONS, icons):
             print(f"{ICON_FONT_FILE}: {icon.name} U+{icon.code_point:04X}, ink "
                   f"{glyph.image.width}x{glyph.image.height} at ({glyph.xoffset}, {glyph.yoffset})")

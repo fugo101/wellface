@@ -8,8 +8,9 @@ class Snapshot {
     // 0-23, whatever the watch's 12/24 h setting is (Q22).
     public var hour as Number;
     public var minute as Number;
-    // Day of month, 1-31.
+    // Day of month, 1-31, and month, 1-12.
     public var day as Number = 1;
+    public var month as Number = 1;
     // Weekday number from FORMAT_SHORT: 1 = Sunday ... 7 = Saturday.
     public var weekdayNumber as Number = 1;
     // The localized weekday name from FORMAT_MEDIUM, as the watch returns it.
@@ -51,7 +52,7 @@ class Frame {
     public var timeX as Number = 0;
     public var timeY as Number = 0;
     public var timeColor as Number = 0;
-    // The date text, for example "THU 12", its width in the date font and
+    // The date text, for example "THU 12/11", its width (dateTextWidth) and
     // the top-left corner to draw it from (left-justified, line top).
     public var date as String = "";
     public var dateWidth as Number = 0;
@@ -83,13 +84,13 @@ class Frame {
     }
 }
 
-// The Always On frame (Q12, Q13, Q28): only the time, as outlines, and the
-// date, as filled text inside an outlined pill, all in the AOD color and
-// moved by the burn-in offset of the current minute. Everything else stays
-// black. FaceModel fills in every field; the defaults only exist to satisfy
-// the type checker.
+// The Always On frame (Q12, Q13, Q28): only the time, filled, and the date,
+// as filled text inside an outlined pill, all in the AOD color and moved by
+// the burn-in offset of the current minute. Everything else stays black.
+// FaceModel fills in every field; the defaults only exist to satisfy the
+// type checker.
 class AodFrame {
-    // The time in the outline-only time font, drawn from its top-left corner
+    // The time in the time font, drawn from its top-left corner
     // (left-justified, line top).
     public var time as String = "";
     public var timeX as Number = 0;
@@ -100,9 +101,11 @@ class AodFrame {
     public var dateX as Number = 0;
     public var dateY as Number = 0;
     public var dateColor as Number = 0;
-    // The pill around the date, drawn as an outline with datePillPen.
+    // The pill around the date as an outline: datePill filled in the AOD
+    // color, then datePillInner filled black over it, so the outline is
+    // exactly the gap between them.
     public var datePill as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
-    public var datePillPen as Number = 0;
+    public var datePillInner as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
     // The burn-in offset this frame is moved by, in px.
     public var offsetX as Number = 0;
     public var offsetY as Number = 0;
@@ -199,11 +202,20 @@ class FieldFrame {
 }
 
 // The parts of the face that depend only on the theme, so the renderer draws
-// them once into a buffer. Its own geometry (disc, time band) is in Layout.
+// them once into a buffer, back to front: bezel track, background disc, well
+// rims, battery well and track, time band well and band, field wells and
+// tracks. The disc's geometry is in Layout.
 class StaticLayer {
     public var backgroundColor as Number = 0;
-    public var wellColor as Number = 0;
-    public var timeBandColor as Number = 0;
+    // The well rims (Q39): around the time band's well, around each round
+    // field's well (same order as fieldWells) and around the bottom field's
+    // pill, which is its own well and is drawn over the rim on every update.
+    public var timeBandRim as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
+    public var fieldRims as Array<Circle> = [] as Array<Circle>;
+    public var bottomFieldRim as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
+    // The time band's black well and the band itself.
+    public var timeBandWell as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
+    public var timeBand as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
     public var bezelTrack as Arc = new Arc(0, 0, 0, 0, 0, 0, 0, 0);
     public var batteryWell as Arc = new Arc(0, 0, 0, 0, 0, 0, 0, 0);
     // The round ends of the battery well, left first.
@@ -315,7 +327,10 @@ module FaceModel {
     // fold to their base letter too (D for the Vietnamese D with stroke).
     const LATIN_1_BASE = "AAAAAA?CEEEEIIIIDNOOOOO?OUUUUY??AAAAAA?CEEEEIIIIDNOOOOO?OUUUUY?Y";
     // Always On: the accent dimmed to this percentage (Q13).
-    const AOD_DIM_PERCENT = 55;
+    const AOD_DIM_PERCENT = 75;
+    // Always On: black, the pixels left off. A platform rule, not a theme
+    // color.
+    const AOD_BLACK = 0x000000;
 
     const LATIN_EXTENDED_A_BASE =
         "AAAAAACCCCCCCCDDDDEEEEEEEEEEGGGGGGGGHHHHIIIIIIIIII??JJKK?LLLLLLLLLL" +
@@ -350,7 +365,7 @@ module FaceModel {
             theme);
         frame.rightField = roundField(Layout.rightField(), Layout.RIGHT_METRIC, snapshot, theme);
         frame.date = dateText(snapshot);
-        frame.dateWidth = textWidth(frame.date, GlyphWidths.DATE);
+        frame.dateWidth = dateTextWidth(frame.date);
         frame.dateX = Layout.CENTER_X - frame.dateWidth / 2;
         // Upper case only, so the capitals are centered, as in the design.
         frame.dateY = digitsTop(Layout.DATE_CENTER_Y, GlyphWidths.DATE_CAP_HEIGHT,
@@ -370,27 +385,24 @@ module FaceModel {
         frame.offsetX = offset[0];
         frame.offsetY = offset[1];
         frame.time = formatTime(snapshot.hour, snapshot.minute);
-        frame.timeX = Layout.TIME_CENTER_X - textWidth(frame.time, GlyphWidths.TIME_OUTLINE) / 2
+        frame.timeX = Layout.TIME_CENTER_X - textWidth(frame.time, GlyphWidths.TIME) / 2
             + frame.offsetX;
-        frame.timeY = Layout.TIME_BASELINE_Y - GlyphWidths.TIME_OUTLINE_BASE + frame.offsetY;
+        frame.timeY = Layout.TIME_BASELINE_Y - GlyphWidths.TIME_BASE + frame.offsetY;
         frame.date = dateText(snapshot);
-        var dateWidth = textWidth(frame.date, GlyphWidths.DATE);
+        var dateWidth = dateTextWidth(frame.date);
         frame.dateX = Layout.CENTER_X - dateWidth / 2 + frame.offsetX;
         frame.dateY = digitsTop(Layout.DATE_CENTER_Y, GlyphWidths.DATE_CAP_HEIGHT,
             GlyphWidths.DATE_BASE) + frame.offsetY;
         var color = aodColor(theme.accent);
         frame.timeColor = color;
         frame.dateColor = color;
-        // The outline's centerline runs half a pen inside the normal pill,
-        // so its outer edge stays on the pill's edge.
-        var inset = Layout.AOD_PEN / 2;
+        // The outline's outer edge is the normal pill's edge.
         var pillWidth = datePillWidth(dateWidth);
-        frame.datePill = new RoundedRect(
-            Layout.CENTER_X - pillWidth / 2 + inset + frame.offsetX,
-            Layout.DATE_PILL_Y + inset + frame.offsetY,
-            pillWidth - 2 * inset, Layout.DATE_PILL_HEIGHT - 2 * inset,
-            Layout.DATE_PILL_RADIUS - inset, color);
-        frame.datePillPen = Layout.AOD_PEN;
+        var pill = new RoundedRect(Layout.CENTER_X - pillWidth / 2 + frame.offsetX,
+            Layout.DATE_PILL_Y + frame.offsetY, pillWidth, Layout.DATE_PILL_HEIGHT,
+            Layout.DATE_PILL_RADIUS, color);
+        frame.datePill = pill;
+        frame.datePillInner = inset(pill, Layout.AOD_PILL_OUTLINE, AOD_BLACK);
         return frame;
     }
 
@@ -729,8 +741,14 @@ module FaceModel {
     function staticLayer(theme as Theme) as StaticLayer {
         var layer = new StaticLayer();
         layer.backgroundColor = theme.background;
-        layer.wellColor = theme.ink;
-        layer.timeBandColor = theme.accent;
+        var band = new RoundedRect(Layout.BAND_X, Layout.BAND_Y, Layout.BAND_W, Layout.BAND_H,
+            Layout.BAND_RADIUS, theme.accent);
+        layer.timeBand = band;
+        layer.timeBandWell = inset(band, -Layout.WELL, theme.ink);
+        layer.timeBandRim = inset(band, -Layout.WELL - Layout.WELL_RIM, theme.wellRim);
+        layer.bottomFieldRim = inset(new RoundedRect(Layout.BOTTOM_X, Layout.BOTTOM_Y,
+            Layout.BOTTOM_W, Layout.BOTTOM_H, Layout.BOTTOM_RADIUS, theme.ink),
+            -Layout.WELL_RIM, theme.wellRim);
         layer.bezelTrack = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.BEZEL_RADIUS,
             Layout.BEZEL_PEN, 0, 360, theme.bezelTrack);
 
@@ -748,6 +766,7 @@ module FaceModel {
         }
         layer.batteryTrack = track;
 
+        layer.fieldRims = [] as Array<Circle>;
         layer.fieldWells = [] as Array<Circle>;
         layer.fieldTracks = [] as Array<Arc>;
         addRoundField(layer, Layout.leftField(), Layout.LEFT_METRIC, theme);
@@ -756,10 +775,13 @@ module FaceModel {
         return layer;
     }
 
-    // A round field's well, and the track its metric's ring is drawn over.
+    // A round field's well rim and well, and the track its metric's ring is
+    // drawn over.
     function addRoundField(layer as StaticLayer, field as RoundField, metric as Metric,
             theme as Theme) as Void {
-        layer.fieldWells.add(new Circle(field.x, field.y, field.radius + Layout.WELL, theme.ink));
+        var well = field.radius + Layout.WELL;
+        layer.fieldRims.add(new Circle(field.x, field.y, well + Layout.WELL_RIM, theme.wellRim));
+        layer.fieldWells.add(new Circle(field.x, field.y, well, theme.ink));
         if (hasZoneSegments(metric)) {
             for (var i = 0; i < Layout.ZONE_SEGMENTS; i++) {
                 layer.fieldTracks.add(zoneSegment(field, i, theme.gaugeTrack));
@@ -768,6 +790,13 @@ module FaceModel {
             layer.fieldTracks.add(arc(field.x, field.y, field.ringRadius, field.ringPen, 0, 360,
                 theme.gaugeTrack));
         }
+    }
+
+    // The rounded rect moved in by `by` px on every side (out for a negative
+    // `by`), its radius with it, in a new color.
+    function inset(rect as RoundedRect, by as Number, color as Number) as RoundedRect {
+        return new RoundedRect(rect.x + by, rect.y + by, rect.width - 2 * by,
+            rect.height - 2 * by, rect.radius - by, color);
     }
 
     // Heart rate is drawn as zone segments (Q11); every other round-field
@@ -888,19 +917,20 @@ module FaceModel {
         return value < low ? low : (value > high ? high : value);
     }
 
-    // The folded weekday, a space and the day of month without a leading zero.
-    // A name that is missing, empty or cannot be folded, or that would make
-    // the pill wider than the time band (Q33), falls back to the English
-    // abbreviation of the weekday number.
+    // The folded weekday, a space and the date as dd/mm, each with a leading
+    // zero, whatever the watch's date format (Q38). A name that is missing,
+    // empty or cannot be folded, or that would make the pill wider than the
+    // time band (Q33), falls back to the English abbreviation of the
+    // weekday number.
     function dateText(snapshot as Snapshot) as String {
-        var day = " " + snapshot.day;
+        var day = " " + snapshot.day.format("%02d") + "/" + snapshot.month.format("%02d");
         var name = foldWeekday(snapshot.weekdayName);
         if (name != null) {
             name = shortenVietnamese(name);
         }
         if (name != null && name.length() > 0) {
             var text = name + day;
-            if (datePillWidth(textWidth(text, GlyphWidths.DATE)) <= Layout.DATE_PILL_MAX_WIDTH) {
+            if (datePillWidth(dateTextWidth(text)) <= Layout.DATE_PILL_MAX_WIDTH) {
                 return text;
             }
         }
@@ -923,11 +953,16 @@ module FaceModel {
         return name;
     }
 
-    // max(minimum, text width + 2 x pad), where the pad gives "THU 12"
-    // exactly the minimum width (Q23). The font generator derives the pad
-    // from the same 96 px (its FONTS entry for the date).
+    // The date's width as the design measures it: letter spacing only
+    // between characters, so without the spacing the date font bakes in
+    // after the last one. The date is centered and padded by this width.
+    function dateTextWidth(text as String) as Number {
+        return textWidth(text, GlyphWidths.DATE) - GlyphWidths.DATE_TRACKING;
+    }
+
+    // max(minimum, text width + 2 x pad) (Q23).
     function datePillWidth(textWidth as Number) as Number {
-        var width = textWidth + 2 * GlyphWidths.DATE_PAD;
+        var width = textWidth + 2 * Layout.DATE_PILL_PAD;
         return width > Layout.DATE_PILL_MIN_WIDTH ? width : Layout.DATE_PILL_MIN_WIDTH;
     }
 

@@ -98,18 +98,17 @@ class Renderer {
         }
     }
 
-    // An Always On frame: no buffers, only the time in the outline font,
-    // the date pill's outline and the date text on black.
+    // An Always On frame: no buffers, only the filled time, the date pill's
+    // outline (the pill filled, its inside filled black again) and the date
+    // text on black.
     function paintAod(dc as Dc, frame as AodFrame) as Void {
         clear(dc);
         dc.setColor(frame.timeColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(frame.timeX, frame.timeY, _fonts.timeOutline, frame.time,
+        dc.drawText(frame.timeX, frame.timeY, _fonts.time, frame.time,
             Graphics.TEXT_JUSTIFY_LEFT);
 
-        var pill = frame.datePill;
-        dc.setColor(pill.color, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(frame.datePillPen);
-        dc.drawRoundedRectangle(pill.x, pill.y, pill.width, pill.height, pill.radius);
+        fillRoundedRect(dc, frame.datePill);
+        fillRoundedRect(dc, frame.datePillInner);
 
         dc.setColor(frame.dateColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(frame.dateX, frame.dateY, _fonts.date, frame.date,
@@ -158,6 +157,12 @@ class Renderer {
         dc.setColor(layer.backgroundColor, layer.backgroundColor);
         dc.fillCircle(Layout.CENTER_X, Layout.CENTER_Y, Layout.DISC_RADIUS);
 
+        fillRoundedRect(dc, layer.timeBandRim);
+        for (var i = 0; i < layer.fieldRims.size(); i++) {
+            fillCircle(dc, layer.fieldRims[i]);
+        }
+        fillRoundedRect(dc, layer.bottomFieldRim);
+
         drawArc(dc, layer.batteryWell);
         for (var i = 0; i < layer.batteryCaps.size(); i++) {
             fillCircle(dc, layer.batteryCaps[i]);
@@ -166,14 +171,8 @@ class Renderer {
             drawArc(dc, layer.batteryTrack[i]);
         }
 
-        var w = Layout.WELL;
-        dc.setColor(layer.wellColor, layer.wellColor);
-        dc.fillRoundedRectangle(Layout.BAND_X - w, Layout.BAND_Y - w,
-            Layout.BAND_W + 2 * w, Layout.BAND_H + 2 * w, Layout.BAND_RADIUS + w);
-
-        dc.setColor(layer.timeBandColor, layer.timeBandColor);
-        dc.fillRoundedRectangle(Layout.BAND_X, Layout.BAND_Y,
-            Layout.BAND_W, Layout.BAND_H, Layout.BAND_RADIUS);
+        fillRoundedRect(dc, layer.timeBandWell);
+        fillRoundedRect(dc, layer.timeBand);
 
         for (var i = 0; i < layer.fieldWells.size(); i++) {
             fillCircle(dc, layer.fieldWells[i]);

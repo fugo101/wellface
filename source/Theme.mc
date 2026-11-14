@@ -1,13 +1,16 @@
 import Toybox.Lang;
 
 // A named set of color roles. Every color on the face comes from the active
-// theme, so layout and logic never name a concrete color.
+// theme, so layout and logic never name a concrete color. The one exception
+// is the black of Always On (Q17), a platform rule: FaceModel.AOD_BLACK.
 class Theme {
     // Time band, gauge and bezel progress, lit battery segments, goal-reached
     // field.
     public var accent as Number;
     // The background disc.
     public var background as Number;
+    // Well rims (Q39): lighter than the background.
+    public var wellRim as Number;
     // The bezel ring track only.
     public var bezelTrack as Number;
     // Gauge tracks, unlit zone segments, unlit battery segments.
@@ -29,6 +32,7 @@ class Theme {
     function initialize(
         accent as Number,
         background as Number,
+        wellRim as Number,
         bezelTrack as Number,
         gaugeTrack as Number,
         ink as Number,
@@ -40,6 +44,7 @@ class Theme {
     ) {
         self.accent = accent;
         self.background = background;
+        self.wellRim = wellRim;
         self.bezelTrack = bezelTrack;
         self.gaugeTrack = gaugeTrack;
         self.ink = ink;
@@ -56,8 +61,9 @@ module Themes {
     function mint() as Theme {
         return new Theme(
             0x8EE3B8, // accent
-            0x1A1D1B, // background
-            0x1E1E1E, // bezelTrack
+            0x2C332F, // background
+            0x4D5852, // wellRim
+            0x343B37, // bezelTrack
             0x2E3330, // gaugeTrack
             0x000000, // ink
             0xFFFFFF, // text

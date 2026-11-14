@@ -4,9 +4,8 @@ import Toybox.WatchUi;
 
 // The generated bitmap fonts, loaded once when the view starts.
 class Fonts {
+    // The time, in both normal mode and Always On.
     public var time as FontResource;
-    // The time as 2 px outlines, for Always On.
-    public var timeOutline as FontResource;
     public var date as FontResource;
     public var number48 as FontResource;
     public var number26 as FontResource;
@@ -16,8 +15,7 @@ class Fonts {
     public var icons as FontResource;
 
     function initialize() {
-        time = WatchUi.loadResource(Rez.Fonts.TimeFilled) as FontResource;
-        timeOutline = WatchUi.loadResource(Rez.Fonts.TimeOutline) as FontResource;
+        time = WatchUi.loadResource(Rez.Fonts.Time) as FontResource;
         date = WatchUi.loadResource(Rez.Fonts.Date) as FontResource;
         number48 = WatchUi.loadResource(Rez.Fonts.Number48) as FontResource;
         number26 = WatchUi.loadResource(Rez.Fonts.Number26) as FontResource;

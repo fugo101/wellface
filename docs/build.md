@@ -36,7 +36,7 @@ Every build fails on any compiler warning. Type checking is strict, set in each 
 
 `scripts/gen-fonts.sh` runs the font generator (`tools/fontgen/generate.py`). It downloads the source fonts fresh from Google Fonts (the google/fonts repository, so it needs the network) and rewrites everything in `resources/fonts/` (BMFont `.fnt` + PNG pages, `fonts.xml`, the OFL license files) and `source/GlyphWidths.mc`. Never edit those files by hand; change the `FONTS` list (or `ICONS`, for the icon font) in the generator and run the script again. Commit the generated files.
 
-The first run creates a gitignored `.venv/` with Python 3.15 (override with `PYTHON=<interpreter>`) and the pinned versions in `tools/fontgen/requirements.txt`. The generator fails if a requested glyph is missing from a source font, or if the time font's `0` is not 46 px ± 1 tall.
+The first run creates a gitignored `.venv/` with Python 3.15 (override with `PYTHON=<interpreter>`) and the pinned versions in `tools/fontgen/requirements.txt`. The generator fails if a requested glyph is missing from a source font, if the time font's `0` is not 63 px ± 1 tall, if a digit's ink does not fit its tabular cell, or if an asserted advance (`0` 38 px, `:` 19 px) differs.
 
 ## Run in the simulator
 

@@ -37,12 +37,15 @@ class DataReader {
         // Info.hour is 0-23 whatever the 12/24 h setting (Q22).
         var clock = Gregorian.info(now, Time.FORMAT_SHORT);
         var weekdayNumber = clock.day_of_week as Number;
+        // FORMAT_SHORT gives the month as a Number, 1-12.
+        var month = clock.month as Number;
         var changed = !_clockRead || clock.hour != _snapshot.hour
             || clock.min != _snapshot.minute || clock.day != _snapshot.day
-            || weekdayNumber != _snapshot.weekdayNumber;
+            || month != _snapshot.month || weekdayNumber != _snapshot.weekdayNumber;
         _snapshot.hour = clock.hour;
         _snapshot.minute = clock.min;
         _snapshot.day = clock.day;
+        _snapshot.month = month;
         _snapshot.weekdayNumber = weekdayNumber;
         if (changed) {
             // Once a minute is enough to follow a change of watch language.
