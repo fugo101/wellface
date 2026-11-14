@@ -14,24 +14,34 @@ class DataReader {
     // Minute of the day the sensors were last read, -1 before the first read.
     private var _sensorMinute as Number = -1;
     private var _wasHighPower as Boolean = false;
-    private var _bodyBatteryId as Complications.Id =
-        new Complications.Id(Complications.COMPLICATION_TYPE_BODY_BATTERY);
-    private var _stressId as Complications.Id =
-        new Complications.Id(Complications.COMPLICATION_TYPE_STRESS);
-    private var _heartRateId as Complications.Id =
-        new Complications.Id(Complications.COMPLICATION_TYPE_HEART_RATE);
+    // The complication id of each metric read from a complication, indexed
+    // by metric (null for the others).
+    private var _ids as Array<Complications.Id?>;
+
+    function initialize() {
+        var all = Metrics.ALL;
+        _ids = new Array<Complications.Id?>[all.size()];
+        for (var i = 0; i < all.size(); i++) {
+            var entry = Metrics.entry(all[i]);
+            if (entry.source == SOURCE_COMPLICATION) {
+                _ids[i] = new Complications.Id(entry.complication);
+            }
+        }
+    }
 
     // Called on every update that is not OFF. Reads the clock and date
     // every time, from one moment so they always agree (no 23:59 with the
     // next day's date), and the weekday name only when they changed.
-    // Reads the sensors only in high power, when the minute changed since
-    // the last sensor read or the previous update was not high power (that
-    // is how a wake is detected; the first high-power update after start
-    // counts as one). On a wake it also reads the heart-rate zones. Heart
-    // rate itself is read on every high-power update, about once a second
-    // (Q36). Nothing is read in AOD. Returns true if the snapshot may have
-    // changed, so FaceModel should run again; a heart rate that did not
-    // change does not count.
+    // Reads the sensors only in high power: the battery and every metric read
+    // once a minute (Metrics), when the minute changed since the last sensor
+    // read or the previous update was not high power (that is how a wake is
+    // detected; the first high-power update after start counts as one). On
+    // a wake it also reads the heart-rate zones (always for now; the read
+    // plan of ticket 04 limits it to a face that draws zone segments). The
+    // metrics read every second (heart rate, Q36) are read on every
+    // high-power update. Nothing is read in AOD. Returns true if the
+    // snapshot may have changed, so FaceModel should run again; a per-second
+    // value that did not change does not count.
     function update(highPower as Boolean) as Boolean {
         var now = Time.now();
         // Info.hour is 0-23 whatever the 12/24 h setting (Q22).
@@ -65,10 +75,19 @@ class DataReader {
                 _sensorMinute = minuteOfDay;
                 changed = true;
             }
-            var heartRate = readComplication(_heartRateId);
-            if (heartRate != _snapshot.heartRate) {
-                _snapshot.heartRate = heartRate;
-                changed = true;
+            var all = Metrics.ALL;
+            for (var i = 0; i < all.size(); i++) {
+                var metric = all[i];
+                var entry = Metrics.entry(metric);
+                // Every per-second metric is a complication (heart rate).
+                if (entry.cadence == CADENCE_EVERY_SECOND
+                        && entry.source == SOURCE_COMPLICATION) {
+                    var value = readComplication(_ids[i]);
+                    if (value != _snapshot.value(metric)) {
+                        _snapshot.setValue(metric, value);
+                        changed = true;
+                    }
+                }
             }
         }
         _wasHighPower = highPower;
@@ -85,18 +104,34 @@ class DataReader {
         return _snapshot;
     }
 
+    // The battery and every metric read once a minute.
     private function readSensors() as Void {
         // A Float percentage; FaceModel only sees a whole number in 0-100.
         var battery = (System.getSystemStats().battery + 0.5).toNumber();
         _snapshot.battery = FaceModel.clamp(battery, 0, 100);
 
-        // Both may be null; the goal is the watch's own (auto) goal.
-        var activity = ActivityMonitor.getInfo();
-        _snapshot.steps = activity.steps;
-        _snapshot.stepGoal = activity.stepGoal;
+        var all = Metrics.ALL;
+        for (var i = 0; i < all.size(); i++) {
+            var metric = all[i];
+            var entry = Metrics.entry(metric);
+            if (entry.cadence != CADENCE_EVERY_MINUTE) {
+                continue;
+            }
+            if (entry.source == SOURCE_COMPLICATION) {
+                _snapshot.setValue(metric, readComplication(_ids[i]));
+            } else if (entry.source == SOURCE_ACTIVITY_STEPS) {
+                // Both may be null; the goal is the watch's own (auto) goal.
+                var activity = ActivityMonitor.getInfo();
+                _snapshot.setValue(metric, wholeNumber(activity.steps));
+                _snapshot.setGoal(metric, wholeNumber(activity.stepGoal));
+            }
+        }
+    }
 
-        _snapshot.bodyBattery = readComplication(_bodyBatteryId);
-        _snapshot.stress = readComplication(_stressId);
+    // The value if it is a whole number (a Number), else null. Negative
+    // values are kept: FaceModel applies the invalid-value rule.
+    private function wholeNumber(value as Object?) as Number? {
+        return value instanceof Number ? value : null;
     }
 
     // The lower bounds of zones 1-5: the first five HR_ZONE_SPORT_GENERIC
@@ -116,13 +151,14 @@ class DataReader {
     }
 
     // A complication's value, polled (ticket 02 showed polling refreshes on
-    // the FR265). Null when it throws or is not a non-negative Number.
-    private function readComplication(id as Complications.Id) as Number? {
+    // the FR265). Null when there is no id, when it throws or when the value
+    // is not a whole number (the API also allows a Float or a String).
+    private function readComplication(id as Complications.Id?) as Number? {
+        if (id == null) {
+            return null;
+        }
         try {
-            var value = Complications.getComplication(id).value;
-            if (value instanceof Number && value >= 0) {
-                return value;
-            }
+            return wholeNumber(Complications.getComplication(id).value);
         } catch (e instanceof Lang.Exception) {
             // Missing, like a null value.
         }

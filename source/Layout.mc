@@ -10,6 +10,71 @@ enum Field {
     FIELD_BEZEL_RING
 }
 
+// The shape of a field, which decides the drawing styles it accepts (Q40).
+enum FieldKind {
+    // The left, center and right fields.
+    FIELD_KIND_ROUND,
+    // The bottom field's pill.
+    FIELD_KIND_BOTTOM,
+    FIELD_KIND_BEZEL_RING
+}
+
+// Which metric each field shows. The same metric may be in several fields,
+// as steps is on the bottom field and the bezel ring.
+class FieldMapping {
+    public var left as Metric;
+    public var center as Metric;
+    public var right as Metric;
+    public var bottom as Metric;
+    public var bezelRing as Metric;
+
+    function initialize(left as Metric, center as Metric, right as Metric, bottom as Metric,
+            bezelRing as Metric) {
+        self.left = left;
+        self.center = center;
+        self.right = right;
+        self.bottom = bottom;
+        self.bezelRing = bezelRing;
+    }
+
+    function metricOf(field as Field) as Metric {
+        switch (field) {
+            case FIELD_LEFT:
+                return left;
+            case FIELD_CENTER:
+                return center;
+            case FIELD_RIGHT:
+                return right;
+            case FIELD_BOTTOM:
+                return bottom;
+        }
+        return bezelRing;
+    }
+}
+
+// The field kinds and the drawing styles each accepts (Q40). With the
+// metric module, the only place that answers "can this metric go here".
+module FieldKinds {
+    function kindOf(field as Field) as FieldKind {
+        switch (field) {
+            case FIELD_BOTTOM:
+                return FIELD_KIND_BOTTOM;
+            case FIELD_BEZEL_RING:
+                return FIELD_KIND_BEZEL_RING;
+        }
+        return FIELD_KIND_ROUND;
+    }
+
+    // A round field draws a gauge or zone segments; the bottom field and the
+    // bezel ring draw a goal metric's progress.
+    function accepts(kind as FieldKind, style as DrawingStyle) as Boolean {
+        if (kind == FIELD_KIND_ROUND) {
+            return style == STYLE_GAUGE || style == STYLE_ZONE_SEGMENTS;
+        }
+        return style == STYLE_GOAL_PROGRESS;
+    }
+}
+
 // The geometry of a round field: its circle, the ring inside it, and
 // where its icon and number go. A field is only a place; the metric shown in
 // it decides what is drawn there (Q29).
@@ -28,7 +93,8 @@ class RoundField {
     // The number is centered on x, its digits vertically centered on this y.
     public var numberY as Number;
     // The center field's large number (always 48 px), rather than one that
-    // shrinks with more characters (FaceModel.numberFontFor).
+    // shrinks with more characters (FaceModel.numberFontFor). The size stays
+    // with the field whatever metric it shows.
     public var largeNumber as Boolean;
 
     function initialize(x as Number, y as Number, radius as Number, ringRadius as Number,
@@ -49,15 +115,32 @@ class RoundField {
 // Fixed geometry from the final design, on the 416x416 canvas, and the
 // static MVP mapping of metrics to fields.
 module Layout {
-    // The one place that says which metric each field shows (Q29). Fields
-    // will become switchable later; only these lines change then.
+    // The default metric of each field (Q29), handed to FaceModel, the view
+    // and the delegate as a FieldMapping (defaultMapping).
     const LEFT_METRIC = METRIC_STRESS;
     const CENTER_METRIC = METRIC_BODY_BATTERY;
     const RIGHT_METRIC = METRIC_HEART_RATE;
     const BOTTOM_METRIC = METRIC_STEPS;
-    // The bezel ring only takes a goal metric: one with a goal read from the
-    // watch (FaceModel.goalOf). Steps is the only one in the MVP.
+    // The bezel ring only takes a goal metric (Q40). Steps is the only one in
+    // the MVP.
     const BEZEL_METRIC = METRIC_STEPS;
+
+    function defaultMapping() as FieldMapping {
+        return new FieldMapping(LEFT_METRIC, CENTER_METRIC, RIGHT_METRIC, BOTTOM_METRIC,
+            BEZEL_METRIC);
+    }
+
+    // The round fields, left to right.
+    const ROUND_FIELDS = [FIELD_LEFT, FIELD_CENTER, FIELD_RIGHT] as Array<Field>;
+
+    // The geometry of a round field: left, center, or right for any other
+    // field (only round fields have one).
+    function roundField(field as Field) as RoundField {
+        if (field == FIELD_LEFT) {
+            return leftField();
+        }
+        return field == FIELD_CENTER ? centerField() : rightField();
+    }
 
     const CENTER_X = 208;
     const CENTER_Y = 208;
@@ -121,7 +204,7 @@ module Layout {
     const BOTTOM_NUMBER_Y = 350;
     const BOTTOM_GOAL_Y = 351;
     // The anchored text fits when the number starts at or after
-    // BOTTOM_NUMBER_MIN_LEFT (4 px past the foot's ink, which ends at x 160)
+    // BOTTOM_NUMBER_MIN_LEFT (4 px past the icon's ink; the foot's ends at x 160)
     // and the goal ends at or before BOTTOM_GOAL_MAX_RIGHT (4 px inside the
     // pill's rounded end).
     const BOTTOM_NUMBER_MIN_LEFT = 164;
@@ -154,7 +237,7 @@ module Layout {
     // The bezel ring, on the screen's edge.
     const BEZEL_RADIUS = 204;
     const BEZEL_PEN = 8;
-    // The dot at the head of the step progress, centered on the ring.
+    // The dot at the head of the goal metric's progress, centered on the ring.
     const BEZEL_HEAD_RADIUS = 4;
     // Notches across the ring at 3, 6 and 9 o'clock, in design degrees.
     const BEZEL_NOTCHES = [90, 180, 270] as Array<Number>;

@@ -47,7 +47,7 @@ module FrameEquality {
             + "|batteryLit=" + arcs(f.batteryLit)
             + "|bezelProgress=" + arc(f.bezelProgress)
             + "|bezelHead=" + optionalCircle(f.bezelHead)
-            + "|goalReached=" + flag(f.stepGoalReached)
+            + "|goalReached=" + flag(f.bottomGoalReached)
             + "|bottom={" + describeBottomField(f.bottomField) + "}"
             + "|left={" + describeField(f.leftField) + "}"
             + "|center={" + describeField(f.centerField) + "}"

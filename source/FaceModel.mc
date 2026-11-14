@@ -16,28 +16,41 @@ class Snapshot {
     // The localized weekday name from FORMAT_MEDIUM, as the watch returns it.
     public var weekdayName as String? = null;
 
-    // Sensor part, read once a minute in high power. Null means missing.
+    // Sensor part, read in high power only. Null means missing.
     // Watch battery in percent, already rounded and clamped to 0-100.
     public var battery as Number? = null;
-    // Today's steps and the watch's own daily step goal (auto goal, never
-    // entered by hand).
-    public var steps as Number? = null;
-    public var stepGoal as Number? = null;
-    // Body Battery, 0-100 (the data reader drops non-Number and negative
-    // values).
-    public var bodyBattery as Number? = null;
-    // Stress, 0-100 (same rule).
-    public var stress as Number? = null;
-    // Heart rate in bpm (same rule), re-read every second while the screen
-    // is awake (Q36).
-    public var heartRate as Number? = null;
     // The lower bounds of heart-rate zones 1-5 in bpm (the first five
     // HR_ZONE_SPORT_GENERIC thresholds), null when unreadable.
     public var heartRateZones as Array<Number>? = null;
+    // Each metric's value and, for a goal metric, its goal (the step goal is
+    // the watch's own auto goal, never entered by hand), indexed by metric
+    // and read at the metric's cadence (Metrics). The data reader keeps only
+    // whole numbers; FaceModel treats a negative one as missing
+    // (Metrics.reading).
+    private var _values as Array<Number?>;
+    private var _goals as Array<Number?>;
 
     function initialize(hour as Number, minute as Number) {
         self.hour = hour;
         self.minute = minute;
+        _values = new Array<Number?>[Metrics.ALL.size()];
+        _goals = new Array<Number?>[Metrics.ALL.size()];
+    }
+
+    function value(metric as Metric) as Number? {
+        return _values[metric];
+    }
+
+    function setValue(metric as Metric, value as Number?) as Void {
+        _values[metric] = value;
+    }
+
+    function goal(metric as Metric) as Number? {
+        return _goals[metric];
+    }
+
+    function setGoal(metric as Metric, goal as Number?) as Void {
+        _goals[metric] = goal;
     }
 }
 
@@ -64,15 +77,15 @@ class Frame {
     // The lit battery segments only, leftmost first. The static layer holds
     // all ten unlit ones underneath.
     public var batteryLit as Array<Arc> = [] as Array<Arc>;
-    // Step progress on the bezel ring, over the static track. Sweep 0 when
-    // there is no progress to show.
+    // The bezel ring's goal metric's progress, over the static track. Sweep
+    // 0 when there is no progress to show.
     public var bezelProgress as Arc = new Arc(0, 0, 0, 0, 0, 0, 0, 0);
     // The dot at the head of the progress, null when there is no goal to
-    // show progress toward or the steps are missing.
+    // show progress toward or the value is missing.
     public var bezelHead as Circle? = null;
-    // Goal reached: the goal is above 0, the steps are known and at least
-    // the goal. The bottom field switches style on it.
-    public var stepGoalReached as Boolean = false;
+    // The bottom field's goal reached: the goal is above 0, the value is
+    // known and at least the goal. The bottom field switches style on it.
+    public var bottomGoalReached as Boolean = false;
     // The bottom field's content.
     public var bottomField as BottomFieldFrame = new BottomFieldFrame();
     // The round fields' content.
@@ -126,17 +139,17 @@ class LongPressTarget {
     }
 }
 
-// What the bottom field draws: its pill (which is its own well), the foot,
-// the step number and "/ goal", each placed from the font catalog.
+// What the bottom field draws: its pill (which is its own well), the goal
+// metric's icon, its number and "/ goal", each placed from the font catalog.
 class BottomFieldFrame {
     public var pill as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
-    // The metric's icon (the foot for steps), "" when hidden to make room.
+    // The metric's icon, "" when hidden to make room.
     public var icon as String = "";
     public var iconX as Number = 0;
     public var iconY as Number = 0;
     public var iconColor as Number = 0;
-    // The step count with a dot thousands separator, or "--". Drawn from
-    // its top-left corner (left-justified, line top), like every text.
+    // The value in the metric's number format, or "--". Drawn from its
+    // top-left corner (left-justified, line top), like every text.
     public var number as String = "";
     public var numberFont as FontId = FONT_NUMBER_22;
     public var numberWidth as Number = 0;
@@ -178,10 +191,11 @@ class FieldFrame {
     }
 }
 
-// The parts of the face that depend only on the theme, so the renderer draws
-// them once into a buffer, back to front: bezel track, background disc, well
-// rims, battery well and track, time band well and band, field wells and
-// tracks. The disc's geometry is in Layout.
+// The parts of the face that depend only on the theme and on which metric
+// each round field shows (its track), so the renderer draws them once into
+// a buffer, back to front: bezel track, background disc, well rims, battery
+// well and track, time band well and band, field wells and tracks. The
+// disc's geometry is in Layout.
 class StaticLayer {
     public var backgroundColor as Number = 0;
     // The well rims (Q39): around the time band's well, around each round
@@ -313,7 +327,7 @@ module FaceModel {
         "AAAAAACCCCCCCCDDDDEEEEEEEEEEGGGGGGGGHHHHIIIIIIIIII??JJKK?LLLLLLLLLL" +
         "NNNNNN?NNOOOOOO??RRRRRRSSSSSSSSTTTTTTUUUUUUUUUUUUWWYYYZZZZZZS";
 
-    function compute(snapshot as Snapshot, theme as Theme) as Frame {
+    function compute(snapshot as Snapshot, theme as Theme, mapping as FieldMapping) as Frame {
         var frame = new Frame();
         frame.time = formatTime(snapshot.hour, snapshot.minute);
         var timeFont = FontCatalog.entry(FONT_TIME);
@@ -324,8 +338,8 @@ module FaceModel {
         frame.batteryLit = batteryLit(snapshot.battery, theme);
 
         // The bezel ring: progress of its goal metric toward the goal.
-        var bezelValue = metricValue(Layout.BEZEL_METRIC, snapshot);
-        var bezelGoal = goalOf(Layout.BEZEL_METRIC, snapshot);
+        var bezelValue = metricValue(mapping.bezelRing, snapshot);
+        var bezelGoal = goalOf(mapping.bezelRing, snapshot);
         var sweep = bezelSweep(bezelValue, bezelGoal);
         frame.bezelProgress = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.BEZEL_RADIUS,
             Layout.BEZEL_PEN, 0, sweep, theme.accent);
@@ -333,15 +347,14 @@ module FaceModel {
             frame.bezelHead = circleAt(sweep, Layout.BEZEL_RADIUS, Layout.BEZEL_HEAD_RADIUS,
                 theme.text);
         }
-        var bottomValue = metricValue(Layout.BOTTOM_METRIC, snapshot);
-        var bottomGoal = goalOf(Layout.BOTTOM_METRIC, snapshot);
-        frame.stepGoalReached = goalReached(bottomValue, bottomGoal);
-        frame.bottomField = bottomField(Layout.BOTTOM_METRIC, bottomValue, bottomGoal, theme);
+        var bottomValue = metricValue(mapping.bottom, snapshot);
+        var bottomGoal = goalOf(mapping.bottom, snapshot);
+        frame.bottomGoalReached = goalReached(bottomValue, bottomGoal);
+        frame.bottomField = bottomField(mapping.bottom, bottomValue, bottomGoal, theme);
 
-        frame.leftField = roundField(Layout.leftField(), Layout.LEFT_METRIC, snapshot, theme);
-        frame.centerField = roundField(Layout.centerField(), Layout.CENTER_METRIC, snapshot,
-            theme);
-        frame.rightField = roundField(Layout.rightField(), Layout.RIGHT_METRIC, snapshot, theme);
+        frame.leftField = roundField(Layout.leftField(), mapping.left, snapshot, theme);
+        frame.centerField = roundField(Layout.centerField(), mapping.center, snapshot, theme);
+        frame.rightField = roundField(Layout.rightField(), mapping.right, snapshot, theme);
         frame.date = dateText(snapshot);
         frame.dateWidth = dateTextWidth(frame.date);
         frame.dateX = Layout.CENTER_X - frame.dateWidth / 2;
@@ -397,26 +410,37 @@ module FaceModel {
         return color;
     }
 
-    // The long-press target at a touch point, null on a miss.
-    function longPressTarget(x as Number, y as Number) as LongPressTarget? {
-        if (insideWell(Layout.leftField(), x, y)) {
-            return new LongPressTarget(FIELD_LEFT, Layout.LEFT_METRIC);
-        }
-        if (insideWell(Layout.centerField(), x, y)) {
-            return new LongPressTarget(FIELD_CENTER, Layout.CENTER_METRIC);
-        }
-        if (insideWell(Layout.rightField(), x, y)) {
-            return new LongPressTarget(FIELD_RIGHT, Layout.RIGHT_METRIC);
+    // Whether a field can show a metric: its field kind accepts the metric's
+    // drawing style (Q40).
+    function accepts(field as Field, metric as Metric) as Boolean {
+        return FieldKinds.accepts(FieldKinds.kindOf(field), Metrics.entry(metric).style);
+    }
+
+    // The long-press target at a touch point, null on a miss. The metric
+    // shown in the field held picks the page.
+    function longPressTarget(x as Number, y as Number, mapping as FieldMapping)
+            as LongPressTarget? {
+        var field = fieldAt(x, y);
+        return field != null ? new LongPressTarget(field, mapping.metricOf(field)) : null;
+    }
+
+    // The field at a touch point, null on a miss.
+    function fieldAt(x as Number, y as Number) as Field? {
+        var round = Layout.ROUND_FIELDS;
+        for (var i = 0; i < round.size(); i++) {
+            if (insideWell(Layout.roundField(round[i]), x, y)) {
+                return round[i];
+            }
         }
         // The bottom field's pill is its own well, so it is not padded.
         if (insideRoundedRect(x, y, Layout.BOTTOM_X, Layout.BOTTOM_Y, Layout.BOTTOM_W,
                 Layout.BOTTOM_H, Layout.BOTTOM_RADIUS)) {
-            return new LongPressTarget(FIELD_BOTTOM, Layout.BOTTOM_METRIC);
+            return FIELD_BOTTOM;
         }
         // The bezel ring: outside the background disc, on the screen.
         if (!insideCircle(x, y, Layout.CENTER_X, Layout.CENTER_Y, Layout.DISC_RADIUS)
                 && insideCircle(x, y, Layout.CENTER_X, Layout.CENTER_Y, Layout.SCREEN_RADIUS)) {
-            return new LongPressTarget(FIELD_BEZEL_RING, Layout.BEZEL_METRIC);
+            return FIELD_BEZEL_RING;
         }
         return null;
     }
@@ -443,7 +467,8 @@ module FaceModel {
         return dx * dx + dy * dy <= radius * radius;
     }
 
-    // The bottom field for a goal metric's value and goal (Q24, Q25, Q34).
+    // The bottom field for a goal metric's value and goal, both already
+    // through the invalid-value rule (Q24, Q25, Q34).
     // Goal not reached: the metric's icon, the number right-aligned and
     // "/ goal" left-aligned at their anchors, if that fits; else the same
     // with the number at 18 px; else the icon hidden and number + gap +
@@ -456,11 +481,9 @@ module FaceModel {
         var reached = goalReached(value, goal);
         content.pill = new RoundedRect(Layout.BOTTOM_X, Layout.BOTTOM_Y, Layout.BOTTOM_W,
             Layout.BOTTOM_H, Layout.BOTTOM_RADIUS, reached ? theme.accent : theme.ink);
-        var icon = iconOf(metric);
-        content.icon = icon != null ? icon.toChar().toString() : "";
+        content.icon = iconText(metric);
         content.iconY = Layout.BOTTOM_ICON_Y;
-        var known = value != null && value >= 0;
-        content.number = value != null && known ? formatThousands(value) : "--";
+        content.number = value != null ? Metrics.format(metric, value) : "--";
 
         if (reached) {
             content.iconColor = theme.ink;
@@ -478,10 +501,10 @@ module FaceModel {
 
         content.iconX = Layout.BOTTOM_ICON_X;
         content.iconColor = theme.secondary;
-        content.numberColor = known ? theme.text : theme.secondary;
+        content.numberColor = value != null ? theme.text : theme.secondary;
         var goalWidth = 0;
         if (goal != null && goal > 0) {
-            content.goal = "/ " + formatThousands(goal);
+            content.goal = "/ " + Metrics.format(metric, goal);
             var goalFont = FontCatalog.entry(FONT_GOAL_15);
             goalWidth = textWidth(content.goal, goalFont);
             content.goalColor = theme.secondary;
@@ -543,38 +566,29 @@ module FaceModel {
         return centerY + capHeight / 2 - base;
     }
 
-    // A non-negative number with a dot every three digits: 1147 -> "1.147".
-    function formatThousands(value as Number) as String {
-        if (value < 1000) {
-            return value.toString();
-        }
-        return formatThousands(value / 1000) + "." + (value % 1000).format("%03d");
-    }
-
-    // A round field showing `metric`: its icon and number, plus the metric's
-    // ring, zone segments for heart rate and a gauge for every other
-    // round-field metric. In warning, the icon, number and gauge take the
-    // warning color.
+    // A round field showing `metric`: its icon and number, plus lit arcs in
+    // the metric's drawing style (zone segments or a gauge), at the field's
+    // geometry. In warning, the icon, number and gauge take the warning
+    // color.
     function roundField(field as RoundField, metric as Metric, snapshot as Snapshot,
             theme as Theme) as FieldFrame {
         var value = metricValue(metric, snapshot);
         var content = new FieldFrame();
-        var icon = iconOf(metric);
-        content.icon = icon != null ? icon.toChar().toString() : "";
+        content.icon = iconText(metric);
         content.iconX = field.iconX;
         content.iconY = field.iconY;
         content.iconColor = theme.secondary;
         content.number = "--";
         content.numberColor = theme.secondary;
         if (value != null) {
-            content.number = value.toString();
+            content.number = Metrics.format(metric, value);
             content.numberColor = theme.text;
             var warning = warningColor(metric, value, theme);
             if (warning != null) {
                 content.iconColor = warning;
                 content.numberColor = warning;
             }
-            content.arcs = hasZoneSegments(metric)
+            content.arcs = Metrics.entry(metric).style == STYLE_ZONE_SEGMENTS
                 ? litZoneSegments(field, value, snapshot.heartRateZones, theme.zones)
                 : gauge(field, value, warning != null ? warning : theme.accent);
         }
@@ -636,39 +650,19 @@ module FaceModel {
         return length == 4 ? FONT_NUMBER_22 : FONT_NUMBER_18;
     }
 
-    // The code point of a metric's icon in the icon font, null if the icon
-    // font has none for it.
-    function iconOf(metric as Metric) as Number? {
-        switch (metric) {
-            case METRIC_BODY_BATTERY:
-                return FontCatalog.ICON_BOLT;
-            case METRIC_STRESS:
-                return FontCatalog.ICON_STRESS;
-            case METRIC_HEART_RATE:
-                return FontCatalog.ICON_HEART;
-            case METRIC_STEPS:
-                return FontCatalog.ICON_FOOT;
-        }
-        return null;
+    // A metric's icon: one glyph in the icon font.
+    function iconText(metric as Metric) as String {
+        return Metrics.entry(metric).icon.toChar().toString();
     }
 
-    // The warning color for a metric's value, null when there is no warning.
+    // The theme's color for a metric's warning level, null when there is no
+    // warning.
     function warningColor(metric as Metric, value as Number, theme as Theme) as Number? {
-        switch (metric) {
-            case METRIC_BODY_BATTERY:
-                // Red below 15, orange at 15-24.
-                if (value < 15) {
-                    return theme.warningLevel2;
-                }
-                return value < 25 ? theme.warningLevel1 : null;
-            case METRIC_STRESS:
-                // Red above 75, orange at 51-75.
-                if (value > 75) {
-                    return theme.warningLevel2;
-                }
-                return value > 50 ? theme.warningLevel1 : null;
+        var level = Metrics.warningLevel(metric, value);
+        if (level == 0) {
+            return null;
         }
-        return null; // heart rate has no warning color; steps have a goal instead
+        return level == 1 ? theme.warningLevel1 : theme.warningLevel2;
     }
 
     // clamp(value, 0, 100) x 360 / 100, rounded down.
@@ -676,30 +670,19 @@ module FaceModel {
         return clamp(value, 0, 100) * 360 / 100;
     }
 
-    // The current value of a metric, null when missing.
+    // The current value of a metric, null when missing or invalid.
     function metricValue(metric as Metric, snapshot as Snapshot) as Number? {
-        switch (metric) {
-            case METRIC_BODY_BATTERY:
-                return snapshot.bodyBattery;
-            case METRIC_STRESS:
-                return snapshot.stress;
-            case METRIC_HEART_RATE:
-                return snapshot.heartRate;
-            case METRIC_STEPS:
-                return snapshot.steps;
-        }
-        return null;
+        return Metrics.reading(snapshot.value(metric));
     }
 
-    // The goal of a goal metric (one whose goal is read from the watch),
-    // null when missing or when the metric has no goal. Only a goal metric
-    // goes on the bezel ring (Layout.BEZEL_METRIC).
+    // The goal of a goal metric, null when missing, invalid or when the
+    // metric has no goal.
     function goalOf(metric as Metric, snapshot as Snapshot) as Number? {
-        return metric == METRIC_STEPS ? snapshot.stepGoal : null;
+        return Metrics.isGoalMetric(metric) ? Metrics.reading(snapshot.goal(metric)) : null;
     }
 
-    // The static layer for a theme.
-    function staticLayer(theme as Theme) as StaticLayer {
+    // The static layer for a theme and the metric each round field shows.
+    function staticLayer(theme as Theme, mapping as FieldMapping) as StaticLayer {
         var layer = new StaticLayer();
         layer.backgroundColor = theme.background;
         var band = new RoundedRect(Layout.BAND_X, Layout.BAND_Y, Layout.BAND_W, Layout.BAND_H,
@@ -730,9 +713,9 @@ module FaceModel {
         layer.fieldRims = [] as Array<Circle>;
         layer.fieldWells = [] as Array<Circle>;
         layer.fieldTracks = [] as Array<Arc>;
-        addRoundField(layer, Layout.leftField(), Layout.LEFT_METRIC, theme);
-        addRoundField(layer, Layout.centerField(), Layout.CENTER_METRIC, theme);
-        addRoundField(layer, Layout.rightField(), Layout.RIGHT_METRIC, theme);
+        addRoundField(layer, Layout.leftField(), mapping.left, theme);
+        addRoundField(layer, Layout.centerField(), mapping.center, theme);
+        addRoundField(layer, Layout.rightField(), mapping.right, theme);
         return layer;
     }
 
@@ -743,7 +726,7 @@ module FaceModel {
         var well = field.radius + Layout.WELL;
         layer.fieldRims.add(new Circle(field.x, field.y, well + Layout.WELL_RIM, theme.wellRim));
         layer.fieldWells.add(new Circle(field.x, field.y, well, theme.ink));
-        if (hasZoneSegments(metric)) {
+        if (Metrics.entry(metric).style == STYLE_ZONE_SEGMENTS) {
             for (var i = 0; i < Layout.ZONE_SEGMENTS; i++) {
                 layer.fieldTracks.add(zoneSegment(field, i, theme.gaugeTrack));
             }
@@ -758,12 +741,6 @@ module FaceModel {
     function inset(rect as RoundedRect, by as Number, color as Number) as RoundedRect {
         return new RoundedRect(rect.x + by, rect.y + by, rect.width - 2 * by,
             rect.height - 2 * by, rect.radius - by, color);
-    }
-
-    // Heart rate is drawn as zone segments (Q11); every other round-field
-    // metric as a gauge.
-    function hasZoneSegments(metric as Metric) as Boolean {
-        return metric == METRIC_HEART_RATE;
     }
 
     // lit = (battery + 9) / 10, clamped to 0-10; missing lights none.
@@ -793,9 +770,9 @@ module FaceModel {
 
     // The black notches across the bezel ring at 3, 6 and 9 o'clock (one per
     // design angle in Layout.BEZEL_NOTCHES), from the inner to the outer
-    // radius. Like the static layer they depend only on the theme, so the
-    // renderer gets them once; unlike it they are drawn on every update,
-    // over the progress (they are not in the buffer).
+    // radius. They depend only on the theme, so the renderer gets them
+    // once; unlike the static layer they are drawn on every update, over
+    // the progress (they are not in the buffer).
     function bezelNotches(theme as Theme) as Array<Line> {
         var angles = Layout.BEZEL_NOTCHES;
         var notches = new Array<Line>[angles.size()];
@@ -814,10 +791,10 @@ module FaceModel {
     }
 
     // Progress of a goal metric can be shown: the goal is above 0 and the
-    // value is known (0 included; a negative value, such as a negative step
-    // count, is no reading).
+    // value is known (0 included). Both have been through the invalid-value
+    // rule (Metrics.reading).
     function hasGoalProgress(value as Number?, goal as Number?) as Boolean {
-        return value != null && goal != null && goal > 0 && value >= 0;
+        return value != null && goal != null && goal > 0;
     }
 
     // Red at 10% or less, orange at 20% or less, otherwise the accent.

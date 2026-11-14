@@ -5,6 +5,7 @@ import Toybox.WatchUi;
 
 class WellfaceView extends WatchUi.WatchFace {
     private var _theme as Theme;
+    private var _mapping as FieldMapping;
     private var _reader as DataReader;
     private var _renderer as Renderer;
     // The last computed frames, one per mode. FaceModel runs again only
@@ -15,9 +16,10 @@ class WellfaceView extends WatchUi.WatchFace {
     function initialize() {
         WatchFace.initialize();
         _theme = Themes.active();
+        _mapping = Layout.defaultMapping();
         _reader = new DataReader();
-        _renderer = new Renderer(FaceModel.staticLayer(_theme), FaceModel.bezelNotches(_theme),
-            new Fonts());
+        _renderer = new Renderer(FaceModel.staticLayer(_theme, _mapping),
+            FaceModel.bezelNotches(_theme), new Fonts());
     }
 
     function onUpdate(dc as Dc) as Void {
@@ -46,7 +48,7 @@ class WellfaceView extends WatchUi.WatchFace {
 
         var frame = _frame;
         if (frame == null) {
-            frame = FaceModel.compute(_reader.snapshot(), _theme);
+            frame = FaceModel.compute(_reader.snapshot(), _theme, _mapping);
             _frame = frame;
         }
         _renderer.paint(dc, frame);

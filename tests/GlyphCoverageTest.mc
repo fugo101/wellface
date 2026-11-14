@@ -45,17 +45,7 @@ module GlyphCoverageTest {
         var s = new Snapshot(8, 42);
         // Zones, so heart rate also lights its segments.
         s.heartRateZones = [96, 115, 134, 154, 173, 192] as Array<Number>;
-        switch (metric) {
-            case METRIC_STRESS:
-                s.stress = value;
-                break;
-            case METRIC_BODY_BATTERY:
-                s.bodyBattery = value;
-                break;
-            case METRIC_HEART_RATE:
-                s.heartRate = value;
-                break;
-        }
+        s.setValue(metric, value);
         return s;
     }
 
@@ -134,7 +124,8 @@ module GlyphCoverageTest {
             var aod = FaceModel.computeAod(new Snapshot(minute / 60, minute % 60), theme);
             assertDrawable(aod.time, FONT_TIME, "time");
         }
-        assertDrawable(FaceModel.compute(new Snapshot(23, 59), theme).time, FONT_TIME, "time");
+        var frame = FaceModel.compute(new Snapshot(23, 59), theme, Layout.defaultMapping());
+        assertDrawable(frame.time, FONT_TIME, "time");
         return true;
     }
 

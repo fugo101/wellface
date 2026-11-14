@@ -80,7 +80,7 @@ class Renderer {
             Graphics.TEXT_JUSTIFY_LEFT);
     }
 
-    // The pill (its own well), then the foot if shown, the number and
+    // The pill (its own well), then the icon if shown, the number and
     // "/ goal" if any.
     private function paintBottomField(dc as Dc, field as BottomFieldFrame) as Void {
         fillRoundedRect(dc, field.pill);

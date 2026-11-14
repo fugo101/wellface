@@ -38,11 +38,11 @@ module GoldenTest {
         s.day = 12;
         s.month = 11;
         s.battery = 64;
-        s.steps = 1147;
-        s.stepGoal = 3110;
-        s.bodyBattery = 56;
-        s.stress = 27;
-        s.heartRate = 72;
+        s.setValue(METRIC_STEPS, 1147);
+        s.setGoal(METRIC_STEPS, 3110);
+        s.setValue(METRIC_BODY_BATTERY, 56);
+        s.setValue(METRIC_STRESS, 27);
+        s.setValue(METRIC_HEART_RATE, 72);
         s.heartRateZones = zones();
         return s;
     }
@@ -59,14 +59,14 @@ module GoldenTest {
 
     function withSteps(steps as Number?, goal as Number?) as Snapshot {
         var s = typical();
-        s.steps = steps;
-        s.stepGoal = goal;
+        s.setValue(METRIC_STEPS, steps);
+        s.setGoal(METRIC_STEPS, goal);
         return s;
     }
 
     function withHeartRate(heartRate as Number?, heartRateZones as Array<Number>?) as Snapshot {
         var s = typical();
-        s.heartRate = heartRate;
+        s.setValue(METRIC_HEART_RATE, heartRate);
         s.heartRateZones = heartRateZones;
         return s;
     }
@@ -86,15 +86,15 @@ module GoldenTest {
         if (name.equals("warning1")) {
             var s = typical();
             s.battery = 15;
-            s.bodyBattery = 20;
-            s.stress = 60;
+            s.setValue(METRIC_BODY_BATTERY, 20);
+            s.setValue(METRIC_STRESS, 60);
             return s;
         }
         if (name.equals("warning2")) {
             var s = typical();
             s.battery = 5;
-            s.bodyBattery = 10;
-            s.stress = 80;
+            s.setValue(METRIC_BODY_BATTERY, 10);
+            s.setValue(METRIC_STRESS, 80);
             return s;
         }
         var zoneRates = { "zones1" => 100, "zones2" => 120, "zones3" => 140, "zones4" => 160,
@@ -182,7 +182,7 @@ module GoldenTest {
         var run = "";
         var count = 0;
         for (var x = TARGET_STEP / 2; x < 416; x += TARGET_STEP) {
-            var code = FrameEquality.describeTarget(FaceModel.longPressTarget(x, y));
+            var code = FrameEquality.describeTarget(FaceModel.longPressTarget(x, y, mapping()));
             if (code.equals(run)) {
                 count++;
                 continue;
@@ -211,12 +211,17 @@ module GoldenTest {
         return Themes.mint();
     }
 
+    function mapping() as FieldMapping {
+        return Layout.defaultMapping();
+    }
+
     (:test)
     function framesMatchTheGoldenValues(logger as Test.Logger) as Boolean {
         var failed = 0;
         for (var i = 0; i < FRAME_CASES.size(); i++) {
             var name = FRAME_CASES[i];
-            var actual = FrameEquality.describeFrame(FaceModel.compute(frameCase(name), mint()));
+            var actual = FrameEquality.describeFrame(
+                FaceModel.compute(frameCase(name), mint(), mapping()));
             if (!matches("frame", name, actual, GoldenValues.FRAMES[name])) {
                 failed++;
             }
@@ -248,7 +253,7 @@ module GoldenTest {
 
     (:test)
     function staticLayerMatchesTheGoldenValue(logger as Test.Logger) as Boolean {
-        var layer = FrameEquality.describeLayer(FaceModel.staticLayer(mint()));
+        var layer = FrameEquality.describeLayer(FaceModel.staticLayer(mint(), mapping()));
         Test.assert(matches("layer", "mint", layer, GoldenValues.STATIC_LAYER));
         return true;
     }
@@ -274,7 +279,7 @@ module GoldenTest {
 
     // The reference values: everything known, so no member is at a default.
     function referenceFrame() as Frame {
-        return FaceModel.compute(withHeartRate(140, zones()), mint());
+        return FaceModel.compute(withHeartRate(140, zones()), mint(), mapping());
     }
 
     function referenceAod() as AodFrame {
@@ -314,7 +319,7 @@ module GoldenTest {
             case 11: f.batteryLit = [] as Array<Arc>; break;
             case 12: f.bezelProgress = otherArc(); break;
             case 13: f.bezelHead = null; break;
-            case 14: f.stepGoalReached = !f.stepGoalReached; break;
+            case 14: f.bottomGoalReached = !f.bottomGoalReached; break;
             case 15: f.bottomField.number += "0"; break;
             case 16: f.leftField.number += "0"; break;
             case 17: f.centerField.number += "0"; break;
@@ -482,14 +487,15 @@ module GoldenTest {
     function equalFramesAreEqual(logger as Test.Logger) as Boolean {
         Test.assert(FrameEquality.framesEqual(referenceFrame(), referenceFrame()));
         Test.assert(FrameEquality.aodFramesEqual(referenceAod(), referenceAod()));
-        Test.assert(FrameEquality.layersEqual(FaceModel.staticLayer(mint()),
-            FaceModel.staticLayer(mint())));
+        Test.assert(FrameEquality.layersEqual(FaceModel.staticLayer(mint(), mapping()),
+            FaceModel.staticLayer(mint(), mapping())));
         Test.assert(FrameEquality.linesEqual(FaceModel.bezelNotches(mint()),
             FaceModel.bezelNotches(mint())));
-        Test.assert(FrameEquality.targetsEqual(FaceModel.longPressTarget(208, 256),
-            FaceModel.longPressTarget(208, 256)));
+        Test.assert(FrameEquality.targetsEqual(FaceModel.longPressTarget(208, 256, mapping()),
+            FaceModel.longPressTarget(208, 256, mapping())));
         Test.assert(FrameEquality.targetsEqual(null, null));
-        Test.assert(!FrameEquality.targetsEqual(FaceModel.longPressTarget(208, 256), null));
+        Test.assert(!FrameEquality.targetsEqual(FaceModel.longPressTarget(208, 256, mapping()),
+            null));
         return true;
     }
 
@@ -561,11 +567,12 @@ module GoldenTest {
     function everyStaticLayerMemberIsCompared(logger as Test.Logger) as Boolean {
         var i = 0;
         while (true) {
-            var changed = FaceModel.staticLayer(mint());
+            var changed = FaceModel.staticLayer(mint(), mapping());
             if (!changeLayer(changed, i)) {
                 break;
             }
-            Test.assertMessage(!FrameEquality.layersEqual(FaceModel.staticLayer(mint()), changed),
+            Test.assertMessage(!FrameEquality.layersEqual(
+                FaceModel.staticLayer(mint(), mapping()), changed),
                 "static layer member " + i + " is not compared");
             i++;
         }
@@ -629,12 +636,13 @@ module GoldenTest {
 
         i = 0;
         while (true) {
-            var changed = FaceModel.longPressTarget(88, 246) as LongPressTarget;
+            var changed = FaceModel.longPressTarget(88, 246, mapping()) as LongPressTarget;
             if (!changeTarget(changed, i)) {
                 break;
             }
-            Test.assertMessage(!FrameEquality.targetsEqual(FaceModel.longPressTarget(88, 246),
-                changed), "long-press target member " + i + " is not compared");
+            Test.assertMessage(!FrameEquality.targetsEqual(
+                FaceModel.longPressTarget(88, 246, mapping()), changed),
+                "long-press target member " + i + " is not compared");
             i++;
         }
         Test.assertEqual(TARGET_MEMBERS, i);

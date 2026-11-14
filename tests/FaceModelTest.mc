@@ -6,8 +6,62 @@ import Toybox.Test;
 module FaceModelTest {
 
     // Helpers stay unannotated: the (:test) module keeps them out of release builds.
+
+    // Frames are built from the default mapping. Tests of a metric's look
+    // find its field through the mapping (fieldOf); tests of a field's own
+    // geometry go by position, whatever metric it shows.
+    function mapping() as FieldMapping {
+        return Layout.defaultMapping();
+    }
+
+    function compute(snapshot as Snapshot) as Frame {
+        return FaceModel.compute(snapshot, Themes.mint(), mapping());
+    }
+
     function frameAt(hour as Number, minute as Number) as Frame {
-        return FaceModel.compute(new Snapshot(hour, minute), Themes.mint());
+        return compute(new Snapshot(hour, minute));
+    }
+
+    // The round field the default mapping shows `metric` in, asserted to be
+    // one.
+    function fieldOf(metric as Metric) as Field {
+        var fields = Layout.ROUND_FIELDS;
+        for (var i = 0; i < fields.size(); i++) {
+            if (mapping().metricOf(fields[i]) == metric) {
+                return fields[i];
+            }
+        }
+        Test.assertMessage(false, "no round field shows metric " + metric);
+        return FIELD_LEFT;
+    }
+
+    // The geometry of the round field showing `metric`.
+    function geometryOf(metric as Metric) as RoundField {
+        return Layout.roundField(fieldOf(metric));
+    }
+
+    function roundFieldIn(frame as Frame, field as Field) as FieldFrame {
+        if (field == FIELD_LEFT) {
+            return frame.leftField;
+        }
+        return field == FIELD_CENTER ? frame.centerField : frame.rightField;
+    }
+
+    // The round field showing `metric` at `value` (with the wearer's zones).
+    function shownWith(metric as Metric, value as Number?) as FieldFrame {
+        var snapshot = new Snapshot(8, 42);
+        snapshot.setValue(metric, value);
+        snapshot.heartRateZones = zones();
+        return roundFieldIn(compute(snapshot), fieldOf(metric));
+    }
+
+    // The round field at `field`, its metric (whichever the mapping shows
+    // there) at `value`.
+    function positionWith(field as Field, value as Number?) as FieldFrame {
+        var snapshot = new Snapshot(8, 42);
+        snapshot.setValue(mapping().metricOf(field), value);
+        snapshot.heartRateZones = zones();
+        return roundFieldIn(compute(snapshot), field);
     }
 
     // The line top to baseline distance of a generated font.
@@ -16,13 +70,13 @@ module FaceModelTest {
     }
 
     function mintLayer() as StaticLayer {
-        return FaceModel.staticLayer(Themes.mint());
+        return FaceModel.staticLayer(Themes.mint(), mapping());
     }
 
     function frameWithBattery(battery as Number?) as Frame {
         var snapshot = new Snapshot(8, 42);
         snapshot.battery = battery;
-        return FaceModel.compute(snapshot, Themes.mint());
+        return compute(snapshot);
     }
 
     // weekdayNumber: 1 = Sunday ... 7 = Saturday (FORMAT_SHORT).
@@ -39,8 +93,7 @@ module FaceModelTest {
 
     function frameOnDate(weekdayName as String?, weekdayNumber as Number, day as Number,
             month as Number) as Frame {
-        return FaceModel.compute(snapshotOnDate(weekdayName, weekdayNumber, day, month),
-            Themes.mint());
+        return compute(snapshotOnDate(weekdayName, weekdayNumber, day, month));
     }
 
     function dateOf(weekdayName as String?, weekdayNumber as Number, day as Number,
@@ -72,11 +125,13 @@ module FaceModelTest {
         return frameWithBattery(battery).batteryLit[0].color;
     }
 
+    // Steps is the only goal metric, so the bottom field and the bezel ring
+    // (which take only goal metrics, Q40) show it.
     function frameWithSteps(steps as Number?, goal as Number?) as Frame {
         var snapshot = new Snapshot(8, 42);
-        snapshot.steps = steps;
-        snapshot.stepGoal = goal;
-        return FaceModel.compute(snapshot, Themes.mint());
+        snapshot.setValue(METRIC_STEPS, steps);
+        snapshot.setGoal(METRIC_STEPS, goal);
+        return compute(snapshot);
     }
 
     function bezelSweepAt(steps as Number?, goal as Number?) as Number {
@@ -90,24 +145,12 @@ module FaceModelTest {
         return dot as Circle;
     }
 
-    function frameWithBodyBattery(bodyBattery as Number?) as Frame {
-        var snapshot = new Snapshot(8, 42);
-        snapshot.bodyBattery = bodyBattery;
-        return FaceModel.compute(snapshot, Themes.mint());
+    function bodyBatteryAt(bodyBattery as Number?) as FieldFrame {
+        return shownWith(METRIC_BODY_BATTERY, bodyBattery);
     }
 
-    function centerAt(bodyBattery as Number?) as FieldFrame {
-        return frameWithBodyBattery(bodyBattery).centerField;
-    }
-
-    function frameWithStress(stress as Number?) as Frame {
-        var snapshot = new Snapshot(8, 42);
-        snapshot.stress = stress;
-        return FaceModel.compute(snapshot, Themes.mint());
-    }
-
-    function leftAt(stress as Number?) as FieldFrame {
-        return frameWithStress(stress).leftField;
+    function stressAt(stress as Number?) as FieldFrame {
+        return shownWith(METRIC_STRESS, stress);
     }
 
     function bottomAt(steps as Number?, goal as Number?) as BottomFieldFrame {
@@ -120,31 +163,37 @@ module FaceModelTest {
         return [96, 115, 134, 154, 173, 192] as Array<Number>;
     }
 
-    function frameWithHeartRate(heartRate as Number?, heartRateZones as Array<Number>?) as Frame {
+    // The field showing heart rate, with these zones.
+    function heartRateWithZones(heartRate as Number?, heartRateZones as Array<Number>?)
+            as FieldFrame {
         var snapshot = new Snapshot(8, 42);
-        snapshot.heartRate = heartRate;
+        snapshot.setValue(METRIC_HEART_RATE, heartRate);
         snapshot.heartRateZones = heartRateZones;
-        return FaceModel.compute(snapshot, Themes.mint());
+        return roundFieldIn(compute(snapshot), fieldOf(METRIC_HEART_RATE));
     }
 
-    function rightAt(heartRate as Number?) as FieldFrame {
-        return frameWithHeartRate(heartRate, zones()).rightField;
+    function heartRateAt(heartRate as Number?) as FieldFrame {
+        return shownWith(METRIC_HEART_RATE, heartRate);
     }
 
     function litZonesAt(heartRate as Number?) as Number {
-        return rightAt(heartRate).arcs.size();
+        return heartRateAt(heartRate).arcs.size();
+    }
+
+    // The circle centered on (x, y), asserted to be there.
+    function circleAt(circles as Array<Circle>, x as Number, y as Number) as Circle {
+        for (var i = 0; i < circles.size(); i++) {
+            if (circles[i].x == x && circles[i].y == y) {
+                return circles[i];
+            }
+        }
+        Test.assertMessage(false, "no circle at " + x + ", " + y);
+        return circles[0];
     }
 
     // The static layer's well centered on (x, y), asserted to be there.
     function wellAt(x as Number, y as Number) as Circle {
-        var wells = mintLayer().fieldWells;
-        for (var i = 0; i < wells.size(); i++) {
-            if (wells[i].x == x && wells[i].y == y) {
-                return wells[i];
-            }
-        }
-        Test.assertMessage(false, "no well at " + x + ", " + y);
-        return wells[0];
+        return circleAt(mintLayer().fieldWells, x, y);
     }
 
     // The static layer's track arcs centered on (x, y), in order.
@@ -230,19 +279,20 @@ module FaceModelTest {
 
     // The long-press target at a touch point, asserted to be a hit.
     function targetAt(x as Number, y as Number) as LongPressTarget {
-        var target = FaceModel.longPressTarget(x, y);
+        var target = FaceModel.longPressTarget(x, y, mapping());
         Test.assert(target != null);
         return target as LongPressTarget;
     }
 
-    function assertTarget(x as Number, y as Number, field as Field, metric as Metric) as Void {
+    // A hit on `field`, opening the metric the mapping shows there.
+    function assertTarget(x as Number, y as Number, field as Field) as Void {
         var target = targetAt(x, y);
         Test.assertEqual(field, target.field);
-        Test.assertEqual(metric, target.metric);
+        Test.assertEqual(mapping().metricOf(field), target.metric);
     }
 
     function assertMiss(x as Number, y as Number) as Void {
-        Test.assert(FaceModel.longPressTarget(x, y) == null);
+        Test.assert(FaceModel.longPressTarget(x, y, mapping()) == null);
     }
 
     (:test)
@@ -357,24 +407,21 @@ module FaceModelTest {
     function roundFieldWellsHave2PxRims(logger as Test.Logger) as Boolean {
         var rims = mintLayer().fieldRims;
         Test.assertEqual(3, rims.size());
-        assertCircle(rims[0], 88, 246, 46, 0x4D5852);
-        assertCircle(rims[1], 208, 256, 68, 0x4D5852);
-        assertCircle(rims[2], 328, 246, 46, 0x4D5852);
+        assertCircle(circleAt(rims, 88, 246), 88, 246, 46, 0x4D5852);
+        assertCircle(circleAt(rims, 208, 256), 208, 256, 68, 0x4D5852);
+        assertCircle(circleAt(rims, 328, 246), 328, 246, 46, 0x4D5852);
         return true;
     }
 
-    // The rims come in the same order as the wells, each one 2 px wider than
-    // the well it surrounds.
+    // Every well has a rim at its center, 2 px wider than the well.
     (:test)
-    function fieldRimsFollowTheFieldWellsInOrder(logger as Test.Logger) as Boolean {
+    function everyFieldWellHasARim2PxWider(logger as Test.Logger) as Boolean {
         var layer = mintLayer();
-        var rims = layer.fieldRims;
         var wells = layer.fieldWells;
-        Test.assertEqual(wells.size(), rims.size());
+        Test.assertEqual(wells.size(), layer.fieldRims.size());
         for (var i = 0; i < wells.size(); i++) {
-            Test.assertEqual(wells[i].x, rims[i].x);
-            Test.assertEqual(wells[i].y, rims[i].y);
-            Test.assertEqual(wells[i].radius + 2, rims[i].radius);
+            var rim = circleAt(layer.fieldRims, wells[i].x, wells[i].y);
+            Test.assertEqual(wells[i].radius + 2, rim.radius);
         }
         return true;
     }
@@ -873,23 +920,23 @@ module FaceModelTest {
 
     (:test)
     function goalIsReachedAtExactlyTheGoal(logger as Test.Logger) as Boolean {
-        Test.assert(!frameWithSteps(3109, 3110).stepGoalReached);
-        Test.assert(frameWithSteps(3110, 3110).stepGoalReached);
-        Test.assert(frameWithSteps(3512, 3110).stepGoalReached);
+        Test.assert(!frameWithSteps(3109, 3110).bottomGoalReached);
+        Test.assert(frameWithSteps(3110, 3110).bottomGoalReached);
+        Test.assert(frameWithSteps(3512, 3110).bottomGoalReached);
         return true;
     }
 
     // Story 29, Q26: steps >= 0 holds for goal 0, but there is no goal to reach.
     (:test)
     function goalZeroIsNeverReached(logger as Test.Logger) as Boolean {
-        Test.assert(!frameWithSteps(1147, 0).stepGoalReached);
+        Test.assert(!frameWithSteps(1147, 0).bottomGoalReached);
         return true;
     }
 
     (:test)
     function missingStepsNeverReachTheGoal(logger as Test.Logger) as Boolean {
-        Test.assert(!frameWithSteps(null, 3110).stepGoalReached);
-        Test.assert(!frameWithSteps(1147, null).stepGoalReached);
+        Test.assert(!frameWithSteps(null, 3110).bottomGoalReached);
+        Test.assert(!frameWithSteps(1147, null).bottomGoalReached);
         return true;
     }
 
@@ -916,22 +963,23 @@ module FaceModelTest {
         var frame = frameWithSteps(-1, 3110);
         Test.assertEqual(0, frame.bezelProgress.sweep);
         Test.assert(frame.bezelHead == null);
-        Test.assert(!frame.stepGoalReached);
+        Test.assert(!frame.bottomGoalReached);
         return true;
     }
 
-    // Story 10: the center gauge fills clockwise from 12 o'clock; 100 is a
-    // full circle (start == end) around the center field (208, 256), pen 9.
+    // Story 10: the Body Battery gauge fills clockwise from 12 o'clock; 100
+    // is a full circle (start == end) on its field's ring.
     (:test)
     function bodyBattery100IsAFullCircle(logger as Test.Logger) as Boolean {
-        var gauge = gaugeOf(centerAt(100));
+        var gauge = gaugeOf(bodyBatteryAt(100));
+        var geometry = geometryOf(METRIC_BODY_BATTERY);
         Test.assertEqual(360, gauge.sweep);
         Test.assertEqual(90, gauge.start);
         Test.assertEqual(90, gauge.end);
-        Test.assertEqual(208, gauge.x);
-        Test.assertEqual(256, gauge.y);
-        Test.assert(gauge.radius == 55 || gauge.radius == 56);
-        Test.assertEqual(9, gauge.pen);
+        Test.assertEqual(geometry.x, gauge.x);
+        Test.assertEqual(geometry.y, gauge.y);
+        Test.assertEqual(geometry.ringRadius, gauge.radius);
+        Test.assertEqual(geometry.ringPen, gauge.pen);
         return true;
     }
 
@@ -939,7 +987,7 @@ module FaceModelTest {
     // from ciq 90 clockwise to ciq 249, in the accent.
     (:test)
     function bodyBattery56SweepsFrom12OClock(logger as Test.Logger) as Boolean {
-        var gauge = gaugeOf(centerAt(56));
+        var gauge = gaugeOf(bodyBatteryAt(56));
         Test.assertEqual(201, gauge.sweep);
         Test.assertEqual(90, gauge.start);
         Test.assertEqual(249, gauge.end);
@@ -949,14 +997,14 @@ module FaceModelTest {
 
     (:test)
     function bodyBattery0DrawsNoArc(logger as Test.Logger) as Boolean {
-        Test.assertEqual(0, centerAt(0).arcs.size());
+        Test.assertEqual(0, bodyBatteryAt(0).arcs.size());
         return true;
     }
 
-    // Story 9: the value as a large white number.
+    // Story 9: the value as a white number.
     (:test)
     function bodyBatteryIsAWhiteNumber(logger as Test.Logger) as Boolean {
-        var field = centerAt(56);
+        var field = bodyBatteryAt(56);
         Test.assertEqual("56", field.number);
         Test.assertEqual(0xFFFFFF, field.numberColor);
         return true;
@@ -965,7 +1013,7 @@ module FaceModelTest {
     // Story 13, Q26: missing Body Battery is "--" in gray, track only.
     (:test)
     function missingBodyBatteryIsGrayDashesWithNoArc(logger as Test.Logger) as Boolean {
-        var field = centerAt(null);
+        var field = bodyBatteryAt(null);
         Test.assertEqual("--", field.number);
         Test.assertEqual(0x8C8C8C, field.numberColor);
         Test.assertEqual(0, field.arcs.size());
@@ -975,7 +1023,7 @@ module FaceModelTest {
     // Story 11: 25 and up is no warning: accent gauge, white number.
     (:test)
     function bodyBattery25IsNoWarning(logger as Test.Logger) as Boolean {
-        var field = centerAt(25);
+        var field = bodyBatteryAt(25);
         Test.assertEqual(0x8EE3B8, gaugeOf(field).color);
         Test.assertEqual(0xFFFFFF, field.numberColor);
         return true;
@@ -986,7 +1034,7 @@ module FaceModelTest {
     function bodyBattery15To24IsOrange(logger as Test.Logger) as Boolean {
         var values = [15, 24] as Array<Number>;
         for (var i = 0; i < values.size(); i++) {
-            var field = centerAt(values[i]);
+            var field = bodyBatteryAt(values[i]);
             Test.assertEqual(0xFF8A3D, gaugeOf(field).color);
             Test.assertEqual(0xFF8A3D, field.numberColor);
         }
@@ -996,23 +1044,24 @@ module FaceModelTest {
     // Story 11: below 15 turns the gauge and number red.
     (:test)
     function bodyBatteryBelow15IsRed(logger as Test.Logger) as Boolean {
-        var field = centerAt(14);
+        var field = bodyBatteryAt(14);
         Test.assertEqual(0xFF4D4D, gaugeOf(field).color);
         Test.assertEqual(0xFF4D4D, field.numberColor);
-        Test.assertEqual(0xFF4D4D, centerAt(0).numberColor);
+        Test.assertEqual(0xFF4D4D, bodyBatteryAt(0).numberColor);
         return true;
     }
 
-    // Story 12: the bolt (U+E000 in the icon font) at (196, 213), gray
-    // without a warning, including when the value is missing.
+    // Story 12: the bolt (U+E000 in the icon font) at its field's icon slot,
+    // gray without a warning, including when the value is missing.
     (:test)
     function bodyBatteryIconIsAGrayBoltWithoutWarning(logger as Test.Logger) as Boolean {
+        var geometry = geometryOf(METRIC_BODY_BATTERY);
         var values = [56, 25, null] as Array<Number?>;
         for (var i = 0; i < values.size(); i++) {
-            var field = centerAt(values[i]);
+            var field = bodyBatteryAt(values[i]);
             Test.assertEqual((0xE000).toChar().toString(), field.icon);
-            Test.assertEqual(196, field.iconX);
-            Test.assertEqual(213, field.iconY);
+            Test.assertEqual(geometry.iconX, field.iconX);
+            Test.assertEqual(geometry.iconY, field.iconY);
             Test.assertEqual(0x8C8C8C, field.iconColor);
         }
         return true;
@@ -1021,32 +1070,72 @@ module FaceModelTest {
     // Story 11: in warning the icon takes the warning color too.
     (:test)
     function bodyBatteryIconTakesTheWarningColor(logger as Test.Logger) as Boolean {
-        Test.assertEqual(0xFF8A3D, centerAt(24).iconColor);
-        Test.assertEqual(0xFF8A3D, centerAt(15).iconColor);
-        Test.assertEqual(0xFF4D4D, centerAt(14).iconColor);
+        Test.assertEqual(0xFF8A3D, bodyBatteryAt(24).iconColor);
+        Test.assertEqual(0xFF8A3D, bodyBatteryAt(15).iconColor);
+        Test.assertEqual(0xFF4D4D, bodyBatteryAt(14).iconColor);
         return true;
     }
 
-    // Story 9: Manrope ExtraBold 48, centered on x 208 by its measured width
-    // ("5" 28 + "6" 30 px in the generated font).
+    // Story 9: the center field's number is Manrope ExtraBold 48, centered on
+    // x 208 by its measured width ("5" 28 + "6" 30 px in the generated font),
+    // whatever metric it shows.
     (:test)
-    function bodyBatteryNumberIsCenteredOnX208(logger as Test.Logger) as Boolean {
-        var field = centerAt(56);
+    function centerNumberIs48PxCenteredOnX208(logger as Test.Logger) as Boolean {
+        var field = positionWith(FIELD_CENTER, 56);
         Test.assertEqual(FONT_NUMBER_48, field.numberFont);
         Test.assertEqual(58, field.numberWidth);
         assertCenteredOn208(field.numberX, field.numberWidth);
-        var dashes = centerAt(null);
+        var dashes = positionWith(FIELD_CENTER, null);
+        Test.assertEqual(FONT_NUMBER_48, dashes.numberFont);
         assertCenteredOn208(dashes.numberX, dashes.numberWidth);
+        Test.assertEqual(FONT_NUMBER_48, positionWith(FIELD_CENTER, 100).numberFont);
         return true;
     }
 
-    // The digits are vertically centered on y 268: with a 35 px cap height
-    // the baseline sits on 268 + 17 = 285. The renderer draws from the line
-    // top, `base` above the baseline.
+    // The center number's digits are vertically centered on y 268: with a
+    // 35 px cap height the baseline sits on 268 + 17 = 285. The renderer
+    // draws from the line top, `base` above the baseline.
     (:test)
-    function bodyBatteryBaselineSitsOnY285(logger as Test.Logger) as Boolean {
-        Test.assertEqual(285, centerAt(56).numberY + baseOf(FONT_NUMBER_48));
-        Test.assertEqual(285, centerAt(null).numberY + baseOf(FONT_NUMBER_48));
+    function centerBaselineSitsOnY285(logger as Test.Logger) as Boolean {
+        Test.assertEqual(285, positionWith(FIELD_CENTER, 56).numberY + baseOf(FONT_NUMBER_48));
+        Test.assertEqual(285, positionWith(FIELD_CENTER, null).numberY + baseOf(FONT_NUMBER_48));
+        return true;
+    }
+
+    // Each round field's icon slot stays with the position whatever it
+    // shows: left (76, 216), center (196, 213), right (316, 216).
+    (:test)
+    function iconSlotsStayWithThePosition(logger as Test.Logger) as Boolean {
+        // Left to right.
+        var fields = Layout.ROUND_FIELDS;
+        var xs = [76, 196, 316] as Array<Number>;
+        var ys = [216, 213, 216] as Array<Number>;
+        for (var i = 0; i < fields.size(); i++) {
+            var field = positionWith(fields[i], null);
+            Test.assertEqual(xs[i], field.iconX);
+            Test.assertEqual(ys[i], field.iconY);
+        }
+        return true;
+    }
+
+    // Each round field's ring stays with the position, whatever track its
+    // metric needs: left (88, 246) and right (328, 246) r 35 (the design's
+    // ring centerline, 38 - 6 / 2), pen 6; center (208, 256) r 56 (the
+    // design's 55.5), pen 9.
+    (:test)
+    function ringsStayWithThePosition(logger as Test.Logger) as Boolean {
+        var xs = [88, 208, 328] as Array<Number>;
+        var ys = [246, 256, 246] as Array<Number>;
+        var radii = [35, 56, 35] as Array<Number>;
+        var pens = [6, 9, 6] as Array<Number>;
+        for (var i = 0; i < xs.size(); i++) {
+            var tracks = tracksAt(xs[i], ys[i]);
+            Test.assert(tracks.size() > 0);
+            for (var t = 0; t < tracks.size(); t++) {
+                Test.assertEqual(radii[i], tracks[t].radius);
+                Test.assertEqual(pens[i], tracks[t].pen);
+            }
+        }
         return true;
     }
 
@@ -1059,34 +1148,39 @@ module FaceModelTest {
         return true;
     }
 
-    // The gauge track is a full circle in the gauge-track color, exactly
-    // under the gauge (same center, radius and pen).
+    // A gauge metric's track is a full circle in the gauge-track color,
+    // exactly under its gauge (same center, radius and pen): Body Battery and
+    // stress.
     (:test)
-    function centerGaugeTrackIsAFullCircleUnderTheGauge(logger as Test.Logger) as Boolean {
-        var track = trackAt(208, 256);
-        var gauge = gaugeOf(centerAt(100));
-        Test.assertEqual(360, track.sweep);
-        Test.assertEqual(0x2E3330, track.color);
-        Test.assertEqual(gauge.x, track.x);
-        Test.assertEqual(gauge.y, track.y);
-        Test.assertEqual(gauge.radius, track.radius);
-        Test.assertEqual(gauge.pen, track.pen);
+    function gaugeTrackIsAFullCircleUnderTheGauge(logger as Test.Logger) as Boolean {
+        var metrics = [METRIC_BODY_BATTERY, METRIC_STRESS] as Array<Metric>;
+        for (var i = 0; i < metrics.size(); i++) {
+            var geometry = geometryOf(metrics[i]);
+            var track = trackAt(geometry.x, geometry.y);
+            var gauge = gaugeOf(shownWith(metrics[i], 100));
+            Test.assertEqual(360, track.sweep);
+            Test.assertEqual(0x2E3330, track.color);
+            Test.assertEqual(gauge.x, track.x);
+            Test.assertEqual(gauge.y, track.y);
+            Test.assertEqual(gauge.radius, track.radius);
+            Test.assertEqual(gauge.pen, track.pen);
+        }
         return true;
     }
 
     // Story 14, design frame 1: stress 27 sweeps 97 deg (27 x 360 / 100,
-    // rounded down) from 12 o'clock around the left field (88, 246), on the
-    // design's ring centerline r 35 (38 - 6 / 2), pen 6, in the accent.
+    // rounded down) from 12 o'clock on its field's ring, in the accent.
     (:test)
-    function stress27SweepsFrom12OClockInTheLeftField(logger as Test.Logger) as Boolean {
-        var gauge = gaugeOf(leftAt(27));
+    function stress27SweepsFrom12OClock(logger as Test.Logger) as Boolean {
+        var gauge = gaugeOf(stressAt(27));
+        var geometry = geometryOf(METRIC_STRESS);
         Test.assertEqual(97, gauge.sweep);
         Test.assertEqual(90, gauge.start);
         Test.assertEqual(353, gauge.end);
-        Test.assertEqual(88, gauge.x);
-        Test.assertEqual(246, gauge.y);
-        Test.assertEqual(35, gauge.radius);
-        Test.assertEqual(6, gauge.pen);
+        Test.assertEqual(geometry.x, gauge.x);
+        Test.assertEqual(geometry.y, gauge.y);
+        Test.assertEqual(geometry.ringRadius, gauge.radius);
+        Test.assertEqual(geometry.ringPen, gauge.pen);
         Test.assertEqual(0x8EE3B8, gauge.color);
         return true;
     }
@@ -1094,7 +1188,7 @@ module FaceModelTest {
     // Story 15: up to 50 is no warning: accent gauge, white number, gray icon.
     (:test)
     function stress50IsNoWarning(logger as Test.Logger) as Boolean {
-        var field = leftAt(50);
+        var field = stressAt(50);
         Test.assertEqual(0x8EE3B8, gaugeOf(field).color);
         Test.assertEqual(0xFFFFFF, field.numberColor);
         Test.assertEqual(0x8C8C8C, field.iconColor);
@@ -1106,7 +1200,7 @@ module FaceModelTest {
     function stress51To75IsOrange(logger as Test.Logger) as Boolean {
         var values = [51, 75] as Array<Number>;
         for (var i = 0; i < values.size(); i++) {
-            var field = leftAt(values[i]);
+            var field = stressAt(values[i]);
             Test.assertEqual(0xFF8A3D, gaugeOf(field).color);
             Test.assertEqual(0xFF8A3D, field.numberColor);
             Test.assertEqual(0xFF8A3D, field.iconColor);
@@ -1117,21 +1211,21 @@ module FaceModelTest {
     // Story 15: above 75 turns the gauge, icon and number red.
     (:test)
     function stressAbove75IsRed(logger as Test.Logger) as Boolean {
-        var field = leftAt(76);
+        var field = stressAt(76);
         Test.assertEqual(0xFF4D4D, gaugeOf(field).color);
         Test.assertEqual(0xFF4D4D, field.numberColor);
         Test.assertEqual(0xFF4D4D, field.iconColor);
         return true;
     }
 
-    // The stress wave (U+E001 in the icon font) with its top-left at
-    // (88 - 12, 246 - 30).
+    // The stress wave (U+E001 in the icon font) at its field's icon slot.
     (:test)
     function stressIconIsTheWaveAboveTheNumber(logger as Test.Logger) as Boolean {
-        var field = leftAt(27);
+        var field = stressAt(27);
+        var geometry = geometryOf(METRIC_STRESS);
         Test.assertEqual((0xE001).toChar().toString(), field.icon);
-        Test.assertEqual(76, field.iconX);
-        Test.assertEqual(216, field.iconY);
+        Test.assertEqual(geometry.iconX, field.iconX);
+        Test.assertEqual(geometry.iconY, field.iconY);
         return true;
     }
 
@@ -1139,7 +1233,7 @@ module FaceModelTest {
     // gauge off and a gray icon.
     (:test)
     function missingStressIsGrayDashesWithNoArc(logger as Test.Logger) as Boolean {
-        var field = leftAt(null);
+        var field = stressAt(null);
         Test.assertEqual("--", field.number);
         Test.assertEqual(0x8C8C8C, field.numberColor);
         Test.assertEqual(0x8C8C8C, field.iconColor);
@@ -1147,28 +1241,29 @@ module FaceModelTest {
         return true;
     }
 
-    // Story 17: up to 3 characters use 26 px ("--" included).
+    // Story 17: in the left field, up to 3 characters use 26 px ("--"
+    // included), whatever metric it shows.
     (:test)
     function leftNumberUpTo3CharactersIs26(logger as Test.Logger) as Boolean {
-        Test.assertEqual(FONT_NUMBER_26, leftAt(7).numberFont);
-        Test.assertEqual(FONT_NUMBER_26, leftAt(100).numberFont);
-        Test.assertEqual(FONT_NUMBER_26, leftAt(null).numberFont);
+        Test.assertEqual(FONT_NUMBER_26, positionWith(FIELD_LEFT, 7).numberFont);
+        Test.assertEqual(FONT_NUMBER_26, positionWith(FIELD_LEFT, 100).numberFont);
+        Test.assertEqual(FONT_NUMBER_26, positionWith(FIELD_LEFT, null).numberFont);
         return true;
     }
 
-    // Story 17: 4 characters use 22 px. Stress stops at 100; the size rule
-    // belongs to the field, for the metrics it may show later (Q15).
+    // Story 17: 4 characters use 22 px. The size rule belongs to the field,
+    // for the metrics it may show later (Q15).
     (:test)
     function leftNumberOf4CharactersIs22(logger as Test.Logger) as Boolean {
-        Test.assertEqual(FONT_NUMBER_22, leftAt(1000).numberFont);
+        Test.assertEqual(FONT_NUMBER_22, positionWith(FIELD_LEFT, 1000).numberFont);
         return true;
     }
 
     // Story 17: 5 characters or more use 18 px.
     (:test)
     function leftNumberOf5CharactersIs18(logger as Test.Logger) as Boolean {
-        Test.assertEqual(FONT_NUMBER_18, leftAt(10000).numberFont);
-        Test.assertEqual(FONT_NUMBER_18, leftAt(100000).numberFont);
+        Test.assertEqual(FONT_NUMBER_18, positionWith(FIELD_LEFT, 10000).numberFont);
+        Test.assertEqual(FONT_NUMBER_18, positionWith(FIELD_LEFT, 100000).numberFont);
         return true;
     }
 
@@ -1176,7 +1271,7 @@ module FaceModelTest {
     // "27" is 16 + 14 px at 26 px.
     (:test)
     function leftNumberIsCenteredOnX88(logger as Test.Logger) as Boolean {
-        var field = leftAt(27);
+        var field = positionWith(FIELD_LEFT, 27);
         Test.assertEqual(30, field.numberWidth);
         Test.assertEqual(73, field.numberX);
         return true;
@@ -1186,8 +1281,8 @@ module FaceModelTest {
     // the baseline sits on 260 + 9 = 269; at 22 px (cap 16) on 268.
     (:test)
     function leftNumberBaselineFollowsItsFont(logger as Test.Logger) as Boolean {
-        Test.assertEqual(269, leftAt(27).numberY + baseOf(FONT_NUMBER_26));
-        Test.assertEqual(268, leftAt(1000).numberY + baseOf(FONT_NUMBER_22));
+        Test.assertEqual(269, positionWith(FIELD_LEFT, 27).numberY + baseOf(FONT_NUMBER_26));
+        Test.assertEqual(268, positionWith(FIELD_LEFT, 1000).numberY + baseOf(FONT_NUMBER_22));
         return true;
     }
 
@@ -1200,34 +1295,21 @@ module FaceModelTest {
         return true;
     }
 
-    // The left gauge track: a full circle in the gauge-track color, exactly
-    // under the gauge.
-    (:test)
-    function leftGaugeTrackIsAFullCircleUnderTheGauge(logger as Test.Logger) as Boolean {
-        var track = trackAt(88, 246);
-        var gauge = gaugeOf(leftAt(100));
-        Test.assertEqual(360, track.sweep);
-        Test.assertEqual(0x2E3330, track.color);
-        Test.assertEqual(gauge.radius, track.radius);
-        Test.assertEqual(gauge.pen, track.pen);
-        return true;
-    }
-
     // Story 18: zone 1 lights segment 0, which spans design 4 to 68 deg
-    // (ciq 86 clockwise to 22) around the right field (328, 246), r 35,
-    // pen 6, in the accent.
+    // (ciq 86 clockwise to 22) on its field's ring.
     (:test)
     function zone1LightsSegment0FromDesign4To68(logger as Test.Logger) as Boolean {
-        var field = rightAt(100);
+        var field = heartRateAt(100);
+        var geometry = geometryOf(METRIC_HEART_RATE);
         Test.assertEqual(1, field.arcs.size());
         var segment = field.arcs[0];
         Test.assertEqual(86, segment.start);
         Test.assertEqual(22, segment.end);
         Test.assertEqual(64, segment.sweep);
-        Test.assertEqual(328, segment.x);
-        Test.assertEqual(246, segment.y);
-        Test.assertEqual(35, segment.radius);
-        Test.assertEqual(6, segment.pen);
+        Test.assertEqual(geometry.x, segment.x);
+        Test.assertEqual(geometry.y, segment.y);
+        Test.assertEqual(geometry.ringRadius, segment.radius);
+        Test.assertEqual(geometry.ringPen, segment.pen);
         return true;
     }
 
@@ -1258,7 +1340,7 @@ module FaceModelTest {
     // Segment 4 (zone 5) spans design 292 to 356 deg: ciq 158 clockwise to 94.
     (:test)
     function zone5SegmentSpansDesign292To356(logger as Test.Logger) as Boolean {
-        var segment = rightAt(200).arcs[4];
+        var segment = heartRateAt(200).arcs[4];
         Test.assertEqual(158, segment.start);
         Test.assertEqual(94, segment.end);
         return true;
@@ -1268,25 +1350,24 @@ module FaceModelTest {
     // zone 1 gray, 2 blue, 3 green, 4 orange, 5 red.
     (:test)
     function eachLitSegmentTakesItsZoneColor(logger as Test.Logger) as Boolean {
-        var segments = rightAt(200).arcs;
+        var segments = heartRateAt(200).arcs;
         var expected = [0xB4B4B4, 0x4DA6FF, 0x4CD964, 0xFF8A3D, 0xFF4D4D] as Array<Number>;
         for (var i = 0; i < expected.size(); i++) {
             Test.assertEqual(expected[i], segments[i].color);
         }
         // Zone 3 lights zones 1-3 in their own colors, not the current zone's.
-        Test.assertEqual(0xB4B4B4, rightAt(142).arcs[0].color);
+        Test.assertEqual(0xB4B4B4, heartRateAt(142).arcs[0].color);
         return true;
     }
 
     // Story 20: without zones nothing is lit, but the number still shows.
     (:test)
     function missingZonesLightNothingButShowTheNumber(logger as Test.Logger) as Boolean {
-        var field = frameWithHeartRate(120, null).rightField;
+        var field = heartRateWithZones(120, null);
         Test.assertEqual(0, field.arcs.size());
         Test.assertEqual("120", field.number);
         Test.assertEqual(0xFFFFFF, field.numberColor);
-        Test.assertEqual(0, frameWithHeartRate(120, [96, 115] as Array<Number>)
-            .rightField.arcs.size());
+        Test.assertEqual(0, heartRateWithZones(120, [96, 115] as Array<Number>).arcs.size());
         return true;
     }
 
@@ -1294,23 +1375,24 @@ module FaceModelTest {
     // every segment off.
     (:test)
     function missingHeartRateIsGrayDashesWithNoSegment(logger as Test.Logger) as Boolean {
-        var field = rightAt(null);
+        var field = heartRateAt(null);
         Test.assertEqual("--", field.number);
         Test.assertEqual(0x8C8C8C, field.numberColor);
         Test.assertEqual(0, field.arcs.size());
         return true;
     }
 
-    // The filled heart (U+E002 in the icon font) with its top-left at
-    // (328 - 12, 246 - 30), always gray.
+    // The filled heart (U+E002 in the icon font) at its field's icon slot,
+    // always gray.
     (:test)
     function heartRateIconIsAGrayHeart(logger as Test.Logger) as Boolean {
+        var geometry = geometryOf(METRIC_HEART_RATE);
         var values = [62, 200, null] as Array<Number?>;
         for (var i = 0; i < values.size(); i++) {
-            var field = rightAt(values[i]);
+            var field = heartRateAt(values[i]);
             Test.assertEqual((0xE002).toChar().toString(), field.icon);
-            Test.assertEqual(316, field.iconX);
-            Test.assertEqual(216, field.iconY);
+            Test.assertEqual(geometry.iconX, field.iconX);
+            Test.assertEqual(geometry.iconY, field.iconY);
             Test.assertEqual(0x8C8C8C, field.iconColor);
         }
         return true;
@@ -1322,7 +1404,7 @@ module FaceModelTest {
     function heartRateHasNoWarningColor(logger as Test.Logger) as Boolean {
         var values = [30, 142, 200] as Array<Number>;
         for (var i = 0; i < values.size(); i++) {
-            var field = rightAt(values[i]);
+            var field = heartRateAt(values[i]);
             Test.assertEqual(0xFFFFFF, field.numberColor);
             Test.assertEqual(0x8C8C8C, field.iconColor);
         }
@@ -1330,16 +1412,16 @@ module FaceModelTest {
     }
 
     // Story 17 for the right field: 62 is 26 px, centered on x 328 ("6" 16 +
-    // "2" 16 px), its digits centered on y 260 (baseline 260 + 9 = 269). 4
-    // characters would be 22 px (heart rate never reaches it).
+    // "2" 16 px), its digits centered on y 260 (baseline 260 + 9 = 269); 4
+    // characters are 22 px. Whatever metric it shows.
     (:test)
     function rightNumberSizeFollowsItsLength(logger as Test.Logger) as Boolean {
-        var field = rightAt(62);
+        var field = positionWith(FIELD_RIGHT, 62);
         Test.assertEqual(FONT_NUMBER_26, field.numberFont);
         Test.assertEqual(32, field.numberWidth);
         Test.assertEqual(312, field.numberX);
         Test.assertEqual(269, field.numberY + baseOf(FONT_NUMBER_26));
-        Test.assertEqual(FONT_NUMBER_22, rightAt(1000).numberFont);
+        Test.assertEqual(FONT_NUMBER_22, positionWith(FIELD_RIGHT, 1000).numberFont);
         return true;
     }
 
@@ -1352,16 +1434,18 @@ module FaceModelTest {
         return true;
     }
 
-    // Its track is the five unlit segments in the gauge-track color, not a
-    // full circle: segment 0 spans ciq 86 to 22 like the lit one.
+    // Heart rate's track is the five unlit segments in the gauge-track
+    // color, not a full circle, on its field's ring: segment 0 spans ciq 86
+    // to 22 like the lit one.
     (:test)
-    function rightFieldTrackIsFiveUnlitSegments(logger as Test.Logger) as Boolean {
-        var segments = tracksAt(328, 246);
+    function heartRateTrackIsFiveUnlitSegments(logger as Test.Logger) as Boolean {
+        var geometry = geometryOf(METRIC_HEART_RATE);
+        var segments = tracksAt(geometry.x, geometry.y);
         Test.assertEqual(5, segments.size());
         for (var i = 0; i < segments.size(); i++) {
             Test.assertEqual(64, segments[i].sweep);
-            Test.assertEqual(35, segments[i].radius);
-            Test.assertEqual(6, segments[i].pen);
+            Test.assertEqual(geometry.ringRadius, segments[i].radius);
+            Test.assertEqual(geometry.ringPen, segments[i].pen);
             Test.assertEqual(0x2E3330, segments[i].color);
         }
         Test.assertEqual(86, segments[0].start);
@@ -1828,28 +1912,30 @@ module FaceModelTest {
         return true;
     }
 
-    // Story 41: holding the center field opens Body Battery. Its well is
-    // the circle (208, 256) r 60 + 6.
+    // Story 41: holding the center field opens the metric it shows (Body
+    // Battery by default). Its well is the circle (208, 256) r 60 + 6.
     (:test)
-    function holdInTheCenterFieldTargetsBodyBattery(logger as Test.Logger) as Boolean {
-        assertTarget(208, 256, FIELD_CENTER, METRIC_BODY_BATTERY);
+    function holdInTheCenterWellTargetsTheCenterField(logger as Test.Logger) as Boolean {
+        assertTarget(208, 256, FIELD_CENTER);
         return true;
     }
 
-    // Story 42: holding the left field opens stress. (88, 289) is 43 px
+    // Story 42: holding the left field opens its metric (stress by
+    // default). (88, 289) is 43 px
     // below the field's center (88, 246): outside the field (r 38) but
     // inside its well (r 44).
     (:test)
-    function holdInTheLeftWellTargetsStress(logger as Test.Logger) as Boolean {
-        assertTarget(88, 289, FIELD_LEFT, METRIC_STRESS);
+    function holdInTheLeftWellTargetsTheLeftField(logger as Test.Logger) as Boolean {
+        assertTarget(88, 289, FIELD_LEFT);
         return true;
     }
 
-    // Story 43: holding the right field opens heart rate. (371, 246) is
+    // Story 43: holding the right field opens its metric (heart rate by
+    // default). (371, 246) is
     // 43 px right of the field's center (328, 246).
     (:test)
-    function holdInTheRightWellTargetsHeartRate(logger as Test.Logger) as Boolean {
-        assertTarget(371, 246, FIELD_RIGHT, METRIC_HEART_RATE);
+    function holdInTheRightWellTargetsTheRightField(logger as Test.Logger) as Boolean {
+        assertTarget(371, 246, FIELD_RIGHT);
         return true;
     }
 
@@ -1857,7 +1943,7 @@ module FaceModelTest {
     // (y 290) hits, 45 px (y 291) misses.
     (:test)
     function leftWellEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(88, 290, FIELD_LEFT, METRIC_STRESS);
+        assertTarget(88, 290, FIELD_LEFT);
         assertMiss(88, 291);
         return true;
     }
@@ -1866,7 +1952,7 @@ module FaceModelTest {
     // center (x 372) hits, 45 px (x 373) misses.
     (:test)
     function rightWellEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(372, 246, FIELD_RIGHT, METRIC_HEART_RATE);
+        assertTarget(372, 246, FIELD_RIGHT);
         assertMiss(373, 246);
         return true;
     }
@@ -1876,7 +1962,7 @@ module FaceModelTest {
     // not one, and the time band's well and rim end at y 170.
     (:test)
     function centerWellTopEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(208, 190, FIELD_CENTER, METRIC_BODY_BATTERY);
+        assertTarget(208, 190, FIELD_CENTER);
         assertMiss(208, 189);
         return true;
     }
@@ -1885,7 +1971,7 @@ module FaceModelTest {
     // field.
     (:test)
     function holdJustAboveTheCenterWellEdgeIsTheCenterField(logger as Test.Logger) as Boolean {
-        assertTarget(208, 321, FIELD_CENTER, METRIC_BODY_BATTERY);
+        assertTarget(208, 321, FIELD_CENTER);
         return true;
     }
 
@@ -1893,7 +1979,7 @@ module FaceModelTest {
     // hits, y 323 misses.
     (:test)
     function centerWellEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(208, 322, FIELD_CENTER, METRIC_BODY_BATTERY);
+        assertTarget(208, 322, FIELD_CENTER);
         assertMiss(208, 323);
         return true;
     }
@@ -1916,7 +2002,7 @@ module FaceModelTest {
     // The bottom field's top edge is the limit: y 330 hits, y 329 misses.
     (:test)
     function bottomFieldTopEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(208, 330, FIELD_BOTTOM, METRIC_STEPS);
+        assertTarget(208, 330, FIELD_BOTTOM);
         assertMiss(208, 329);
         return true;
     }
@@ -1925,7 +2011,7 @@ module FaceModelTest {
     // y 371 misses.
     (:test)
     function bottomFieldBottomEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(208, 370, FIELD_BOTTOM, METRIC_STEPS);
+        assertTarget(208, 370, FIELD_BOTTOM);
         assertMiss(208, 371);
         return true;
     }
@@ -1938,12 +2024,12 @@ module FaceModelTest {
         return true;
     }
 
-    // Story 44: holding the bottom field opens steps. Its pill is (126,
+    // Story 44: holding the bottom field opens its metric (steps). Its pill is (126,
     // 330, 164, 40), radius 20, unpadded.
     (:test)
-    function holdInTheBottomFieldTargetsSteps(logger as Test.Logger) as Boolean {
-        assertTarget(208, 331, FIELD_BOTTOM, METRIC_STEPS);
-        assertTarget(208, 350, FIELD_BOTTOM, METRIC_STEPS);
+    function holdInTheBottomFieldTargetsTheBottomField(logger as Test.Logger) as Boolean {
+        assertTarget(208, 331, FIELD_BOTTOM);
+        assertTarget(208, 350, FIELD_BOTTOM);
         return true;
     }
 
@@ -1952,7 +2038,7 @@ module FaceModelTest {
     // 400).
     (:test)
     function holdJustInsideABottomFieldCornerHits(logger as Test.Logger) as Boolean {
-        assertTarget(130, 340, FIELD_BOTTOM, METRIC_STEPS);
+        assertTarget(130, 340, FIELD_BOTTOM);
         return true;
     }
 
@@ -1964,11 +2050,11 @@ module FaceModelTest {
         return true;
     }
 
-    // Story 44: holding the bezel ring opens steps too. (208, 6) is 202 px
+    // Story 44: holding the bezel ring opens its metric (steps) too. (208, 6) is 202 px
     // above the face center, in the band outside the background disc.
     (:test)
-    function holdOnTheBezelRingTargetsSteps(logger as Test.Logger) as Boolean {
-        assertTarget(208, 6, FIELD_BEZEL_RING, METRIC_STEPS);
+    function holdOnTheBezelRingTargetsTheBezelRing(logger as Test.Logger) as Boolean {
+        assertTarget(208, 6, FIELD_BEZEL_RING);
         return true;
     }
 
@@ -1979,9 +2065,9 @@ module FaceModelTest {
     function bezelRingBandExcludesTheDiscEdgeAndIncludesTheScreenEdge(logger as Test.Logger)
             as Boolean {
         assertMiss(208, 14);
-        assertTarget(208, 13, FIELD_BEZEL_RING, METRIC_STEPS);
-        assertTarget(208, 0, FIELD_BEZEL_RING, METRIC_STEPS);
-        assertTarget(0, 208, FIELD_BEZEL_RING, METRIC_STEPS);
+        assertTarget(208, 13, FIELD_BEZEL_RING);
+        assertTarget(208, 0, FIELD_BEZEL_RING);
+        assertTarget(0, 208, FIELD_BEZEL_RING);
         return true;
     }
 

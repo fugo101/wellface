@@ -8,13 +8,15 @@ import Toybox.WatchUi;
 // step with the face's entry points when they change.
 class CaptureView extends WatchUi.WatchFace {
     private var _theme as Theme;
+    private var _mapping as FieldMapping;
     private var _renderer as Renderer;
 
     function initialize() {
         WatchFace.initialize();
         _theme = Themes.active();
-        _renderer = new Renderer(FaceModel.staticLayer(_theme), FaceModel.bezelNotches(_theme),
-            new Fonts());
+        _mapping = Layout.defaultMapping();
+        _renderer = new Renderer(FaceModel.staticLayer(_theme, _mapping),
+            FaceModel.bezelNotches(_theme), new Fonts());
     }
 
     function onUpdate(dc as Dc) as Void {
@@ -24,7 +26,7 @@ class CaptureView extends WatchUi.WatchFace {
             _renderer.paintAod(dc, FaceModel.computeAod(normal(), _theme));
             return;
         }
-        _renderer.paint(dc, FaceModel.compute(snapshot(name), _theme));
+        _renderer.paint(dc, FaceModel.compute(snapshot(name), _theme, _mapping));
     }
 
     // Thursday 12/11, 08:42, every value known, heart rate in zone 2.
@@ -35,11 +37,11 @@ class CaptureView extends WatchUi.WatchFace {
         s.day = 12;
         s.month = 11;
         s.battery = 64;
-        s.steps = 1147;
-        s.stepGoal = 3110;
-        s.bodyBattery = 56;
-        s.stress = 27;
-        s.heartRate = 128;
+        s.setValue(METRIC_STEPS, 1147);
+        s.setGoal(METRIC_STEPS, 3110);
+        s.setValue(METRIC_BODY_BATTERY, 56);
+        s.setValue(METRIC_STRESS, 27);
+        s.setValue(METRIC_HEART_RATE, 128);
         s.heartRateZones = [96, 115, 134, 154, 173, 192] as Array<Number>;
         return s;
     }
@@ -50,18 +52,18 @@ class CaptureView extends WatchUi.WatchFace {
         }
         var s = normal();
         if (name.equals("goalReached")) {
-            s.steps = 3110;
+            s.setValue(METRIC_STEPS, 3110);
         } else if (name.equals("longSteps")) {
-            s.steps = 12345;
-            s.stepGoal = 15000;
+            s.setValue(METRIC_STEPS, 12345);
+            s.setGoal(METRIC_STEPS, 15000);
         } else if (name.equals("steps100000")) {
-            s.steps = 100000;
+            s.setValue(METRIC_STEPS, 100000);
         } else if (name.equals("warning")) {
             // Level 2 everywhere, and heart rate in zone 5.
             s.battery = 5;
-            s.bodyBattery = 10;
-            s.stress = 80;
-            s.heartRate = 180;
+            s.setValue(METRIC_BODY_BATTERY, 10);
+            s.setValue(METRIC_STRESS, 80);
+            s.setValue(METRIC_HEART_RATE, 180);
         }
         return s;
     }

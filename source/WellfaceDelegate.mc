@@ -18,31 +18,16 @@ class WellfaceDelegate extends WatchUi.WatchFaceDelegate {
             return false;
         }
         var point = clickEvent.getCoordinates();
-        var target = FaceModel.longPressTarget(point[0], point[1]);
+        // The default mapping until a face config owns it (ticket 03).
+        var target = FaceModel.longPressTarget(point[0], point[1], Layout.defaultMapping());
         if (target == null) {
             return false;
         }
         try {
-            Complications.exitTo(new Complications.Id(complicationType(target.metric)));
+            Complications.exitTo(new Complications.Id(Metrics.entry(target.metric).complication));
         } catch (e instanceof Lang.Exception) {
             return false;
         }
         return true;
-    }
-
-    // The native complication whose Garmin page shows a metric.
-    private function complicationType(metric as Metric) as Complications.Type {
-        switch (metric) {
-            case METRIC_STRESS:
-                return Complications.COMPLICATION_TYPE_STRESS;
-            case METRIC_BODY_BATTERY:
-                return Complications.COMPLICATION_TYPE_BODY_BATTERY;
-            case METRIC_HEART_RATE:
-                return Complications.COMPLICATION_TYPE_HEART_RATE;
-            case METRIC_STEPS:
-                return Complications.COMPLICATION_TYPE_STEPS;
-        }
-        // Unreachable: every metric is listed above.
-        return Complications.COMPLICATION_TYPE_STEPS;
     }
 }
