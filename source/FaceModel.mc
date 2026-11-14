@@ -46,7 +46,7 @@ class Snapshot {
 // satisfy the type checker.
 class Frame {
     public var time as String = "";
-    // Width of the time in the time font, from its glyph-width table.
+    // Width of the time in the time font, from its catalog entry.
     public var timeWidth as Number = 0;
     // Top-left corner to draw the time from (left-justified, line top).
     public var timeX as Number = 0;
@@ -126,31 +126,8 @@ class LongPressTarget {
     }
 }
 
-// The generated fonts a field's number can be drawn in. The renderer maps
-// each to its loaded font, FaceModel to its glyph-width table.
-enum NumberFont {
-    NUMBER_FONT_48,
-    NUMBER_FONT_26,
-    NUMBER_FONT_22,
-    NUMBER_FONT_18
-}
-
-// A generated font's glyph-width table, base and cap height (from
-// GlyphWidths), so FaceModel can measure and place text in it.
-class FontMetrics {
-    public var widths as Dictionary<Char, Number>;
-    public var base as Number;
-    public var capHeight as Number;
-
-    function initialize(widths as Dictionary<Char, Number>, base as Number, capHeight as Number) {
-        self.widths = widths;
-        self.base = base;
-        self.capHeight = capHeight;
-    }
-}
-
 // What the bottom field draws: its pill (which is its own well), the foot,
-// the step number and "/ goal", each placed from the glyph-width tables.
+// the step number and "/ goal", each placed from the font catalog.
 class BottomFieldFrame {
     public var pill as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
     // The metric's icon (the foot for steps), "" when hidden to make room.
@@ -161,7 +138,7 @@ class BottomFieldFrame {
     // The step count with a dot thousands separator, or "--". Drawn from
     // its top-left corner (left-justified, line top), like every text.
     public var number as String = "";
-    public var numberFont as NumberFont = NUMBER_FONT_22;
+    public var numberFont as FontId = FONT_NUMBER_22;
     public var numberWidth as Number = 0;
     public var numberX as Number = 0;
     public var numberY as Number = 0;
@@ -192,7 +169,7 @@ class FieldFrame {
     // top-left corner to draw it from (left-justified, line top).
     public var number as String = "";
     public var numberColor as Number = 0;
-    public var numberFont as NumberFont = NUMBER_FONT_48;
+    public var numberFont as FontId = FONT_NUMBER_48;
     public var numberWidth as Number = 0;
     public var numberX as Number = 0;
     public var numberY as Number = 0;
@@ -339,9 +316,10 @@ module FaceModel {
     function compute(snapshot as Snapshot, theme as Theme) as Frame {
         var frame = new Frame();
         frame.time = formatTime(snapshot.hour, snapshot.minute);
-        frame.timeWidth = textWidth(frame.time, GlyphWidths.TIME);
+        var timeFont = FontCatalog.entry(FONT_TIME);
+        frame.timeWidth = textWidth(frame.time, timeFont);
         frame.timeX = Layout.TIME_CENTER_X - frame.timeWidth / 2;
-        frame.timeY = Layout.TIME_BASELINE_Y - GlyphWidths.TIME_BASE;
+        frame.timeY = Layout.TIME_BASELINE_Y - timeFont.base;
         frame.timeColor = theme.ink;
         frame.batteryLit = batteryLit(snapshot.battery, theme);
 
@@ -368,8 +346,8 @@ module FaceModel {
         frame.dateWidth = dateTextWidth(frame.date);
         frame.dateX = Layout.CENTER_X - frame.dateWidth / 2;
         // Upper case only, so the capitals are centered, as in the design.
-        frame.dateY = digitsTop(Layout.DATE_CENTER_Y, GlyphWidths.DATE_CAP_HEIGHT,
-            GlyphWidths.DATE_BASE);
+        var dateFont = FontCatalog.entry(FONT_DATE);
+        frame.dateY = digitsTop(Layout.DATE_CENTER_Y, dateFont.capHeight, dateFont.base);
         frame.dateColor = theme.text;
         var pillWidth = datePillWidth(frame.dateWidth);
         frame.datePill = new RoundedRect(Layout.CENTER_X - pillWidth / 2, Layout.DATE_PILL_Y,
@@ -385,14 +363,15 @@ module FaceModel {
         frame.offsetX = offset[0];
         frame.offsetY = offset[1];
         frame.time = formatTime(snapshot.hour, snapshot.minute);
-        frame.timeX = Layout.TIME_CENTER_X - textWidth(frame.time, GlyphWidths.TIME) / 2
-            + frame.offsetX;
-        frame.timeY = Layout.TIME_BASELINE_Y - GlyphWidths.TIME_BASE + frame.offsetY;
+        var timeFont = FontCatalog.entry(FONT_TIME);
+        frame.timeX = Layout.TIME_CENTER_X - textWidth(frame.time, timeFont) / 2 + frame.offsetX;
+        frame.timeY = Layout.TIME_BASELINE_Y - timeFont.base + frame.offsetY;
         frame.date = dateText(snapshot);
         var dateWidth = dateTextWidth(frame.date);
         frame.dateX = Layout.CENTER_X - dateWidth / 2 + frame.offsetX;
-        frame.dateY = digitsTop(Layout.DATE_CENTER_Y, GlyphWidths.DATE_CAP_HEIGHT,
-            GlyphWidths.DATE_BASE) + frame.offsetY;
+        var dateFont = FontCatalog.entry(FONT_DATE);
+        frame.dateY = digitsTop(Layout.DATE_CENTER_Y, dateFont.capHeight, dateFont.base)
+            + frame.offsetY;
         var color = aodColor(theme.accent);
         frame.timeColor = color;
         frame.dateColor = color;
@@ -487,9 +466,9 @@ module FaceModel {
             content.iconColor = theme.ink;
             content.numberColor = theme.ink;
             var room = Layout.BOTTOM_GROUP_RIGHT - Layout.BOTTOM_GROUP_LEFT;
-            var font = NUMBER_FONT_22;
+            var font = FONT_NUMBER_22;
             if (groupWidth(content.number, font) > room) {
-                font = NUMBER_FONT_18;
+                font = FONT_NUMBER_18;
             }
             content.iconX = Layout.CENTER_X - groupWidth(content.number, font) / 2;
             placeBottomNumber(content, font,
@@ -503,17 +482,17 @@ module FaceModel {
         var goalWidth = 0;
         if (goal != null && goal > 0) {
             content.goal = "/ " + formatThousands(goal);
-            goalWidth = textWidth(content.goal, GlyphWidths.GOAL_15);
+            var goalFont = FontCatalog.entry(FONT_GOAL_15);
+            goalWidth = textWidth(content.goal, goalFont);
             content.goalColor = theme.secondary;
-            content.goalY = digitsTop(Layout.BOTTOM_GOAL_Y, GlyphWidths.GOAL_15_CAP_HEIGHT,
-                GlyphWidths.GOAL_15_BASE);
+            content.goalY = digitsTop(Layout.BOTTOM_GOAL_Y, goalFont.capHeight, goalFont.base);
         }
 
         // At the anchors, 22 px and then 18 px.
-        var fonts = [NUMBER_FONT_22, NUMBER_FONT_18] as Array<NumberFont>;
+        var fonts = [FONT_NUMBER_22, FONT_NUMBER_18] as Array<FontId>;
         for (var i = 0; i < fonts.size(); i++) {
             var left = Layout.BOTTOM_NUMBER_RIGHT
-                - textWidth(content.number, numberMetrics(fonts[i]).widths);
+                - textWidth(content.number, FontCatalog.entry(fonts[i]));
             if (left >= Layout.BOTTOM_NUMBER_MIN_LEFT && (content.goal.length() == 0
                     || Layout.BOTTOM_GOAL_LEFT + goalWidth <= Layout.BOTTOM_GOAL_MAX_RIGHT)) {
                 placeBottomNumber(content, fonts[i], left);
@@ -525,7 +504,7 @@ module FaceModel {
         // Centered on the face without the icon; without "/ goal" as a
         // last resort.
         content.icon = "";
-        var numberWidth = textWidth(content.number, numberMetrics(NUMBER_FONT_18).widths);
+        var numberWidth = textWidth(content.number, FontCatalog.entry(FONT_NUMBER_18));
         var width = numberWidth;
         if (content.goal.length() > 0) {
             width += Layout.BOTTOM_GOAL_LEFT - Layout.BOTTOM_NUMBER_RIGHT + goalWidth;
@@ -534,27 +513,27 @@ module FaceModel {
                 width = numberWidth;
             }
         }
-        placeBottomNumber(content, NUMBER_FONT_18, Layout.CENTER_X - width / 2);
+        placeBottomNumber(content, FONT_NUMBER_18, Layout.CENTER_X - width / 2);
         content.goalX = content.numberX + numberWidth + Layout.BOTTOM_GOAL_LEFT
             - Layout.BOTTOM_NUMBER_RIGHT;
         return content;
     }
 
     // The icon's box, the gap and the number in this font, side by side.
-    function groupWidth(number as String, font as NumberFont) as Number {
+    function groupWidth(number as String, font as FontId) as Number {
         return Layout.ICON_SIZE + Layout.BOTTOM_REACHED_GAP
-            + textWidth(number, numberMetrics(font).widths);
+            + textWidth(number, FontCatalog.entry(font));
     }
 
     // The bottom field's number in `font`, starting at x `left`, its digits
     // centered on Layout.BOTTOM_NUMBER_Y.
-    function placeBottomNumber(content as BottomFieldFrame, font as NumberFont, left as Number)
+    function placeBottomNumber(content as BottomFieldFrame, font as FontId, left as Number)
             as Void {
-        var metrics = numberMetrics(font);
+        var entry = FontCatalog.entry(font);
         content.numberFont = font;
-        content.numberWidth = textWidth(content.number, metrics.widths);
+        content.numberWidth = textWidth(content.number, entry);
         content.numberX = left;
-        content.numberY = digitsTop(Layout.BOTTOM_NUMBER_Y, metrics.capHeight, metrics.base);
+        content.numberY = digitsTop(Layout.BOTTOM_NUMBER_Y, entry.capHeight, entry.base);
     }
 
     // The line top to draw text from so that its capitals (or digits) are
@@ -600,11 +579,11 @@ module FaceModel {
                 : gauge(field, value, warning != null ? warning : theme.accent);
         }
         content.numberFont = numberFontFor(field, content.number);
-        var metrics = numberMetrics(content.numberFont);
-        content.numberWidth = textWidth(content.number, metrics.widths);
+        var font = FontCatalog.entry(content.numberFont);
+        content.numberWidth = textWidth(content.number, font);
         content.numberX = field.x - content.numberWidth / 2;
         // Digits only, so their cap height is centered on numberY.
-        content.numberY = digitsTop(field.numberY, metrics.capHeight, metrics.base);
+        content.numberY = digitsTop(field.numberY, font.capHeight, font.base);
         return content;
     }
 
@@ -646,33 +625,15 @@ module FaceModel {
 
     // The center field's number is always 48 px. The left and right numbers
     // shrink with more characters: <= 3 -> 26, 4 -> 22, >= 5 -> 18.
-    function numberFontFor(field as RoundField, text as String) as NumberFont {
+    function numberFontFor(field as RoundField, text as String) as FontId {
         if (field.largeNumber) {
-            return NUMBER_FONT_48;
+            return FONT_NUMBER_48;
         }
         var length = text.length();
         if (length <= 3) {
-            return NUMBER_FONT_26;
+            return FONT_NUMBER_26;
         }
-        return length == 4 ? NUMBER_FONT_22 : NUMBER_FONT_18;
-    }
-
-    // A number font's width table, base and cap height. The renderer maps
-    // the same fonts to their resources (Fonts.number).
-    function numberMetrics(font as NumberFont) as FontMetrics {
-        switch (font) {
-            case NUMBER_FONT_26:
-                return new FontMetrics(GlyphWidths.NUMBER_26, GlyphWidths.NUMBER_26_BASE,
-                    GlyphWidths.NUMBER_26_CAP_HEIGHT);
-            case NUMBER_FONT_22:
-                return new FontMetrics(GlyphWidths.NUMBER_22, GlyphWidths.NUMBER_22_BASE,
-                    GlyphWidths.NUMBER_22_CAP_HEIGHT);
-            case NUMBER_FONT_18:
-                return new FontMetrics(GlyphWidths.NUMBER_18, GlyphWidths.NUMBER_18_BASE,
-                    GlyphWidths.NUMBER_18_CAP_HEIGHT);
-        }
-        return new FontMetrics(GlyphWidths.NUMBER_48, GlyphWidths.NUMBER_48_BASE,
-            GlyphWidths.NUMBER_48_CAP_HEIGHT);
+        return length == 4 ? FONT_NUMBER_22 : FONT_NUMBER_18;
     }
 
     // The code point of a metric's icon in the icon font, null if the icon
@@ -680,13 +641,13 @@ module FaceModel {
     function iconOf(metric as Metric) as Number? {
         switch (metric) {
             case METRIC_BODY_BATTERY:
-                return GlyphWidths.ICON_BOLT;
+                return FontCatalog.ICON_BOLT;
             case METRIC_STRESS:
-                return GlyphWidths.ICON_STRESS;
+                return FontCatalog.ICON_STRESS;
             case METRIC_HEART_RATE:
-                return GlyphWidths.ICON_HEART;
+                return FontCatalog.ICON_HEART;
             case METRIC_STEPS:
-                return GlyphWidths.ICON_FOOT;
+                return FontCatalog.ICON_FOOT;
         }
         return null;
     }
@@ -957,7 +918,8 @@ module FaceModel {
     // between characters, so without the spacing the date font bakes in
     // after the last one. The date is centered and padded by this width.
     function dateTextWidth(text as String) as Number {
-        return textWidth(text, GlyphWidths.DATE) - GlyphWidths.DATE_TRACKING;
+        var font = FontCatalog.entry(FONT_DATE);
+        return textWidth(text, font) - font.letterSpacing;
     }
 
     // max(minimum, text width + 2 x pad) (Q23).
@@ -1057,8 +1019,10 @@ module FaceModel {
     }
 
     // Width of text drawn in a generated font: the sum of its glyphs'
-    // xadvance values. A glyph missing from the table counts as 0.
-    function textWidth(text as String, widths as Dictionary<Char, Number>) as Number {
+    // xadvance values. A glyph missing from the font counts as 0 (the
+    // glyph-coverage test makes sure none is).
+    function textWidth(text as String, font as FontEntry) as Number {
+        var widths = font.widths;
         var total = 0;
         var chars = text.toCharArray();
         for (var i = 0; i < chars.size(); i++) {

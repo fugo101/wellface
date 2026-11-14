@@ -21,3 +21,7 @@ design/*.zip
 
 # Python virtual environment for the font generator
 .venv/
+
+# Simulator captures (scripts/capture.sh) and the scenario it writes
+captures/
+tools/capture/scenario/

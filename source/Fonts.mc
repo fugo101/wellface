@@ -2,39 +2,22 @@ import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.WatchUi;
 
-// The generated bitmap fonts, loaded once when the view starts.
+// Every font in the font catalog, loaded once when the view starts. The
+// renderer draws a FaceModel font id with the font loaded from the same
+// catalog entry that FaceModel measured it with.
 class Fonts {
-    // The time, in both normal mode and Always On.
-    public var time as FontResource;
-    public var date as FontResource;
-    public var number48 as FontResource;
-    public var number26 as FontResource;
-    public var number22 as FontResource;
-    public var number18 as FontResource;
-    public var goal as FontResource;
-    public var icons as FontResource;
+    // Indexed by FontId.
+    private var _loaded as Array<FontResource>;
 
     function initialize() {
-        time = WatchUi.loadResource(Rez.Fonts.Time) as FontResource;
-        date = WatchUi.loadResource(Rez.Fonts.Date) as FontResource;
-        number48 = WatchUi.loadResource(Rez.Fonts.Number48) as FontResource;
-        number26 = WatchUi.loadResource(Rez.Fonts.Number26) as FontResource;
-        number22 = WatchUi.loadResource(Rez.Fonts.Number22) as FontResource;
-        number18 = WatchUi.loadResource(Rez.Fonts.Number18) as FontResource;
-        goal = WatchUi.loadResource(Rez.Fonts.Goal15) as FontResource;
-        icons = WatchUi.loadResource(Rez.Fonts.Icons) as FontResource;
+        var entries = FontCatalog.entries();
+        _loaded = new Array<FontResource>[entries.size()];
+        for (var i = 0; i < entries.size(); i++) {
+            _loaded[i] = WatchUi.loadResource(entries[i].resource) as FontResource;
+        }
     }
 
-    // The loaded font for a FaceModel number font.
-    function number(font as NumberFont) as FontResource {
-        switch (font) {
-            case NUMBER_FONT_26:
-                return number26;
-            case NUMBER_FONT_22:
-                return number22;
-            case NUMBER_FONT_18:
-                return number18;
-        }
-        return number48;
+    function get(id as FontId) as FontResource {
+        return _loaded[id as Number];
     }
 }

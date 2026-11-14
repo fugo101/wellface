@@ -10,6 +10,11 @@ module FaceModelTest {
         return FaceModel.compute(new Snapshot(hour, minute), Themes.mint());
     }
 
+    // The line top to baseline distance of a generated font.
+    function baseOf(font as FontId) as Number {
+        return FontCatalog.entry(font).base;
+    }
+
     function mintLayer() as StaticLayer {
         return FaceModel.staticLayer(Themes.mint());
     }
@@ -278,7 +283,7 @@ module FaceModelTest {
     (:test)
     function timeBaselineIsAtY149(logger as Test.Logger) as Boolean {
         // The renderer draws from the line top, which sits `base` above the baseline.
-        Test.assertEqual(149, frameAt(8, 42).timeY + GlyphWidths.TIME_BASE);
+        Test.assertEqual(149, frameAt(8, 42).timeY + baseOf(FONT_TIME));
         return true;
     }
 
@@ -289,8 +294,8 @@ module FaceModelTest {
     (:test)
     function time0842Is171PxWideFromX123(logger as Test.Logger) as Boolean {
         var frame = frameAt(8, 42);
-        Test.assertEqual(38, GlyphWidths.TIME['0']);
-        Test.assertEqual(19, GlyphWidths.TIME[':']);
+        Test.assertEqual(38, FontCatalog.entry(FONT_TIME).widths['0']);
+        Test.assertEqual(19, FontCatalog.entry(FONT_TIME).widths[':']);
         Test.assertEqual(171, frame.timeWidth);
         Test.assertEqual(123, frame.timeX);
         Test.assertEqual(72, frame.timeY);
@@ -600,10 +605,10 @@ module FaceModelTest {
     // tracking. A single "I" advances 7 px and measures 7 - 2 = 5.
     (:test)
     function dateTextWidthLeavesOutOneTrailingTracking(logger as Test.Logger) as Boolean {
-        Test.assertEqual(2, GlyphWidths.DATE_TRACKING);
-        Test.assertEqual(7, FaceModel.textWidth("I", GlyphWidths.DATE));
+        Test.assertEqual(2, FontCatalog.entry(FONT_DATE).letterSpacing);
+        Test.assertEqual(7, FaceModel.textWidth("I", FontCatalog.entry(FONT_DATE)));
         Test.assertEqual(5, FaceModel.dateTextWidth("I"));
-        Test.assertEqual(97, FaceModel.textWidth("THU 12/11", GlyphWidths.DATE));
+        Test.assertEqual(97, FaceModel.textWidth("THU 12/11", FontCatalog.entry(FONT_DATE)));
         Test.assertEqual(95, FaceModel.dateTextWidth("THU 12/11"));
         return true;
     }
@@ -613,7 +618,7 @@ module FaceModelTest {
     // "/" (10) + "11" (20) = 97 px, and measures 97 - 2 = 95 px.
     (:test)
     function thu1211Is95PxWide(logger as Test.Logger) as Boolean {
-        Test.assertEqual(10, GlyphWidths.DATE['/']);
+        Test.assertEqual(10, FontCatalog.entry(FONT_DATE).widths['/']);
         Test.assertEqual(95, frameOnDate("Thu", 5, 12, 11).dateWidth);
         return true;
     }
@@ -663,7 +668,7 @@ module FaceModelTest {
     // so the baseline sits on 170 + 6 = 176.
     (:test)
     function dateBaselineSitsOnY176(logger as Test.Logger) as Boolean {
-        Test.assertEqual(176, frameOnDate("Thu", 5, 12, 11).dateY + GlyphWidths.DATE_BASE);
+        Test.assertEqual(176, frameOnDate("Thu", 5, 12, 11).dateY + baseOf(FONT_DATE));
         return true;
     }
 
@@ -1027,7 +1032,7 @@ module FaceModelTest {
     (:test)
     function bodyBatteryNumberIsCenteredOnX208(logger as Test.Logger) as Boolean {
         var field = centerAt(56);
-        Test.assertEqual(NUMBER_FONT_48, field.numberFont);
+        Test.assertEqual(FONT_NUMBER_48, field.numberFont);
         Test.assertEqual(58, field.numberWidth);
         assertCenteredOn208(field.numberX, field.numberWidth);
         var dashes = centerAt(null);
@@ -1040,8 +1045,8 @@ module FaceModelTest {
     // top, `base` above the baseline.
     (:test)
     function bodyBatteryBaselineSitsOnY285(logger as Test.Logger) as Boolean {
-        Test.assertEqual(285, centerAt(56).numberY + GlyphWidths.NUMBER_48_BASE);
-        Test.assertEqual(285, centerAt(null).numberY + GlyphWidths.NUMBER_48_BASE);
+        Test.assertEqual(285, centerAt(56).numberY + baseOf(FONT_NUMBER_48));
+        Test.assertEqual(285, centerAt(null).numberY + baseOf(FONT_NUMBER_48));
         return true;
     }
 
@@ -1145,9 +1150,9 @@ module FaceModelTest {
     // Story 17: up to 3 characters use 26 px ("--" included).
     (:test)
     function leftNumberUpTo3CharactersIs26(logger as Test.Logger) as Boolean {
-        Test.assertEqual(NUMBER_FONT_26, leftAt(7).numberFont);
-        Test.assertEqual(NUMBER_FONT_26, leftAt(100).numberFont);
-        Test.assertEqual(NUMBER_FONT_26, leftAt(null).numberFont);
+        Test.assertEqual(FONT_NUMBER_26, leftAt(7).numberFont);
+        Test.assertEqual(FONT_NUMBER_26, leftAt(100).numberFont);
+        Test.assertEqual(FONT_NUMBER_26, leftAt(null).numberFont);
         return true;
     }
 
@@ -1155,15 +1160,15 @@ module FaceModelTest {
     // belongs to the field, for the metrics it may show later (Q15).
     (:test)
     function leftNumberOf4CharactersIs22(logger as Test.Logger) as Boolean {
-        Test.assertEqual(NUMBER_FONT_22, leftAt(1000).numberFont);
+        Test.assertEqual(FONT_NUMBER_22, leftAt(1000).numberFont);
         return true;
     }
 
     // Story 17: 5 characters or more use 18 px.
     (:test)
     function leftNumberOf5CharactersIs18(logger as Test.Logger) as Boolean {
-        Test.assertEqual(NUMBER_FONT_18, leftAt(10000).numberFont);
-        Test.assertEqual(NUMBER_FONT_18, leftAt(100000).numberFont);
+        Test.assertEqual(FONT_NUMBER_18, leftAt(10000).numberFont);
+        Test.assertEqual(FONT_NUMBER_18, leftAt(100000).numberFont);
         return true;
     }
 
@@ -1181,8 +1186,8 @@ module FaceModelTest {
     // the baseline sits on 260 + 9 = 269; at 22 px (cap 16) on 268.
     (:test)
     function leftNumberBaselineFollowsItsFont(logger as Test.Logger) as Boolean {
-        Test.assertEqual(269, leftAt(27).numberY + GlyphWidths.NUMBER_26_BASE);
-        Test.assertEqual(268, leftAt(1000).numberY + GlyphWidths.NUMBER_22_BASE);
+        Test.assertEqual(269, leftAt(27).numberY + baseOf(FONT_NUMBER_26));
+        Test.assertEqual(268, leftAt(1000).numberY + baseOf(FONT_NUMBER_22));
         return true;
     }
 
@@ -1330,11 +1335,11 @@ module FaceModelTest {
     (:test)
     function rightNumberSizeFollowsItsLength(logger as Test.Logger) as Boolean {
         var field = rightAt(62);
-        Test.assertEqual(NUMBER_FONT_26, field.numberFont);
+        Test.assertEqual(FONT_NUMBER_26, field.numberFont);
         Test.assertEqual(32, field.numberWidth);
         Test.assertEqual(312, field.numberX);
-        Test.assertEqual(269, field.numberY + GlyphWidths.NUMBER_26_BASE);
-        Test.assertEqual(NUMBER_FONT_22, rightAt(1000).numberFont);
+        Test.assertEqual(269, field.numberY + baseOf(FONT_NUMBER_26));
+        Test.assertEqual(FONT_NUMBER_22, rightAt(1000).numberFont);
         return true;
     }
 
@@ -1371,7 +1376,7 @@ module FaceModelTest {
     function stepsAndGoalSitAtTheirAnchors(logger as Test.Logger) as Boolean {
         var field = bottomAt(1147, 3110);
         Test.assertEqual("1.147", field.number);
-        Test.assertEqual(NUMBER_FONT_22, field.numberFont);
+        Test.assertEqual(FONT_NUMBER_22, field.numberFont);
         Test.assertEqual(175, field.numberX);
         Test.assertEqual("/ 3.110", field.goal);
         Test.assertEqual(233, field.goalX);
@@ -1387,7 +1392,7 @@ module FaceModelTest {
     (:test)
     function fiveDigitStepsShrinkTo18(logger as Test.Logger) as Boolean {
         var field = bottomAt(10000, 11111);
-        Test.assertEqual(NUMBER_FONT_18, field.numberFont);
+        Test.assertEqual(FONT_NUMBER_18, field.numberFont);
         Test.assertEqual(166, field.numberX);
         Test.assertEqual("/ 11.111", field.goal);
         Test.assertEqual(233, field.goalX);
@@ -1401,10 +1406,10 @@ module FaceModelTest {
     (:test)
     function numberStartingAt164StaysAt22(logger as Test.Logger) as Boolean {
         var fits = bottomAt(2004, null);
-        Test.assertEqual(NUMBER_FONT_22, fits.numberFont);
+        Test.assertEqual(FONT_NUMBER_22, fits.numberFont);
         Test.assertEqual(164, fits.numberX);
         var shrunk = bottomAt(2000, null);
-        Test.assertEqual(NUMBER_FONT_18, shrunk.numberFont);
+        Test.assertEqual(FONT_NUMBER_18, shrunk.numberFont);
         Test.assertEqual(175, shrunk.numberX);
         return true;
     }
@@ -1442,7 +1447,7 @@ module FaceModelTest {
     function aFiveDigitGoalHidesTheFootAndCentersTheText(logger as Test.Logger) as Boolean {
         var field = bottomAt(1147, 10000);
         Test.assertEqual("", field.icon);
-        Test.assertEqual(NUMBER_FONT_18, field.numberFont);
+        Test.assertEqual(FONT_NUMBER_18, field.numberFont);
         Test.assertEqual("/ 10.000", field.goal);
         Test.assertEqual(154, field.numberX);
         Test.assertEqual(202, field.goalX);
@@ -1468,7 +1473,7 @@ module FaceModelTest {
         Test.assertEqual("100.000", field.number);
         Test.assertEqual("", field.goal);
         Test.assertEqual("", field.icon);
-        Test.assertEqual(NUMBER_FONT_18, field.numberFont);
+        Test.assertEqual(FONT_NUMBER_18, field.numberFont);
         Test.assertEqual(171, field.numberX);
         return true;
     }
@@ -1481,7 +1486,7 @@ module FaceModelTest {
         var field = bottomAt(3512, 3110);
         Test.assertEqual(166, field.iconX);
         Test.assertEqual(338, field.iconY);
-        Test.assertEqual(NUMBER_FONT_22, field.numberFont);
+        Test.assertEqual(FONT_NUMBER_22, field.numberFont);
         Test.assertEqual(194, field.numberX);
         Test.assertEqual("", field.goal);
         return true;
@@ -1492,7 +1497,7 @@ module FaceModelTest {
     (:test)
     function goalReachedWithFiveDigitsStaysAt22(logger as Test.Logger) as Boolean {
         var field = bottomAt(12345, 10000);
-        Test.assertEqual(NUMBER_FONT_22, field.numberFont);
+        Test.assertEqual(FONT_NUMBER_22, field.numberFont);
         Test.assertEqual(159, field.iconX);
         Test.assertEqual(187, field.numberX);
         Test.assertEqual("", field.goal);
@@ -1506,11 +1511,11 @@ module FaceModelTest {
     (:test)
     function reachedGroupOf136StaysAt22(logger as Test.Logger) as Boolean {
         var fits = bottomAt(1000014, 3110);
-        Test.assertEqual(NUMBER_FONT_22, fits.numberFont);
+        Test.assertEqual(FONT_NUMBER_22, fits.numberFont);
         Test.assertEqual(140, fits.iconX);
         Test.assertEqual(168, fits.numberX);
         var shrunk = bottomAt(1000001, 3110);
-        Test.assertEqual(NUMBER_FONT_18, shrunk.numberFont);
+        Test.assertEqual(FONT_NUMBER_18, shrunk.numberFont);
         Test.assertEqual(150, shrunk.iconX);
         Test.assertEqual(178, shrunk.numberX);
         return true;
@@ -1610,9 +1615,9 @@ module FaceModelTest {
     (:test)
     function stepTextSitsOnItsBaselines(logger as Test.Logger) as Boolean {
         var field = bottomAt(1147, 3110);
-        Test.assertEqual(358, field.numberY + GlyphWidths.NUMBER_22_BASE);
-        Test.assertEqual(356, field.goalY + GlyphWidths.GOAL_15_BASE);
-        Test.assertEqual(356, bottomAt(10000, 11111).numberY + GlyphWidths.NUMBER_18_BASE);
+        Test.assertEqual(358, field.numberY + baseOf(FONT_NUMBER_22));
+        Test.assertEqual(356, field.goalY + baseOf(FONT_GOAL_15));
+        Test.assertEqual(356, bottomAt(10000, 11111).numberY + baseOf(FONT_NUMBER_18));
         return true;
     }
 

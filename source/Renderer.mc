@@ -55,13 +55,13 @@ class Renderer {
 
         // FaceModel places the time by its measured width and the font's base.
         dc.setColor(frame.timeColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(frame.timeX, frame.timeY, _fonts.time, frame.time,
+        dc.drawText(frame.timeX, frame.timeY, _fonts.get(FONT_TIME), frame.time,
             Graphics.TEXT_JUSTIFY_LEFT);
 
         // The pill's width follows the text, so it is not in the static layer.
         fillRoundedRect(dc, frame.datePill);
         dc.setColor(frame.dateColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(frame.dateX, frame.dateY, _fonts.date, frame.date,
+        dc.drawText(frame.dateX, frame.dateY, _fonts.get(FONT_DATE), frame.date,
             Graphics.TEXT_JUSTIFY_LEFT);
     }
 
@@ -72,10 +72,10 @@ class Renderer {
             drawArc(dc, field.arcs[i]);
         }
         dc.setColor(field.iconColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(field.iconX, field.iconY, _fonts.icons, field.icon,
+        dc.drawText(field.iconX, field.iconY, _fonts.get(FONT_ICONS), field.icon,
             Graphics.TEXT_JUSTIFY_LEFT);
         dc.setColor(field.numberColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(field.numberX, field.numberY, _fonts.number(field.numberFont), field.number,
+        dc.drawText(field.numberX, field.numberY, _fonts.get(field.numberFont), field.number,
             Graphics.TEXT_JUSTIFY_LEFT);
     }
 
@@ -85,15 +85,15 @@ class Renderer {
         fillRoundedRect(dc, field.pill);
         if (field.icon.length() > 0) {
             dc.setColor(field.iconColor, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(field.iconX, field.iconY, _fonts.icons, field.icon,
+            dc.drawText(field.iconX, field.iconY, _fonts.get(FONT_ICONS), field.icon,
                 Graphics.TEXT_JUSTIFY_LEFT);
         }
         dc.setColor(field.numberColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(field.numberX, field.numberY, _fonts.number(field.numberFont), field.number,
+        dc.drawText(field.numberX, field.numberY, _fonts.get(field.numberFont), field.number,
             Graphics.TEXT_JUSTIFY_LEFT);
         if (field.goal.length() > 0) {
             dc.setColor(field.goalColor, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(field.goalX, field.goalY, _fonts.goal, field.goal,
+            dc.drawText(field.goalX, field.goalY, _fonts.get(FONT_GOAL_15), field.goal,
                 Graphics.TEXT_JUSTIFY_LEFT);
         }
     }
@@ -104,14 +104,14 @@ class Renderer {
     function paintAod(dc as Dc, frame as AodFrame) as Void {
         clear(dc);
         dc.setColor(frame.timeColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(frame.timeX, frame.timeY, _fonts.time, frame.time,
+        dc.drawText(frame.timeX, frame.timeY, _fonts.get(FONT_TIME), frame.time,
             Graphics.TEXT_JUSTIFY_LEFT);
 
         fillRoundedRect(dc, frame.datePill);
         fillRoundedRect(dc, frame.datePillInner);
 
         dc.setColor(frame.dateColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(frame.dateX, frame.dateY, _fonts.date, frame.date,
+        dc.drawText(frame.dateX, frame.dateY, _fonts.get(FONT_DATE), frame.date,
             Graphics.TEXT_JUSTIFY_LEFT);
     }
 

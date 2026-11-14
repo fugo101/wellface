@@ -1,0 +1,12 @@
+# Capture face: the real FaceModel, Renderer, fonts and resources, fed a fixed
+# snapshot instead of the watch's sensors, so screenshots of the simulator can
+# be compared pixel by pixel before and after a change. Debug-only, with its
+# own app id and manifest; nothing here is part of the main jungle. Run it
+# with scripts/capture.sh.
+project.manifest = manifest.xml
+project.typecheck = strict
+
+# The face's own sources (its app class is unused here), this folder's
+# sources, and the scenario that scripts/capture.sh writes before each build.
+base.sourcePath = ../../source;source;scenario
+base.resourcePath = ../../resources

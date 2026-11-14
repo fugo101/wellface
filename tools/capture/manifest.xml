@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
+    <!-- Its own app id and entry, so it never replaces Wellface. -->
+    <iq:application id="e533b2a9-e8ed-46fb-bc89-0bdf8da05e30" type="watchface" name="@Strings.AppName" entry="CaptureApp" launcherIcon="@Drawables.LauncherIcon" minApiLevel="5.2.0">
+        <iq:products>
+            <iq:product id="fr265"/>
+        </iq:products>
+        <!-- The face's data reader is compiled in (unused), so it needs the
+             face's permissions. -->
+        <iq:permissions>
+            <iq:uses-permission id="ComplicationSubscriber"/>
+            <iq:uses-permission id="UserProfile"/>
+        </iq:permissions>
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
+        <iq:barrels/>
+    </iq:application>
+</iq:manifest>

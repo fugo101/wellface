@@ -21,8 +21,11 @@ The scripts never print the key or its path. If the VS Code extension generated 
 | `scripts/build-test.sh` | `bin/wellface-test.prg` | build with the `(:test)` code |
 | `scripts/run-tests.sh [test name]` | `bin/test.log` | build the tests, start the simulator, run them |
 | `scripts/build-release.sh` | `bin/wellface-release.prg` | release build for the watch (`-r --build-stats 0`) |
+| `scripts/build-profile.sh` | `bin/wellface-profile.prg` | the release build with profiling support (`-r -k`), see "Profile" |
+| `scripts/run-profile.sh [file.prg]` | `bin/wellface-profile.prg` | profile build (or the given PRG), start the simulator and load it |
+| `scripts/capture.sh <dir> [--compare <dir>]` | `<dir>/<scenario>.png` | simulator screenshots of fixed scenarios, compared pixel by pixel, see "Captures" |
 | `scripts/sideload.sh [file.prg]` | `GARMIN/Apps/WELLFACE.PRG` on the watch | release build, then copy it to the watch over USB (or copy the given PRG) |
-| `scripts/gen-fonts.sh` | `resources/fonts/`, `source/GlyphWidths.mc` | regenerate the bitmap fonts, the icon font and the glyph-width tables |
+| `scripts/gen-fonts.sh` | `resources/fonts/`, `source/FontCatalog.mc` | regenerate the bitmap fonts, the icon font and the font catalog |
 | `scripts/build-spike.sh` | `bin/wfspike.prg` | data spike (ticket 02), a separate debug-only face |
 | `scripts/run-spike.sh` | `bin/wfspike.prg` | data spike, start the simulator and load it |
 
@@ -34,7 +37,7 @@ Every build fails on any compiler warning. Type checking is strict, set in each 
 
 ## Fonts
 
-`scripts/gen-fonts.sh` runs the font generator (`tools/fontgen/generate.py`). It downloads the source fonts fresh from Google Fonts (the google/fonts repository, so it needs the network) and rewrites everything in `resources/fonts/` (BMFont `.fnt` + PNG pages, `fonts.xml`, the OFL license files) and `source/GlyphWidths.mc`. Never edit those files by hand; change the `FONTS` list (or `ICONS`, for the icon font) in the generator and run the script again. Commit the generated files.
+`scripts/gen-fonts.sh` runs the font generator (`tools/fontgen/generate.py`). It downloads the source fonts fresh from Google Fonts (the google/fonts repository, so it needs the network) and rewrites everything in `resources/fonts/` (BMFont `.fnt` + PNG pages, `fonts.xml`, the OFL license files) and `source/FontCatalog.mc`, the font catalog: one entry per font, the icon font included, with its resource, glyph set, glyph widths (the `.fnt` xadvances), base, cap height and letter spacing. FaceModel measures text and the renderer loads and draws fonts through the same entry, and a glyph-coverage test (`tests/GlyphCoverageTest.mc`) fails if any string the face can print uses a glyph its font lacks. It reads google/fonts at the latest commit on `main` (Q31). To rebuild exactly the fonts of an earlier commit, set `GOOGLE_FONTS_COMMIT=<sha>`; the fonts in the repo were generated from `29b4ec6df2522a8aee279414b78a07910b065874` (2026-11-13), and regenerating from it, or from `main` while upstream is unchanged, leaves `resources/fonts/` byte-identical. Never edit those files by hand; change the `FONTS` list (or `ICONS`, for the icon font) in the generator and run the script again. Commit the generated files.
 
 The first run creates a gitignored `.venv/` with Python 3.15 (override with `PYTHON=<interpreter>`) and the pinned versions in `tools/fontgen/requirements.txt`. The generator fails if a requested glyph is missing from a source font, if the time font's `0` is not 63 px ± 1 tall, if a digit's ink does not fit its tabular cell, or if an asserted advance (`0` 38 px, `:` 19 px) differs.
 
@@ -45,6 +48,29 @@ The first run creates a gitignored `.venv/` with Python 3.15 (override with `PYT
 To try a long press, hold the left mouse button on a field for about a second. The simulator shows a plain launch view (for example "Body Battery launched") instead of a Garmin page; File → Kill App, then `scripts/run-sim.sh` again, brings the face back.
 
 To check Always On, choose Settings → Display Mode → Always-On in the simulator (High Power switches back), then File → View Screen Heat Map. The heat map window shows the current luminance usage, and its 24-Hour Simulation reports the peak luminance usage and whether burn-in was detected (simulator of SDK 9.3.0).
+
+## Profile
+
+`scripts/build-profile.sh` builds the release build with profiling support (`-k`). `scripts/run-profile.sh` builds it, starts the simulator and loads it; give it a PRG to load that one instead (for example a baseline build of an older commit). With SDK 9.3.0 the simulator opens its profiler window (File → View Profiler) by itself when such a build loads. The profiler lists Function, Total Time, Actual Time, Average Time (µs) and Call Count (Garmin's profiling guide).
+
+The measurement scenario is fixed (`.scratch/settings-ready/spec.md`, refresh plan), so numbers stay comparable from one change to the next:
+
+1. Load the default face with `scripts/run-profile.sh`.
+2. Simulation → Activity Data → Data Source: Data Simulation. Heart rate then changes about every second.
+3. Awake: profile 30 s in Settings → Display Mode → High Power. Note the Average Time of `WellfaceView.onUpdate` (the high-power update), `FaceModel.compute` (the frame) and `DataReader.readComplication` (mostly the heart-rate read: it runs every second, the other two complications once a minute).
+4. Always On: Settings → Display Mode → Always-On, profile 3 minutes. Note the Average Time of `WellfaceView.onUpdate` (the AOD update) and `FaceModel.computeAod`.
+5. Peak memory: File → View Memory.
+6. Run the whole scenario twice; the spread between the two runs is the profiler's noise.
+
+How to start, stop and read a profiling run is not settled yet: driven by scripted clicks in this session, the table stayed empty (simulator of SDK 9.3.0). Menu names may differ slightly.
+
+On the watch, Garmin's guide says a build with profiling support writes `GARMIN/APPS/LOGS/<app>.PRF`, which the profiler's Load button opens together with the build's `.prg.debug.xml`. Whether the FR265 does this, and whether the file must exist first (as the `.TXT` log must), is not verified.
+
+## Captures
+
+`scripts/capture.sh <dir>` takes simulator screenshots of the face in fixed scenarios: `normal`, `missing` (no data), `goalReached`, `longSteps` (12.345 of 15.000), `steps100000`, `warning` (level 2 everywhere, heart rate in zone 5) and `aod`. It builds the capture face (`tools/capture/`: the face's own FaceModel, Renderer, fonts and resources, fed a fixed snapshot instead of sensors) once per scenario, loads it and captures the simulator window. With `--compare <dir>` it then compares each capture with the one of the same name in that folder, pixel by pixel (the window's title bar and status bar left out). It exits 0 when everything was captured (and, with `--compare`, every capture is identical), 1 when a capture differs or is missing, and 2 when it could not run (build failed, no simulator, missing permission). Two runs of the same build give identical captures.
+
+Captures are machine-specific (display scale, simulator version), so compare only captures taken on the same Mac. Keep them in the gitignored `captures/` folder. It needs macOS and the Screen Recording permission for the terminal, and `.venv` (created by `scripts/gen-fonts.sh`) for `--compare`.
 
 ## Data spike
 
