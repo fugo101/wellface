@@ -48,6 +48,14 @@ _Avoid_: Battery gauge, battery ring
 A fixed place on the face, with its own size and well, that shows one metric. Fields are named by position, never by the metric they show.
 _Avoid_: Slot, cell, widget, complication
 
+**Field kind**:
+The shape of a field, which decides which drawing styles it accepts: a round field (left, center, right field) takes a gauge or zone segments, the bottom field and the bezel ring take a goal metric's progress. A field only shows a metric whose drawing style its kind accepts.
+_Avoid_: Field type, slot type
+
+**Drawing style**:
+How a metric is drawn, decided by the metric: a gauge, zone segments, or progress toward a goal (only for a goal metric).
+_Avoid_: Render mode, display type, widget type
+
 **Metric**:
 A piece of health or activity data shown in a field, such as stress, Body Battery, heart rate or steps. The metric decides how its value is drawn inside the field.
 _Avoid_: Data field, stat, value
@@ -75,6 +83,10 @@ _Avoid_: Step pill, steps field
 **Bezel ring**:
 The ring around the edge of the face. It only shows a goal metric, as progress.
 _Avoid_: Step ring, outer ring, progress ring
+
+**Face config**:
+The choices that set up the face: the active theme and the metric shown in each field. There is a built-in default; settings will later produce other face configs.
+_Avoid_: Settings, preferences, profile, layout
 
 **Gauge**:
 A ring inside a field that fills from 0 to 100 according to the metric's value.
