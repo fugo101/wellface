@@ -9,15 +9,16 @@ import Toybox.System;
 // Readings are kept in memory and printed only when the face enters AOD
 // (onEnterSleep), the view is hidden, the app stops, or the buffer is
 // nearly full at the end of an update, so no print falls inside a timed
-// part. On the
-// watch System.println writes to GARMIN/Apps/LOGS/WELLFACE.TXT (the file
-// must exist); tools/timing/summary.py reads it.
+// part. On the watch System.println writes to GARMIN/Apps/LOGS/WELLFACE.TXT
+// (the file must exist), and the watch moves it to WELLFACE.BAK once it
+// passes about 5 kB, so the output is kept short; tools/timing/summary.py
+// reads it.
 
 // What a reading times. Start and stop a timing with the same kind; a stop
-// of TIMING_UPDATE or TIMING_AOD is recorded as one of the next three kinds
-// when it is the first update since the face started (or was shown again)
-// or the first high-power update after AOD. An update's time includes the
-// frame and static readings taken inside it.
+// of TIMING_UPDATE or TIMING_AOD is recorded as TIMING_FIRST,
+// TIMING_FIRST_AOD, TIMING_SHOW or TIMING_WAKE when it is the first update
+// since the face started, since the view was hidden, or since AOD. An
+// update's time includes the frame and static readings taken inside it.
 enum TimingKind {
     // A high-power update (WellfaceView.onUpdate after the mode check).
     TIMING_UPDATE,
@@ -29,6 +30,9 @@ enum TimingKind {
     TIMING_FIRST_AOD,
     // The first high-power update after AOD or a screen off (a wake).
     TIMING_WAKE,
+    // The first high-power update after the view was hidden and shown
+    // again without a restart (a return from the widget loop).
+    TIMING_SHOW,
     // FaceModel.update on its own.
     TIMING_FRAME,
     // FaceModel.updateAod on its own.
@@ -51,20 +55,25 @@ module Timing {
 
 (:timing)
 module Timing {
-    // Printed once per reading, in TimingKind order.
-    const NAMES = ["update", "aod", "first", "firstAod", "wake", "frame", "aodFrame", "static"];
+    // The one-letter code printed before each reading's milliseconds, in
+    // TimingKind order (tools/timing/summary.py has the same table).
+    const CODES = ["u", "a", "F", "A", "w", "h", "f", "d", "s"];
     // Readings kept before a flush; an update adds at most three.
     const CAPACITY = 240;
+    // Readings per printed line.
+    const PER_LINE = 20;
 
     // Each reading is ms * KIND_RANGE + kind.
     const KIND_RANGE = 16;
     var _readings as Array<Number> = new Array<Number>[CAPACITY];
     var _count as Number = 0;
     // System.getTimer() at the last start of each kind.
-    var _starts as Array<Number> = new Array<Number>[NAMES.size()];
-    // Whether an update was recorded since the face started or was last
-    // hidden, and whether the last one was high power.
-    var _updateSeen as Boolean = false;
+    var _starts as Array<Number> = new Array<Number>[CODES.size()];
+    // No update recorded since the face started (module variables start
+    // fresh with the app) or since the view was hidden, and whether the
+    // last update recorded was high power.
+    var _fresh as Boolean = true;
+    var _hidden as Boolean = false;
     var _lastHighPower as Boolean = false;
 
     function start(kind as TimingKind) as Void {
@@ -77,12 +86,15 @@ module Timing {
         var recorded = kind;
         if (update) {
             var highPower = kind == TIMING_UPDATE;
-            if (!_updateSeen) {
+            if (_fresh) {
                 recorded = highPower ? TIMING_FIRST : TIMING_FIRST_AOD;
+            } else if (highPower && _hidden) {
+                recorded = TIMING_SHOW;
             } else if (highPower && !_lastHighPower) {
                 recorded = TIMING_WAKE;
             }
-            _updateSeen = true;
+            _fresh = false;
+            _hidden = false;
             _lastHighPower = highPower;
         }
         // The subtraction wraps like the timer, so a span across a rollover
@@ -97,20 +109,26 @@ module Timing {
         }
     }
 
-    // Prints a header line and every reading kept, then forgets them.
-    // Reasons: "sleep" (entering AOD; the screen goes off only from there,
-    // so the next high-power update is a wake), "hide" (the next update
-    // counts as a face start), "stop" and "full".
+    // Prints a header line ("timing flush <reason> <count>") and the
+    // readings kept, PER_LINE to a line ("timing u19 f4 u23"), then forgets
+    // them. Reasons: "sleep" (entering AOD; the screen goes off only from
+    // there, so the next high-power update is a wake), "hide" (the next one
+    // is a show), "stop" and "full".
     function flush(reason as String) as Void {
         if (reason.equals("sleep")) {
             _lastHighPower = false;
         } else if (reason.equals("hide")) {
-            _updateSeen = false;
+            _hidden = true;
         }
         System.println("timing flush " + reason + " " + _count);
+        var line = "timing";
         for (var i = 0; i < _count; i++) {
             var reading = _readings[i];
-            System.println("timing " + NAMES[reading % KIND_RANGE] + " " + reading / KIND_RANGE);
+            line += " " + CODES[reading % KIND_RANGE] + reading / KIND_RANGE;
+            if ((i + 1) % PER_LINE == 0 || i == _count - 1) {
+                System.println(line);
+                line = "timing";
+            }
         }
         _count = 0;
     }

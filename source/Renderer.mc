@@ -7,8 +7,10 @@ import Toybox.Lang;
 // screen on every high-power update. It depends on the theme and the field
 // mapping (the metric each round field shows decides its track), so a new
 // one comes with every applied face config (setStatic) and the buffer is
-// repainted once then. The face is started again on every return from a
-// widget, so the buffer is rebuilt then too.
+// repainted once then. The face is started again after a widget opened in
+// full, so the buffer is rebuilt then too; a return from the widget loop
+// only hides and shows the view and keeps it (docs/build.md, "Timing
+// build").
 class Renderer {
     private var _layer as StaticLayer = new StaticLayer();
     private var _notches as Array<Line> = [] as Array<Line>;

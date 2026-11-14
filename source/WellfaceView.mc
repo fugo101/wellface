@@ -110,7 +110,8 @@ class WellfaceView extends WatchUi.WatchFace {
         WatchUi.requestUpdate();
     }
 
-    // A return to the widgets leaves the face without onEnterSleep.
+    // Going to the widgets leaves the face without onEnterSleep: the widget
+    // loop hides the view, a widget opened in full stops the app.
     function onHide() as Void {
         Timing.flush("hide");
     }
