@@ -215,18 +215,21 @@ class FontSpec:
     # None keeps the font's own advances.
     tabular_advance: int | None = None
     tracking: int = 0  # px added to every xadvance (baked-in letter spacing)
-    digit_height: float | None = None  # asserted height of "0" in px, +-1
+    # Asserted height of "0" above the baseline in px, +-1: the design's
+    # measureText("0").actualBoundingBoxAscent, so the overshoot below the
+    # baseline is not counted.
+    digit_height: float | None = None
     # Asserted xadvances (px) of these glyphs, as the design measures them.
     advances: dict[str, int] | None = None
 
 
 FONTS = [
-    # The time, filled, in both normal mode and Always On (Q12).
-    # The source digits are proportional (20.5-38.5 px at 78 px); the design
-    # gives every digit a 38 px cell, so "08:42" is 171 px wide.
-    FontSpec("Time", "time78", "TIME", "big-shoulders-display-800", 78,
-             DIGITS + ":", tabular_advance=38, digit_height=63,
-             advances={"0": 38, ":": 19}),
+    # The time, filled, in both normal mode and Always On (Q12), at 86 px
+    # (Q8/Q16). The source digits are proportional; the design gives every
+    # digit a 42 px cell and the colon 21 px, so "08:42" is 189 px wide.
+    FontSpec("Time", "time86", "TIME", "big-shoulders-display-800", 86,
+             DIGITS + ":", tabular_advance=42, digit_height=69,
+             advances={"0": 42, ":": 21}),
     # The date, for example "THU 12/11" (Q38): letter spacing 2 px.
     FontSpec("Date", "date17", "DATE", "manrope-800", 17,
              LETTERS + DIGITS + "/ ", tracking=2),
@@ -312,10 +315,10 @@ def render_font(spec: FontSpec, src: SourceFont) -> tuple[list[Glyph], Metrics]:
     if spec.digit_height is not None:
         pen = BoundsPen(glyph_set)
         glyph_set[cmap[ord("0")]].draw(pen)
-        _, y_min, _, y_max = pen.bounds
-        height = (y_max - y_min) * scale
+        _, _, _, y_max = pen.bounds
+        height = y_max * scale
         if abs(height - spec.digit_height) > 1:
-            raise SystemExit(f"{spec.file}: '0' is {height:.2f} px tall, "
+            raise SystemExit(f"{spec.file}: '0' rises {height:.2f} px above the baseline, "
                              f"expected {spec.digit_height} +-1")
 
     advances = {c: round(tt["hmtx"][cmap[ord(c)]][0] * scale) for c in spec.glyphs}

@@ -68,11 +68,11 @@ module FontCatalog {
         var all = _entries;
         if (all == null) {
             all = [
-                // BigShouldersDisplay-ExtraBold 78 px.
+                // BigShouldersDisplay-ExtraBold 86 px.
                 new FontEntry(Rez.Fonts.Time, "Time",
                     "0123456789:",
-                    { '0' => 38, '1' => 38, '2' => 38, '3' => 38, '4' => 38, '5' => 38, '6' => 38, '7' => 38, '8' => 38, '9' => 38, ':' => 19 } as Dictionary<Char, Number>,
-                    77, 62, 0),
+                    { '0' => 42, '1' => 42, '2' => 42, '3' => 42, '4' => 42, '5' => 42, '6' => 42, '7' => 42, '8' => 42, '9' => 42, ':' => 21 } as Dictionary<Char, Number>,
+                    85, 69, 0),
                 // Manrope-ExtraBold 17 px.
                 new FontEntry(Rez.Fonts.Date, "Date",
                     "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/ ",

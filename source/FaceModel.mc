@@ -8,6 +8,9 @@ class Snapshot {
     // 0-23, whatever the watch's 12/24 h setting is (Q22).
     public var hour as Number;
     public var minute as Number;
+    // 0-59. Not read from the clock or drawn yet (seconds, Q41); the capture
+    // face sets it for its scenarios.
+    public var second as Number = 0;
     // Day of month, 1-31, and month, 1-12.
     public var day as Number = 1;
     public var month as Number = 1;

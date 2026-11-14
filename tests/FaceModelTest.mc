@@ -331,24 +331,23 @@ module FaceModelTest {
     }
 
     (:test)
-    function timeBaselineIsAtY149(logger as Test.Logger) as Boolean {
+    function timeBaselineIsAtY155(logger as Test.Logger) as Boolean {
         // The renderer draws from the line top, which sits `base` above the baseline.
-        Test.assertEqual(149, frameAt(8, 42).timeY + baseOf(FONT_TIME));
+        Test.assertEqual(155, frameAt(8, 42).timeY + baseOf(FONT_TIME));
         return true;
     }
 
-    // The 78 px time font has tabular digits of 38 px and a 19 px colon, so
-    // "08:42" is 4 x 38 + 19 = 171 px wide, from x 208 - 85 = 123 (the
-    // design's 122.5 in integer math), with its line top at 149 - base 77 =
-    // 72.
+    // Q8/Q16: the 86 px time font has tabular digits of 42 px and a 21 px
+    // colon, so "08:42" is 4 x 42 + 21 = 189 px wide, from x 208 - 94 = 114
+    // (the design's 113.5 in integer math); timeBaselineIsAtY155 places it
+    // vertically.
     (:test)
-    function time0842Is171PxWideFromX123(logger as Test.Logger) as Boolean {
+    function time0842Is189PxWideFromX114(logger as Test.Logger) as Boolean {
         var frame = frameAt(8, 42);
-        Test.assertEqual(38, FontCatalog.entry(FONT_TIME).widths['0']);
-        Test.assertEqual(19, FontCatalog.entry(FONT_TIME).widths[':']);
-        Test.assertEqual(171, frame.timeWidth);
-        Test.assertEqual(123, frame.timeX);
-        Test.assertEqual(72, frame.timeY);
+        Test.assertEqual(42, FontCatalog.entry(FONT_TIME).widths['0']);
+        Test.assertEqual(21, FontCatalog.entry(FONT_TIME).widths[':']);
+        Test.assertEqual(189, frame.timeWidth);
+        Test.assertEqual(114, frame.timeX);
         return true;
     }
 
@@ -383,21 +382,21 @@ module FaceModelTest {
         return true;
     }
 
-    // The band (72, 78, 272, 84), radius 22, in the accent; its black well is
-    // the band grown by the 6 px well: (66, 72, 284, 96), radius 28.
+    // The band (64, 78, 288, 88), radius 24, in the accent; its black well is
+    // the band grown by the 6 px well: (58, 72, 300, 100), radius 30.
     (:test)
     function timeBandSitsInItsBlackWell(logger as Test.Logger) as Boolean {
         var layer = mintLayer();
-        assertRoundedRect(layer.timeBand, 72, 78, 272, 84, 22, 0x8EE3B8);
-        assertRoundedRect(layer.timeBandWell, 66, 72, 284, 96, 28, 0x000000);
+        assertRoundedRect(layer.timeBand, 64, 78, 288, 88, 24, 0x8EE3B8);
+        assertRoundedRect(layer.timeBandWell, 58, 72, 300, 100, 30, 0x000000);
         return true;
     }
 
     // Q39: a 2 px rim in the well-rim color just outside the time band's
-    // well: (64, 70, 288, 100), radius 30.
+    // well: (56, 70, 304, 104), radius 32.
     (:test)
     function timeBandWellHasA2PxRim(logger as Test.Logger) as Boolean {
-        assertRoundedRect(mintLayer().timeBandRim, 64, 70, 288, 100, 30, 0x446D58);
+        assertRoundedRect(mintLayer().timeBandRim, 56, 70, 304, 104, 32, 0x446D58);
         return true;
     }
 
@@ -751,9 +750,11 @@ module FaceModelTest {
         return true;
     }
 
-    // Q33: a pill wider than the time band (272 px) falls back to English.
+    // Q33: a pill wider than its maximum (272 px, the design's
+    // Math.min(272, ...), narrower than the 288 px band) falls back to
+    // English.
     (:test)
-    function nameTooWideForTheTimeBandFallsBackToEnglish(logger as Test.Logger) as Boolean {
+    function nameTooWideForTheMaximumPillFallsBackToEnglish(logger as Test.Logger) as Boolean {
         var frame = frameOnDate("Wednesday Wednesday", 4, 28, 11);
         Test.assertEqual("WED 28/11", frame.date);
         Test.assertEqual(frameOnDate("Wed", 4, 28, 11).datePill.width, frame.datePill.width);
@@ -762,11 +763,11 @@ module FaceModelTest {
 
     // Q33 at its edge, with widths from the date font: 10 x M (170) + I (7)
     // + E (12) = 189, + " 12/11" (57) = 246 px advanced, 246 - 2 = 244 px
-    // measured, a pill of exactly 272 from x 72 (the band's own x), is kept;
-    // 10 x M (170) + I (7) + R (13) = 190 makes 247 - 2 = 245 px, a 273 px
-    // pill, and falls back.
+    // measured, a pill of exactly 272 from x 72, is kept; 10 x M (170) + I
+    // (7) + R (13) = 190 makes 247 - 2 = 245 px, a 273 px pill, and falls
+    // back, although the band is 288 px wide.
     (:test)
-    function pillOfExactlyTheBandWidthIsKept(logger as Test.Logger) as Boolean {
+    function pillOfExactlyTheMaximumWidthIsKept(logger as Test.Logger) as Boolean {
         var frame = frameOnDate("MMMMMMMMMMIE", 5, 12, 11);
         Test.assertEqual("MMMMMMMMMMIE 12/11", frame.date);
         Test.assertEqual(244, frame.dateWidth);
@@ -776,7 +777,7 @@ module FaceModelTest {
     }
 
     (:test)
-    function pillOnePixelWiderThanTheBandFallsBack(logger as Test.Logger) as Boolean {
+    function pillOnePixelWiderThanTheMaximumFallsBack(logger as Test.Logger) as Boolean {
         Test.assertEqual(245, FaceModel.dateTextWidth("MMMMMMMMMMIR 12/11"));
         Test.assertEqual(273, FaceModel.datePillWidth(245));
         Test.assertEqual("THU 12/11", dateOf("MMMMMMMMMMIR", 5, 12, 11));
@@ -1810,30 +1811,29 @@ module FaceModelTest {
         return true;
     }
 
-    // Q12: the AOD time is filled. Story 37: in the same font, size and
-    // position as the normal time (08:42 is 4 x 38 + 19 = 171 px wide, from x 208 - 85
-    // = 123; baseline 149 - base 77 = line top 72), moved by the minute's
-    // offset.
+    // Q12: the AOD time is filled. Stories 37, 56: in the same font, size
+    // and position as the normal time (08:42 is 4 x 42 + 21 = 189 px wide,
+    // from x 208 - 94 = 114; baseline 155), moved by the minute's offset.
     (:test)
     function aodTimeSitsWhereTheNormalTimeIsMovedByTheOffset(logger as Test.Logger) as Boolean {
         var aod = aodAt(8, 42);
         Test.assertEqual("08:42", aod.time);
-        Test.assertEqual(123 + aod.offsetX, aod.timeX);
-        Test.assertEqual(72 + aod.offsetY, aod.timeY);
+        Test.assertEqual(114 + aod.offsetX, aod.timeX);
+        Test.assertEqual(155 - baseOf(FONT_TIME) + aod.offsetY, aod.timeY);
         return true;
     }
 
     // The AOD time is measured with the time font's own table, so it lands
     // exactly on the normal time, whatever the digits: the digits are
-    // tabular, so "00:00", "11:11" and "23:59" are all 171 px wide, from
-    // x 123.
+    // tabular, so "00:00", "11:11" and "23:59" are all 189 px wide, from
+    // x 114.
     (:test)
     function aodTimeIsMeasuredWithTheTimeTable(logger as Test.Logger) as Boolean {
         var times = [[0, 0], [11, 11], [23, 59]] as Array<Array<Number> >;
         for (var i = 0; i < times.size(); i++) {
             var aod = aodAt(times[i][0], times[i][1]);
             var normal = frameAt(times[i][0], times[i][1]);
-            Test.assertEqual(123 + aod.offsetX, aod.timeX);
+            Test.assertEqual(114 + aod.offsetX, aod.timeX);
             Test.assertEqual(normal.timeX + aod.offsetX, aod.timeX);
             Test.assertEqual(normal.timeY + aod.offsetY, aod.timeY);
         }

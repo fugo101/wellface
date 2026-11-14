@@ -221,22 +221,23 @@ module Layout {
     const WELL_RIM = 2;
 
     // The time band: a rounded rect filled with the accent.
-    const BAND_X = 72;
+    const BAND_X = 64;
     const BAND_Y = 78;
-    const BAND_W = 272;
-    const BAND_H = 84;
-    const BAND_RADIUS = 22;
+    const BAND_W = 288;
+    const BAND_H = 88;
+    const BAND_RADIUS = 24;
 
     // The date pill, overlapping the bottom edge of the time band: centered
     // on CENTER_X, the text's width plus DATE_PILL_PAD on each side, from
-    // DATE_PILL_MIN_WIDTH up to the band's width (Q23, Q33). The date's
+    // DATE_PILL_MIN_WIDTH up to DATE_PILL_MAX_WIDTH (Q23, Q33: the design's
+    // Math.min(272, ...), its own value, narrower than the band). The date's
     // capitals are vertically centered on DATE_CENTER_Y.
     const DATE_PILL_Y = 156;
     const DATE_PILL_HEIGHT = 28;
     const DATE_PILL_RADIUS = 14;
     const DATE_PILL_PAD = 14;
     const DATE_PILL_MIN_WIDTH = 96;
-    const DATE_PILL_MAX_WIDTH = BAND_W;
+    const DATE_PILL_MAX_WIDTH = 272;
     const DATE_CENTER_Y = 170;
 
     // Always On: the width of the date pill's outline (Q12), inside the
@@ -254,7 +255,7 @@ module Layout {
 
     // The time: centered on this x, with its baseline on this y.
     const TIME_CENTER_X = CENTER_X;
-    const TIME_BASELINE_Y = 149;
+    const TIME_BASELINE_Y = 155;
 
     // The battery bar, in design degrees (0 = 12 o'clock, clockwise).
     // Segment i spans BATTERY_FIRST + i * BATTERY_STEP for BATTERY_SEGMENT

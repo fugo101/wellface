@@ -18,7 +18,7 @@
 JUNGLE="$(cd "$(dirname "$0")/.." && pwd)/tools/capture/monkey.jungle"
 source "$(dirname "$0")/common.sh"
 
-SCENARIOS=(normal missing goalReached longSteps steps100000 warning aod)
+SCENARIOS=(frame1 frame1sec00 frame2 frame3 frame5 frame7 frame11 frame11b frame12 goalReached warning longSteps steps100000)
 SCENARIO_DIR="$ROOT/tools/capture/scenario"
 PRG="$BIN/capture.prg"
 PYTHON="$ROOT/.venv/bin/python"
