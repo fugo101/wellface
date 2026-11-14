@@ -35,7 +35,7 @@ Every build fails on any compiler warning. Type checking is strict, set in each 
 
 `sideload.sh` exits 0 when exactly one full-size copy is confirmed on the watch, 1 when the copy is not confirmed and 2 when it could not run (no watch, an MTP app holding it, missing tools, failed build).
 
-`run-tests.sh` exits 0 when all tests pass, 1 when a test fails and 2 when the tests could not run (the build failed, or there is no `RESULTS` block because the simulator was not reachable, the app crashed or the run timed out). It ignores `monkeydo`'s exit code, which is 1 even when every test passes (SDK 9.3.0).
+`run-tests.sh` starts the simulator hidden and in the background (`open -g -j`), so it takes no screen space and no focus; the tests still run in it. A simulator that is already running is left as it is. Set `CIQ_SIM_SHOW=1` to start it the usual way, with its window. `run-tests.sh` exits 0 when all tests pass, 1 when a test fails and 2 when the tests could not run (the build failed, or there is no `RESULTS` block because the simulator was not reachable, the app crashed or the run timed out). It ignores `monkeydo`'s exit code, which is 1 even when every test passes (SDK 9.3.0).
 
 ## Fonts
 

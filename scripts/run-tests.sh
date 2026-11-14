@@ -12,7 +12,13 @@ trap 'exit 2' ERR
 compile "$BIN/wellface-test.prg" -t
 
 LOG="$BIN/test.log"
-"$CIQ_SDK/bin/connectiq"   # starts the simulator, or focuses it if running
+# Start the simulator hidden and in the background (or leave a running one
+# as it is): the tests need no window. Set CIQ_SIM_SHOW=1 to show it.
+if [[ "$(uname)" == "Darwin" && -z "${CIQ_SIM_SHOW:-}" ]]; then
+    open -g -j -a "$CIQ_SDK/bin/ConnectIQ.app"
+else
+    "$CIQ_SDK/bin/connectiq"   # starts the simulator, or focuses it if running
+fi
 
 # Run with a hard time limit (macOS has no `timeout`).
 with_timeout() { perl -e 'alarm shift; exec @ARGV' "$@"; }
