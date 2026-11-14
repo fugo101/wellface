@@ -11,7 +11,8 @@ class Renderer {
     private var _notches as Array<Line>;
     private var _fonts as Fonts;
     // The reference and the bitmap it returned. Holding the bitmap keeps it
-    // locked in the graphics pool; it is drawn again if it was purged anyway.
+    // locked in the graphics pool, so it is drawn once and never purged
+    // (Garmin's graphics pool guide).
     private var _reference as BufferedBitmapReference?;
     private var _bitmap as BufferedBitmap?;
 
@@ -121,14 +122,16 @@ class Renderer {
         dc.clear();
     }
 
-    // The buffer holding the static layer, drawn if it is new or was purged.
-    // Null if the graphics pool has no room for it.
+    // The buffer holding the static layer, drawn when it is first created.
+    // Null if the graphics pool has no room for it. BufferedBitmap.isCached()
+    // is not asked: it only says whether get() restored a released bitmap
+    // from the pool, and stays false on a bitmap the face keeps holding, which
+    // made every update repaint the layer (ticket settings-ready 01).
     private function staticBitmap(width as Number, height as Number) as BufferedBitmap? {
         var bitmap = _bitmap;
-        if (bitmap != null && bitmap.isCached()) {
+        if (bitmap != null) {
             return bitmap;
         }
-        _bitmap = null;
         try {
             var reference = _reference;
             if (reference == null) {

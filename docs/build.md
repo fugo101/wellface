@@ -23,6 +23,8 @@ The scripts never print the key or its path. If the VS Code extension generated 
 | `scripts/build-release.sh` | `bin/wellface-release.prg` | release build for the watch (`-r --build-stats 0`) |
 | `scripts/build-profile.sh` | `bin/wellface-profile.prg` | the release build with profiling support (`-r -k`), see "Profile" |
 | `scripts/run-profile.sh [file.prg]` | `bin/wellface-profile.prg` | profile build (or the given PRG), start the simulator and load it |
+| `scripts/watch-logs.sh list \| create <NAME> \| get <NAME> <file>` | — | the watch's `GARMIN/Apps/LOGS` over USB: list, create an empty log file, copy a log back |
+| `scripts/profile-sim.sh <file.prg> <dir> [run]` | `<dir>/<run>.PRF`, `.txt`, `-memory.txt` | the fixed profiling scenario in the simulator, unattended, see "Profile" |
 | `scripts/capture.sh <dir> [--compare <dir>]` | `<dir>/<scenario>.png` | simulator screenshots of fixed scenarios, compared pixel by pixel, see "Captures" |
 | `scripts/sideload.sh [file.prg]` | `GARMIN/Apps/WELLFACE.PRG` on the watch | release build, then copy it to the watch over USB (or copy the given PRG) |
 | `scripts/gen-fonts.sh` | `resources/fonts/`, `source/FontCatalog.mc` | regenerate the bitmap fonts, the icon font and the font catalog |
@@ -51,20 +53,15 @@ To check Always On, choose Settings → Display Mode → Always-On in the simula
 
 ## Profile
 
-`scripts/build-profile.sh` builds the release build with profiling support (`-k`). `scripts/run-profile.sh` builds it, starts the simulator and loads it; give it a PRG to load that one instead (for example a baseline build of an older commit). With SDK 9.3.0 the simulator opens its profiler window (File → View Profiler) by itself when such a build loads. The profiler lists Function, Total Time, Actual Time, Average Time (µs) and Call Count (Garmin's profiling guide).
+`scripts/build-profile.sh` builds the release build with profiling support (`-k`). `scripts/run-profile.sh [file.prg]` builds it (or takes the given PRG), starts the simulator and loads it; the simulator then opens its profiler (File → View Profiler) and starts it by itself (SDK 9.3.0).
 
-The measurement scenario is fixed (`.scratch/settings-ready/spec.md`, refresh plan), so numbers stay comparable from one change to the next:
+The measurement scenario is fixed (`.scratch/settings-ready/spec.md`, refresh plan), so numbers stay comparable from one change to the next. `scripts/profile-sim.sh <file.prg> <out dir> [run name]` runs it unattended in about four minutes: it restarts the simulator, loads the PRG, sets Settings → Display Mode → High Power and Simulation → Activity Data → Data Source: Data Simulation (heart rate then changes about every second), waits 30 s, switches to Settings → Display Mode → Always-On, waits 3 minutes, reads File → View Memory (current and peak memory), stops the profiler and reads its log. It drives the menus by UI scripting, so it needs macOS and the Accessibility permission for the terminal; leave the mouse and keyboard alone while it runs. Run it twice per build: the spread between the two runs is the profiler's noise.
 
-1. Load the default face with `scripts/run-profile.sh`.
-2. Simulation → Activity Data → Data Source: Data Simulation. Heart rate then changes about every second.
-3. Awake: profile 30 s in Settings → Display Mode → High Power. Note the Average Time of `WellfaceView.onUpdate` (the high-power update), `FaceModel.compute` (the frame) and `DataReader.readComplication` (mostly the heart-rate read: it runs every second, the other two complications once a minute).
-4. Always On: Settings → Display Mode → Always-On, profile 3 minutes. Note the Average Time of `WellfaceView.onUpdate` (the AOD update) and `FaceModel.computeAod`.
-5. Peak memory: File → View Memory.
-6. Run the whole scenario twice; the spread between the two runs is the profiler's noise.
+It writes `<run>.PRF` (the profiler's log), `<run>.txt` and `<run>-memory.txt`. `tools/profile/prf.py <file.PRF> <file.prg.debug.xml> [function ...]` turns a log into the profiler's table (calls, Total, Actual and Average time in µs per function) and also splits `WellfaceView.onUpdate` into high-power and Always On updates. The numbers to compare are the Average Time of the high-power and the Always On update, `FaceModel.compute`, `FaceModel.computeAod` and `DataReader.readComplication` (mostly the heart-rate read: it runs every second, Body Battery and stress once a minute), and the peak memory.
 
-How to start, stop and read a profiling run is not settled yet: driven by scripted clicks in this session, the table stayed empty (simulator of SDK 9.3.0). Menu names may differ slightly.
+The script reads the log itself because the profiler window can show nothing: with SDK 9.3.0 the simulator wrote the log under the name of an earlier build of the same app (`WELLFACE-TEST.PRF`) and then looked for that build's debug file, failing with "Unable to load debug.xml data for this app". The `.PRF` format is not documented; `prf.py` describes what was read from it.
 
-On the watch, Garmin's guide says a build with profiling support writes `GARMIN/APPS/LOGS/<app>.PRF`, which the profiler's Load button opens together with the build's `.prg.debug.xml`. Whether the FR265 does this, and whether the file must exist first (as the `.TXT` log must), is not verified.
+On the watch (verified on the FR265, 2026-11-14): create the log files first with `scripts/watch-logs.sh create WELLFACE.PRF` (and `WELLFACE.TXT` for `System.println` output), sideload a profile build with `scripts/sideload.sh bin/wellface-profile.prg`, unplug and wear it, plug in again and copy the log back with `scripts/watch-logs.sh get WELLFACE.PRF <local file>`. `prf.py` reads it with the build's `.prg.debug.xml`. Two differences from the simulator's log: the watch starts a new log each time the face starts (a return from a widget included), so it holds only the last run; and its clock advances only while the face's code runs, so times are execution time, not wall time. Whether the files must exist beforehand was not tested (they did). Sideload the normal build afterwards.
 
 ## Captures
 

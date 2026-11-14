@@ -25,3 +25,6 @@ design/*.zip
 # Simulator captures (scripts/capture.sh) and the scenario it writes
 captures/
 tools/capture/scenario/
+
+# Python bytecode caches
+__pycache__/
