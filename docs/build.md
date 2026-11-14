@@ -23,7 +23,7 @@ The scripts never print the key or its path. If the VS Code extension generated 
 | `scripts/build-release.sh` | `bin/wellface-release.prg` | release build for the watch (`-r --build-stats 0`) |
 | `scripts/build-profile.sh` | `bin/wellface-profile.prg` | the release build with profiling support (`-r -k`), see "Profile" |
 | `scripts/run-profile.sh [file.prg]` | `bin/wellface-profile.prg` | profile build (or the given PRG), start the simulator and load it |
-| `scripts/watch-logs.sh list \| create <NAME> \| get <NAME> <file>` | — | the watch's `GARMIN/Apps/LOGS` over USB: list, create an empty log file, copy a log back |
+| `scripts/watch-logs.sh list \| create <NAME> \| get <NAME> <file> \| delete <NAME>` | — | the watch's `GARMIN/Apps/LOGS` over USB: list, create an empty log file, copy a log back, delete one |
 | `scripts/profile-sim.sh <file.prg> <dir> [run]` | `<dir>/<run>.PRF`, `.txt`, `-memory.txt` | the fixed profiling scenario in the simulator, unattended, see "Profile" |
 | `scripts/capture.sh <dir> [--compare <dir>]` | `<dir>/<scenario>.png` | simulator screenshots of fixed scenarios, compared pixel by pixel, see "Captures" |
 | `scripts/sideload.sh [file.prg]` | `GARMIN/Apps/WELLFACE.PRG` on the watch | release build, then copy it to the watch over USB (or copy the given PRG) |
@@ -61,7 +61,7 @@ It writes `<run>.PRF` (the profiler's log), `<run>.txt` and `<run>-memory.txt`. 
 
 The script reads the log itself because the profiler window can show nothing: with SDK 9.3.0 the simulator wrote the log under the name of an earlier build of the same app (`WELLFACE-TEST.PRF`) and then looked for that build's debug file, failing with "Unable to load debug.xml data for this app". The `.PRF` format is not documented; `prf.py` describes what was read from it.
 
-On the watch (verified on the FR265, 2026-11-14): create the log files first with `scripts/watch-logs.sh create WELLFACE.PRF` (and `WELLFACE.TXT` for `System.println` output), sideload a profile build with `scripts/sideload.sh bin/wellface-profile.prg`, unplug and wear it, plug in again and copy the log back with `scripts/watch-logs.sh get WELLFACE.PRF <local file>`. `prf.py` reads it with the build's `.prg.debug.xml`. Two differences from the simulator's log: the watch starts a new log each time the face starts (a return from a widget included), so it holds only the last run; and its clock advances only while the face's code runs, so times are execution time, not wall time. Whether the files must exist beforehand was not tested (they did). Sideload the normal build afterwards.
+On the watch (verified on the FR265, 2026-11-14): create the log files first with `scripts/watch-logs.sh create WELLFACE.PRF` (and `WELLFACE.TXT` for `System.println` output), sideload a profile build with `scripts/sideload.sh bin/wellface-profile.prg`, unplug and wear it, plug in again and copy the log back with `scripts/watch-logs.sh get WELLFACE.PRF <local file>`. `prf.py` reads it with the build's `.prg.debug.xml`. Two differences from the simulator's log: the watch starts a new log each time the face starts (a return from a widget included), so it holds only the last run; and its clock advances only while the face's code runs, so times are execution time, not wall time. Whether the files must exist beforehand was not tested (they did). Sideload the normal build afterwards and delete the log files (`scripts/watch-logs.sh delete <NAME>`).
 
 ## Captures
 

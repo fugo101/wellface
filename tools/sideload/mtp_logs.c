@@ -6,6 +6,7 @@
 //   mtp-logs list                      name and size of every file
 //   mtp-logs put <local file> <name>   create or replace <name>
 //   mtp-logs get <name> <local file>   copy <name> from the watch
+//   mtp-logs del <name>                delete <name>, confirmed in a new session
 //
 // Exit codes: 0 done, 1 the file was not found or not copied, 2 no device,
 // no GARMIN/Apps/LOGS, or bad arguments.
@@ -63,6 +64,12 @@ int main(int argc, char **argv) {
     int rc = 0;
     if (!strcmp(argv[1], "list")) each(NULL, 0, NULL);
     else if (!strcmp(argv[1], "get") && argc == 4) rc = each(argv[2], 0, argv[3]) == 1 ? 0 : 1;
+    else if (!strcmp(argv[1], "del") && argc == 3) {
+        int found = each(argv[2], 1, NULL);
+        LIBMTP_Release_Device(dev); if (open_session() != 0) return 2;
+        rc = found < 1 || each(argv[2], 0, NULL) != 0;
+        if (!rc) printf("deleted GARMIN/Apps/LOGS/%s\n", argv[2]);
+    }
     else if (!strcmp(argv[1], "put") && argc == 4) {
         struct stat st; if (stat(argv[2], &st)) { perror(argv[2]); return 2; }
         each(argv[3], 1, NULL);
@@ -73,7 +80,7 @@ int main(int argc, char **argv) {
         rc = LIBMTP_Send_File_From_File(dev, argv[2], file, NULL, NULL) != 0;
         if (rc) LIBMTP_Dump_Errorstack(dev);
         LIBMTP_destroy_file_t(file);
-    } else { fprintf(stderr, "usage: mtp-logs list | put <local> <name> | get <name> <local>\n"); rc = 2; }
+    } else { fprintf(stderr, "usage: mtp-logs list | put <local> <name> | get <name> <local> | del <name>\n"); rc = 2; }
     LIBMTP_Release_Device(dev);
     return rc;
 }

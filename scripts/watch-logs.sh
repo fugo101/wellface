@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # The watch's GARMIN/Apps/LOGS folder over USB: list it, create an empty log
-# file there (a log is written only if its file exists), or copy a log back.
+# file there (a log is written only if its file exists), copy a log back, or
+# delete one.
 # Compiles the MTP helper (tools/sideload/mtp_logs.c) the first time, like
 # scripts/sideload.sh, and needs the same setup (libmtp, a C compiler, no
 # MTP app holding the watch).
@@ -8,6 +9,7 @@
 # Usage: scripts/watch-logs.sh list
 #        scripts/watch-logs.sh create <NAME>          e.g. WELLFACE.PRF
 #        scripts/watch-logs.sh get <NAME> <local file>
+#        scripts/watch-logs.sh delete <NAME>
 # Exit codes: 0 done, 1 not found or not copied, 2 could not run.
 set -euo pipefail
 
@@ -45,7 +47,8 @@ case "${1:-}" in
     list) [[ $# -eq 1 ]] || die "usage: scripts/watch-logs.sh list"; args=(list) ;;
     create) [[ $# -eq 2 ]] || die "usage: scripts/watch-logs.sh create <NAME>"; args=(put "$empty" "$2") ;;
     get) [[ $# -eq 3 ]] || die "usage: scripts/watch-logs.sh get <NAME> <local file>"; args=(get "$2" "$3") ;;
-    *) die "usage: scripts/watch-logs.sh list | create <NAME> | get <NAME> <local file>" ;;
+    delete) [[ $# -eq 2 ]] || die "usage: scripts/watch-logs.sh delete <NAME>"; args=(del "$2") ;;
+    *) die "usage: scripts/watch-logs.sh list | create <NAME> | get <NAME> <local file> | delete <NAME>" ;;
 esac
 
 # libusb and libmtp print harmless notes for every session (see sideload.sh).
