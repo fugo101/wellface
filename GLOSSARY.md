@@ -8,6 +8,10 @@ A custom watch face for a round AMOLED Garmin watch. Every element sits inside a
 The black area that surrounds an element and separates it from the background. A black pill can be its own well.
 _Avoid_: Frame, outline, border
 
+**Well rim**:
+The thin edge, lighter than the background, around a well, so the well keeps its shape when the watch dims the screen. Not every well has one.
+_Avoid_: Border, outline, halo
+
 **Theme**:
 A named set of colors used to draw the face. The face has exactly one active theme.
 _Avoid_: Skin, color scheme
@@ -31,7 +35,7 @@ The rounded band, filled with the accent, that holds hours:minutes.
 _Avoid_: Time bar, header
 
 **Date pill**:
-The small rounded pill under the time band that shows the weekday and day of month.
+The small rounded pill under the time band that shows the weekday, the day and the month.
 _Avoid_: Date field, date badge
 
 **Battery bar**:

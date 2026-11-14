@@ -17,17 +17,17 @@ Source: the Q1–Q17 Q&A session with the user, plus the final design in Claude 
 | Q3 | Colors | 1 accent color (per theme) + warning colors. BB 15–24 orange `#FF8A3D`, <15 red `#FF4D4D`. Stress 51–75 orange, >75 red. Battery ≤20% orange, ≤10% red |
 | Q4 | Bedtime countdown | **Not** in the MVP. Performance comes first |
 | Q5 | Long-press on fields | Yes: opens the matching Garmin page (BB, left field, heart rate, steps) |
-| Q8/Q16 | Time font | **Big Shoulders Display ExtraBold**, 57 px (digit height 46 px). LCD was chosen at first, but the user switched in Claude Design. Secondary font: **Manrope** ExtraBold/Bold |
+| Q8/Q16 | Time font | **Big Shoulders Display ExtraBold**, 78 px (digit height 63 px; changed 2026-11-14, was 57 px with digit height 46 px). LCD was chosen at first, but the user switched in Claude Design. Secondary font: **Manrope** ExtraBold/Bold |
 | Q9 | Default accent | Mint `#8EE3B8`. This is only the first theme; more themes later |
 | Q10 | Bezel | Step progress ring (no month-name ring) |
 | Q11 | Field style | BB and stress are round gauges with a 0–100 ring. Heart rate is 5 HR-zone segments + the number |
 | — | AOD | Time + date only, **same position and size**, everything else black |
-| Q12 | AOD digits | **2 px outline** only, no fill, no dimmed background segments |
-| Q13 | AOD color | Accent × 0.55 (mint → `#4E7D65`) |
-| — | AOD burn-in protection | The whole time + date group shifts a few pixels each minute; ≤10% of pixels lit; verify with the heat map |
+| Q12 | AOD digits | Time **filled**, in the same time font as normal mode; date pill as a **3 px outline** with filled text; no dimmed background segments (changed 2026-11-14; was 2 px outlined digits and a 2 px pill outline) |
+| Q13 | AOD color | Accent × 0.75 (mint → `#6BAA8A`) (changed 2026-11-14; was × 0.55, `#4E7D65`) |
+| — | AOD burn-in protection | The whole time + date group shifts a few pixels each minute (Q28); acceptance is less than 10% of screen luminance (Q35), verified with the heat map (changed 2026-11-14; was ≤10% of pixels lit) |
 | Q14 | Morning sleep score | **Dropped**: the FR265 (API 5.2) doesn't expose it to CIQ faces |
 | Q15 | Extras beyond the MVP (left field switchable to recovery / SpO₂ / altitude, sleep-mode dimming, properties.xml) | **Not** in the MVP. The left field is always stress. Leave room in the code to extend |
-| Q17 | Background | Very dark gray `#1A1D1B` when the screen is on; pure black in AOD |
+| Q17 | Background | Dark gray `#2C332F` when the screen is on, light enough to stay visible when the watch dims the screen at night; pure black in AOD (changed 2026-11-14; was `#1A1D1B`) |
 | — | Testing | The single test seam is `FaceModel` (see CLAUDE.md) |
 
 ## Implementation decisions (agreed 2026-11-12, second session)
@@ -55,18 +55,21 @@ Vocabulary follows `GLOSSARY.md`. These rows extend Q1–Q17; where one changes 
 | Q35 | AMOLED rule | Acceptance criterion for AOD: **less than 10% of screen luminance**, measured with the simulator heat map (the SDK rule since the Venu 2). The hard "no pixel lit > 3 minutes" requirement is dropped. The ±4 px burn-in shift (Q28) stays, as Garmin recommends, to limit physical burn-in |
 | Q36 | Heart-rate refresh | While the screen is awake (high-power mode), heart rate alone is re-read every second and the right field updates when it changes. All other data stays once a minute and on wake. AOD shows no heart rate, so nothing is read there |
 | Q37 | Heart-rate zone colors (agreed 2026-11-13, ticket 09) | Each lit zone segment takes its own zone's color, in Garmin's order: zone 1 gray `#B4B4B4`, 2 blue `#4DA6FF`, 3 green `#4CD964`, 4 orange `#FF8A3D`, 5 red `#FF4D4D`. Garmin's manuals name the colors but publish no values; these were chosen for the dark background, and zones 4 and 5 reuse the warning colors on purpose. The colors are a theme role. Replaces the accent for lit zone segments (Q3 otherwise unchanged) |
+| Q38 | Date format (agreed 2026-11-14) | The date pill shows the weekday, a space, then day/month as `dd/mm`, always two digits each (`THU 12/11`, `T2 03/11`), in every language and whatever the watch's date-format setting. The English fallback (Q21, Q33) uses the same format. Replaces the day-of-month-only date of the MVP (`T5 12`, no leading zero); Q21's weekday rules are unchanged |
+| Q39 | Well rims (agreed 2026-11-14) | A 2 px well rim, lighter than the background (a theme role), around the wells of the time band, the left, center and right fields and the bottom field, so the wells keep their shape when the watch dims the screen. The battery bar and the date pill have none. Long-press targets stay the wells (R + 6), rims not included |
 
 ## Final design: main elements
 Coordinates are on the 416×416 canvas, center (208,208). Full details in `spec` inside the design file.
-- **Step ring:** arc r 204, stroke 8, starts at 12 o'clock, runs clockwise, angle = min(1, steps/goal) × 360°. Track `#1E1E1E`. 3 black notches at 90/180/270°. White dot r 4 at the ring's head.
-- **Background:** fillCircle r 194, color `#1A1D1B`. Draw order: ring → background → wells → content. A well is a 6 px black border around each element.
+- **Step ring:** arc r 204, stroke 8, starts at 12 o'clock, runs clockwise, angle = min(1, steps/goal) × 360°. Track `#343B37`. 3 black notches at 90/180/270°. White dot r 4 at the ring's head.
+- **Background:** fillCircle r 194, color `#2C332F`. Draw order: ring → background → well rims → wells → content. A well is a 6 px black border around each element.
+- **Well rims (Q39):** `#4D5852`, 2 px outside the well: time band fillRoundedRectangle(64, 70, 288, 100, 30); left field fillCircle(88, 246, 46); right field fillCircle(328, 246, 46); center field fillCircle(208, 256, 68); bottom field fillRoundedRectangle(124, 328, 168, 44, 22).
 - **Battery:** 10 arc segments r 180, stroke 4, spanning −34°…+34°, 1.6° gaps. Well: arc stroke 12 with 2 round caps. Lit segments = ceil(battery/10). Off segments `#2E3330`.
-- **Time band:** roundRect (72,80,272,64) radius 20, accent color. Time in black, centered on x 208.
-- **Date:** pill (160,140,96,28) radius 14, overlapping the bottom edge of the time band. Manrope ExtraBold 17, letter spacing 1.5, white text. Format `THU 12`.
-- **Left field (stress):** center (88,236) R 38. Ring stroke 6. Icon 24 px. Manrope number 26, size shrinks with character count (≤3 → 26, 4 → 22, ≥5 → 18).
-- **Body Battery:** center (208,246) R 60. Ring stroke 9. Lightning-bolt icon. Manrope number 48.
-- **Heart rate:** center (328,236) R 38. 5 arc segments (i×72°+4° → (i+1)×72°−4°). Lit segments = number of HR-zone thresholds ≤ heart rate (zones from `UserProfile.getHeartRateZones`), each in its zone's color (Q37). No data: `--` in gray.
-- **Steps:** pill (126,320,164,40) radius 20. Manrope number 22 right-aligned at x 228, `/ goal` Bold 15. Thousands separator is a dot (e.g. `1.147`). When the goal is reached: pill background switches to the accent color, text black.
+- **Time band:** well (66,72,284,96) radius 28; band roundRect (72,78,272,84) radius 22, accent color. Time in black, centered on x 208, baseline y 149: tabular digits 38 px, `:` 19 px, `08:42` 171 px wide.
+- **Date:** pill at y 156, height 28, radius 14, width max(96, text + 2 × 14) up to 272, centered on x 208, overlapping the bottom edge of the time band. Text centered on y 170. Manrope ExtraBold 17, letter spacing 2, white text. Format `THU 12/11` (Q38).
+- **Left field (stress):** center (88,246) R 38, icon at (76,216), number centered on y 260. Ring stroke 6. Icon 24 px. Manrope number 26, size shrinks with character count (≤3 → 26, 4 → 22, ≥5 → 18).
+- **Body Battery:** center (208,256) R 60, icon at (196,213), number centered on y 268. Ring stroke 9. Lightning-bolt icon. Manrope number 48.
+- **Heart rate:** center (328,246) R 38, icon at (316,216), number centered on y 260. 5 arc segments (i×72°+4° → (i+1)×72°−4°). Lit segments = number of HR-zone thresholds ≤ heart rate (zones from `UserProfile.getHeartRateZones`), each in its zone's color (Q37). No data: `--` in gray.
+- **Steps:** pill (126,330,164,40) radius 20, 8 px below the center field's well. Contents centered on y 350: foot icon at y 338, `/ goal` centered on y 351. Manrope number 22 right-aligned at x 228, `/ goal` Bold 15. Thousands separator is a dot (e.g. `1.147`). When the goal is reached: pill background switches to the accent color, text black.
 - **Color rule:** the accent color is used only for the time band and progress. Icons are gray `#8C8C8C` and only change color on a warning.
 - **Missing data:** stress or HR shows `--` in gray, ring off.
-- **Fonts to export:** time font as filled + outline (AOD) with glyphs `0–9 :`. Manrope at sizes 15/17/18/22/26/48, each with only the glyphs it draws (Q32): ExtraBold 17 `A–Z 0–9` + space; ExtraBold 18 and 22 `0–9 . -`; ExtraBold 26 and 48 `0–9 -`; Bold 15 `0–9 . /` + space. No `%` or `h` until a Q15 metric is built.
+- **Fonts to export:** time font, filled only (also used in AOD), with glyphs `0–9 :`. Manrope at sizes 15/17/18/22/26/48, each with only the glyphs it draws (Q32): ExtraBold 17 `A–Z 0–9 /` + space; ExtraBold 18 and 22 `0–9 . -`; ExtraBold 26 and 48 `0–9 -`; Bold 15 `0–9 . /` + space. No `%` or `h` until a Q15 metric is built.

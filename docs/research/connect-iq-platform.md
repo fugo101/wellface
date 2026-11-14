@@ -228,7 +228,7 @@ This document collects what the Connect IQ platform offers and requires for Well
 - **Mode detection:** use `System.getDisplayMode()` in every `onUpdate` as the source of truth. Use `onEnterSleep`/`onExitSleep` only to request a redraw. Return early on `DISPLAY_MODE_OFF`. Do not implement `onPartialUpdate` (it does not exist on fr265).
 - **Static layer:** render the background, wells, tracks and off segments once (the notches go in the dynamic pass, after the bezel progress arc, or the arc would cover them) into a full-colour BufferedBitmap and keep the locked `get()` result. If it is null or `!isCached()`, re-render it.
 - **Dynamic layer:** draw the dynamic parts once per minute. Optionally cache the finished frame in a second buffer, so a per-second high-power update is a single `drawBitmap`. Measure the pool cost first; each full-colour buffer takes about 676 KB in the simulator (ticket 04).
-- **AOD:** use no buffers. Clear to black and draw only the outline time and date, in accent × 0.55, at FaceModel's ±4 px per-minute offset (Q12, Q13, Q17, Q28). Design to satisfy both the 10% / 3-minute rule and the luminance rule, and check with the heat map in low-power mode.
+- **AOD:** use no buffers. Clear to black and draw only the outline time and date, in accent × 0.55 (superseded 2026-11-14: filled time, × 0.75, Q12, Q13), at FaceModel's ±4 px per-minute offset (Q12, Q13, Q17, Q28). Design to satisfy both the 10% / 3-minute rule and the luminance rule, and check with the heat map in low-power mode.
 - **Arc geometry in FaceModel:**
   - Emit integer angles normalized to 0–359.
   - Never emit a zero sweep, because start == end draws a full circle.
@@ -266,7 +266,7 @@ This document collects what the Connect IQ platform offers and requires for Well
 - **Fonts:** commit `tools/fonts/make_fonts.py` (Python with Pillow, in a gitignored venv with pinned `requirements.txt`; installing it needs the user's OK). It should:
   - write a text `.fnt` with single spaces only;
   - write one 8-bit grayscale page per font, white on black;
-  - build the AOD outline as the fill minus a 2 px erosion;
+  - build the AOD outline as the fill minus a 2 px erosion (dropped 2026-11-14: the AOD time is filled, Q12);
   - put icons at PUA codepoints;
   - **fail if any requested glyph is missing**, because the compiler will not.
 
@@ -308,6 +308,6 @@ This document collects what the Connect IQ platform offers and requires for Well
 22. Do the Google Fonts downloads of Big Shoulders Display and Manrope include static ExtraBold/Bold TTFs, or must they be instantiated from the variable font (for example with fontTools)? **Answered (ticket 03, 2026-11-12):** google/fonts publishes no static files for either. `ofl/bigshouldersdisplay` holds only `BigShouldersDisplay[wght].ttf`, which its `config.yaml` builds as the opsz=72 subspace of "Big Shoulders" (from an older upstream commit); `ofl/manrope` holds only `Manrope[wght].ttf`. The generator instances the variable fonts with fontTools.
 23. Install Pillow in a gitignored venv? This needs the user's approval. **Answered (ticket 03, 2026-11-12):** approved; `.venv/` with Python 3.15, Pillow 13.0.0 and fontTools 4.68.0, created by `scripts/gen-fonts.sh`.
 24. Do PUA-codepoint glyphs render on the fr265 simulator and device? Test with a one-glyph font. **Simulator: yes (ticket 07, SDK 9.3.0, 2026-11-13).** The bolt at U+E000 in the generated icon font (filter `\uE000`, drawn with `drawText` from `(0xE000).toChar().toString()`) renders in the right place and takes the `setColor` color. **Device: yes (ticket 07, 2026-11-13, user report).** The bolt shows on the FR265 in the warning color. **All four icons (stress, bolt, heart, foot) render correctly on the FR265 (ticket 13, 2026-11-13, user report).**
-25. Do the anti-aliased fonts and the 2 px outline AOD time stay within the burn-in budget? Check with the heat map.
+25. Do the anti-aliased fonts and the AOD time stay within the burn-in budget? Check with the heat map. **2 px outline at × 0.55 (ticket 11, 2026-11-13): yes**, Luminance Usage 0.53%, 24-hour peak 0.60%. **Filled 78 px time, 3 px date-pill outline at × 0.75 (Q12, Q13, 2026-11-14): open**, design-refresh ticket 01.
 26. What are the semantics of `drawBitmap2` `:tintColor` (multiply or replace)? This matters only if bitmap icons are preferred over an icon font.
 27. Confirm on the first test run that `monkeydo -t` really exits 1 even when all tests pass.
