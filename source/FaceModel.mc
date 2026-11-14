@@ -74,12 +74,20 @@ class Frame {
     public var timeY as Number = 0;
     public var timeColor as Number = 0;
     // The date text, for example "THU 12/11", its width (dateTextWidth) and
-    // the top-left corner to draw it from (left-justified, line top).
+    // the top-left corner of the whole text (left-justified, line top),
+    // centered as one group.
     public var date as String = "";
     public var dateWidth as Number = 0;
     public var dateX as Number = 0;
     public var dateY as Number = 0;
-    public var dateColor as Number = 0;
+    // The date is drawn as two runs on dateY (stories 35, 36): the weekday
+    // from dateX in the accent, then the day/month from dayMonthX, after the
+    // weekday and the space, in the text color.
+    public var weekday as String = "";
+    public var weekdayColor as Number = 0;
+    public var dayMonth as String = "";
+    public var dayMonthX as Number = 0;
+    public var dayMonthColor as Number = 0;
     // The black pill behind the date; its width follows the text.
     public var datePill as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
     // The lit battery segments only, leftmost first. The static layer holds
@@ -333,6 +341,10 @@ module FaceModel {
     // Always On: black, the pixels left off. A platform rule, not a theme
     // color.
     const AOD_BLACK = 0x000000;
+    // Indices into dateParts.
+    const DATE_WEEKDAY = 0;
+    const DATE_DAY_MONTH = 1;
+    const DATE_TEXT = 2;
 
     // The frame part of each field, indexed by field.
     const FIELD_PARTS = [PART_LEFT, PART_CENTER, PART_RIGHT, PART_BOTTOM, PART_BEZEL_RING]
@@ -378,13 +390,23 @@ module FaceModel {
             frame.timeColor = theme.ink;
         }
         if ((parts & PART_DATE) != 0) {
-            frame.date = dateText(snapshot);
+            var date = dateParts(snapshot);
+            frame.weekday = date[DATE_WEEKDAY];
+            frame.dayMonth = date[DATE_DAY_MONTH];
+            frame.date = date[DATE_TEXT];
             frame.dateWidth = dateTextWidth(frame.date);
             frame.dateX = Layout.CENTER_X - frame.dateWidth / 2;
             // Upper case only, so the capitals are centered, as in the design.
             var dateFont = FontCatalog.entry(FONT_DATE);
             frame.dateY = digitsTop(Layout.DATE_CENTER_Y, dateFont.capHeight, dateFont.base);
-            frame.dateColor = theme.text;
+            // The date font bakes its letter spacing into every advance, so
+            // the weekday's and the space's advances put the day/month where
+            // it is in the whole text.
+            // The date font has the space (its glyph set includes it).
+            frame.dayMonthX = frame.dateX + textWidth(frame.weekday, dateFont)
+                + (dateFont.widths[' '] as Number);
+            frame.weekdayColor = theme.accent;
+            frame.dayMonthColor = theme.text;
             var pillWidth = datePillWidth(frame.dateWidth);
             frame.datePill = new RoundedRect(Layout.CENTER_X - pillWidth / 2, Layout.DATE_PILL_Y,
                 pillWidth, Layout.DATE_PILL_HEIGHT, Layout.DATE_PILL_RADIUS, theme.ink);
@@ -1022,24 +1044,31 @@ module FaceModel {
         return value < low ? low : (value > high ? high : value);
     }
 
-    // The folded weekday, a space and the date as dd/mm, each with a leading
-    // zero, whatever the watch's date format (Q38). A name that is missing,
-    // empty or cannot be folded, or that would make the pill wider than the
-    // time band (Q33), falls back to the English abbreviation of the
-    // weekday number.
+    // The date text: the weekday, a space and the day/month (dateParts).
     function dateText(snapshot as Snapshot) as String {
-        var day = " " + snapshot.day.format("%02d") + "/" + snapshot.month.format("%02d");
+        return dateParts(snapshot)[DATE_TEXT];
+    }
+
+    // The date's parts, indexed by DATE_WEEKDAY, DATE_DAY_MONTH and
+    // DATE_TEXT: the folded weekday, the date as dd/mm (each with a leading
+    // zero, whatever the watch's date format, Q38) and the whole text
+    // between them with a space. A name that is missing, empty or cannot be
+    // folded, or that would make the pill wider than its maximum (Q33),
+    // falls back to the English abbreviation of the weekday number.
+    function dateParts(snapshot as Snapshot) as Array<String> {
+        var dayMonth = snapshot.day.format("%02d") + "/" + snapshot.month.format("%02d");
         var name = foldWeekday(snapshot.weekdayName);
         if (name != null) {
             name = shortenVietnamese(name);
         }
         if (name != null && name.length() > 0) {
-            var text = name + day;
+            var text = name + " " + dayMonth;
             if (datePillWidth(dateTextWidth(text)) <= Layout.DATE_PILL_MAX_WIDTH) {
-                return text;
+                return [name, dayMonth, text] as Array<String>;
             }
         }
-        return ENGLISH_WEEKDAYS[snapshot.weekdayNumber - 1] + day;
+        var english = ENGLISH_WEEKDAYS[snapshot.weekdayNumber - 1];
+        return [english, dayMonth, english + " " + dayMonth] as Array<String>;
     }
 
     // Vietnamese weekdays in their usual short form (Q21): "THU 2" ... "THU 7"

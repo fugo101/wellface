@@ -401,15 +401,15 @@ module FaceModelTest {
     }
 
     // Q39: each round field's rim is its well (r R + 6) grown by 2 px, at
-    // the field's center, in the well-rim color: left (88, 246) r 46, center
-    // (208, 256) r 68, right (328, 246) r 46.
+    // the field's center, in the well-rim color: left (88, 252) r 46, center
+    // (208, 262) r 68, right (328, 252) r 46.
     (:test)
     function roundFieldWellsHave2PxRims(logger as Test.Logger) as Boolean {
         var rims = mintLayer().fieldRims;
         Test.assertEqual(3, rims.size());
-        assertCircle(circleAt(rims, 88, 246), 88, 246, 46, 0x446D58);
-        assertCircle(circleAt(rims, 208, 256), 208, 256, 68, 0x446D58);
-        assertCircle(circleAt(rims, 328, 246), 328, 246, 46, 0x446D58);
+        assertCircle(circleAt(rims, 88, 252), 88, 252, 46, 0x446D58);
+        assertCircle(circleAt(rims, 208, 262), 208, 262, 68, 0x446D58);
+        assertCircle(circleAt(rims, 328, 252), 328, 252, 46, 0x446D58);
         return true;
     }
 
@@ -426,11 +426,11 @@ module FaceModelTest {
         return true;
     }
 
-    // Q39: the bottom field's pill (126, 330, 164, 40), radius 20, is its own
-    // well; its rim is the pill grown by 2 px: (124, 328, 168, 44), radius 22.
+    // Q39: the bottom field's pill (126, 336, 164, 40), radius 20, is its own
+    // well; its rim is the pill grown by 2 px: (124, 334, 168, 44), radius 22.
     (:test)
     function bottomFieldPillHasA2PxRim(logger as Test.Logger) as Boolean {
-        assertRoundedRect(mintLayer().bottomFieldRim, 124, 328, 168, 44, 22, 0x446D58);
+        assertRoundedRect(mintLayer().bottomFieldRim, 124, 334, 168, 44, 22, 0x446D58);
         return true;
     }
 
@@ -671,11 +671,11 @@ module FaceModelTest {
     }
 
     // The pill is the text plus 14 px on each side: 95 + 28 = 123 wide, from
-    // x 208 - 61 = 147, at (147, 156, 123, 28), radius 14, ink fill.
+    // x 208 - 61 = 147, at (147, 162, 123, 28), radius 14, ink fill.
     (:test)
     function thu1211FillsItsPill(logger as Test.Logger) as Boolean {
         var pill = frameOnDate("Thu", 5, 12, 11).datePill;
-        assertRoundedRect(pill, 147, 156, 123, 28, 14, 0x000000);
+        assertRoundedRect(pill, 147, 162, 123, 28, 14, 0x000000);
         return true;
     }
 
@@ -705,17 +705,66 @@ module FaceModelTest {
         return true;
     }
 
+    // Stories 35, 36: the date is two runs, the weekday in the accent and
+    // the day/month in the text color.
     (:test)
-    function mintDateTextIsWhite(logger as Test.Logger) as Boolean {
-        Test.assertEqual(0xFFFFFF, frameOnDate("Thu", 5, 12, 11).dateColor);
+    function mintWeekdayIsAccentAndDayMonthIsWhite(logger as Test.Logger) as Boolean {
+        var frame = frameOnDate("Thu", 5, 12, 11);
+        Test.assertEqual("THU", frame.weekday);
+        Test.assertEqual(0x8EE3B8, frame.weekdayColor);
+        Test.assertEqual("12/11", frame.dayMonth);
+        Test.assertEqual(0xFFFFFF, frame.dayMonthColor);
         return true;
     }
 
-    // The date's capitals (cap height 12) span y 164-176, centered on 170,
-    // so the baseline sits on 170 + 6 = 176.
+    // The weekday starts the centered group (x 161); the day/month starts
+    // after the weekday and the space, letter spacing included: "THU "
+    // advances 40 + 5 = 45, so x 206, and "12/11" measures 52 - 2 = 50 px,
+    // ending at 256 = 161 + 95, the whole date's end.
     (:test)
-    function dateBaselineSitsOnY176(logger as Test.Logger) as Boolean {
-        Test.assertEqual(176, frameOnDate("Thu", 5, 12, 11).dateY + baseOf(FONT_DATE));
+    function dayMonthStartsAfterTheWeekdayAndTheSpace(logger as Test.Logger) as Boolean {
+        var frame = frameOnDate("Thu", 5, 12, 11);
+        Test.assertEqual(161, frame.dateX);
+        Test.assertEqual(206, frame.dayMonthX);
+        Test.assertEqual(frame.dateX + frame.dateWidth,
+            frame.dayMonthX + FaceModel.dateTextWidth(frame.dayMonth));
+        return true;
+    }
+
+    // Q21: the Vietnamese short weekday is the accent run: "T5 12/11"
+    // advances T5 (24) + " " (5) + 12/11 (52) = 81 and measures 79 px, from
+    // x 208 - 39 = 169; the day/month starts at 169 + 29 = 198.
+    (:test)
+    function vietnameseShortWeekdayIsTheAccentRun(logger as Test.Logger) as Boolean {
+        var thu5 = fromCodePoints([0x54, 0x68, 0x1EE9, 0x20, 0x35] as Array<Number>);
+        var frame = frameOnDate(thu5, 5, 12, 11);
+        Test.assertEqual("T5", frame.weekday);
+        Test.assertEqual("12/11", frame.dayMonth);
+        Test.assertEqual(79, frame.dateWidth);
+        Test.assertEqual(169, frame.dateX);
+        Test.assertEqual(198, frame.dayMonthX);
+        Test.assertEqual(frame.dateX + frame.dateWidth,
+            frame.dayMonthX + FaceModel.dateTextWidth(frame.dayMonth));
+        return true;
+    }
+
+    // Q33: the English fallback is the accent run too, placed the same way.
+    (:test)
+    function englishFallbackIsTheAccentRun(logger as Test.Logger) as Boolean {
+        var frame = frameOnDate("Wednesday Wednesday", 4, 28, 11);
+        Test.assertEqual("WED 28/11", frame.date);
+        Test.assertEqual("WED", frame.weekday);
+        Test.assertEqual("28/11", frame.dayMonth);
+        Test.assertEqual(frame.dateX + frame.dateWidth,
+            frame.dayMonthX + FaceModel.dateTextWidth(frame.dayMonth));
+        return true;
+    }
+
+    // The date's capitals (cap height 12) span y 170-182, centered on 176,
+    // so the baseline sits on 176 + 6 = 182.
+    (:test)
+    function dateBaselineSitsOnY182(logger as Test.Logger) as Boolean {
+        Test.assertEqual(182, frameOnDate("Thu", 5, 12, 11).dateY + baseOf(FONT_DATE));
         return true;
     }
 
@@ -1094,24 +1143,24 @@ module FaceModelTest {
         return true;
     }
 
-    // The center number's digits are vertically centered on y 268: with a
-    // 35 px cap height the baseline sits on 268 + 17 = 285. The renderer
+    // The center number's digits are vertically centered on y 274: with a
+    // 35 px cap height the baseline sits on 274 + 17 = 291. The renderer
     // draws from the line top, `base` above the baseline.
     (:test)
-    function centerBaselineSitsOnY285(logger as Test.Logger) as Boolean {
-        Test.assertEqual(285, positionWith(FIELD_CENTER, 56).numberY + baseOf(FONT_NUMBER_48));
-        Test.assertEqual(285, positionWith(FIELD_CENTER, null).numberY + baseOf(FONT_NUMBER_48));
+    function centerBaselineSitsOnY291(logger as Test.Logger) as Boolean {
+        Test.assertEqual(291, positionWith(FIELD_CENTER, 56).numberY + baseOf(FONT_NUMBER_48));
+        Test.assertEqual(291, positionWith(FIELD_CENTER, null).numberY + baseOf(FONT_NUMBER_48));
         return true;
     }
 
     // Each round field's icon slot stays with the position whatever it
-    // shows: left (76, 216), center (196, 213), right (316, 216).
+    // shows: left (76, 222), center (196, 219), right (316, 222).
     (:test)
     function iconSlotsStayWithThePosition(logger as Test.Logger) as Boolean {
         // Left to right.
         var fields = Layout.ROUND_FIELDS;
         var xs = [76, 196, 316] as Array<Number>;
-        var ys = [216, 213, 216] as Array<Number>;
+        var ys = [222, 219, 222] as Array<Number>;
         for (var i = 0; i < fields.size(); i++) {
             var field = positionWith(fields[i], null);
             Test.assertEqual(xs[i], field.iconX);
@@ -1121,13 +1170,13 @@ module FaceModelTest {
     }
 
     // Each round field's ring stays with the position, whatever track its
-    // metric needs: left (88, 246) and right (328, 246) r 35 (the design's
-    // ring centerline, 38 - 6 / 2), pen 6; center (208, 256) r 56 (the
+    // metric needs: left (88, 252) and right (328, 252) r 35 (the design's
+    // ring centerline, 38 - 6 / 2), pen 6; center (208, 262) r 56 (the
     // design's 55.5), pen 9.
     (:test)
     function ringsStayWithThePosition(logger as Test.Logger) as Boolean {
         var xs = [88, 208, 328] as Array<Number>;
-        var ys = [246, 256, 246] as Array<Number>;
+        var ys = [252, 262, 252] as Array<Number>;
         var radii = [35, 56, 35] as Array<Number>;
         var pens = [6, 9, 6] as Array<Number>;
         for (var i = 0; i < xs.size(); i++) {
@@ -1141,10 +1190,10 @@ module FaceModelTest {
         return true;
     }
 
-    // The center field sits in a black well of r 60 + 6 around (208, 256).
+    // The center field sits in a black well of r 60 + 6 around (208, 262).
     (:test)
     function centerFieldHasABlackWell(logger as Test.Logger) as Boolean {
-        var well = wellAt(208, 256);
+        var well = wellAt(208, 262);
         Test.assertEqual(66, well.radius);
         Test.assertEqual(0x000000, well.color);
         return true;
@@ -1279,19 +1328,19 @@ module FaceModelTest {
         return true;
     }
 
-    // The digits are vertically centered on y 260: at 26 px (cap height 19)
-    // the baseline sits on 260 + 9 = 269; at 22 px (cap 16) on 268.
+    // The digits are vertically centered on y 266: at 26 px (cap height 19)
+    // the baseline sits on 266 + 9 = 275; at 22 px (cap 16) on 274.
     (:test)
     function leftNumberBaselineFollowsItsFont(logger as Test.Logger) as Boolean {
-        Test.assertEqual(269, positionWith(FIELD_LEFT, 27).numberY + baseOf(FONT_NUMBER_26));
-        Test.assertEqual(268, positionWith(FIELD_LEFT, 1000).numberY + baseOf(FONT_NUMBER_22));
+        Test.assertEqual(275, positionWith(FIELD_LEFT, 27).numberY + baseOf(FONT_NUMBER_26));
+        Test.assertEqual(274, positionWith(FIELD_LEFT, 1000).numberY + baseOf(FONT_NUMBER_22));
         return true;
     }
 
-    // The left field sits in a black well of r 38 + 6 around (88, 246).
+    // The left field sits in a black well of r 38 + 6 around (88, 252).
     (:test)
     function leftFieldHasABlackWell(logger as Test.Logger) as Boolean {
-        var well = wellAt(88, 246);
+        var well = wellAt(88, 252);
         Test.assertEqual(44, well.radius);
         Test.assertEqual(0x000000, well.color);
         return true;
@@ -1414,7 +1463,7 @@ module FaceModelTest {
     }
 
     // Story 17 for the right field: 62 is 26 px, centered on x 328 ("6" 16 +
-    // "2" 16 px), its digits centered on y 260 (baseline 260 + 9 = 269); 4
+    // "2" 16 px), its digits centered on y 266 (baseline 266 + 9 = 275); 4
     // characters are 22 px. Whatever metric it shows.
     (:test)
     function rightNumberSizeFollowsItsLength(logger as Test.Logger) as Boolean {
@@ -1422,15 +1471,15 @@ module FaceModelTest {
         Test.assertEqual(FONT_NUMBER_26, field.numberFont);
         Test.assertEqual(32, field.numberWidth);
         Test.assertEqual(312, field.numberX);
-        Test.assertEqual(269, field.numberY + baseOf(FONT_NUMBER_26));
+        Test.assertEqual(275, field.numberY + baseOf(FONT_NUMBER_26));
         Test.assertEqual(FONT_NUMBER_22, positionWith(FIELD_RIGHT, 1000).numberFont);
         return true;
     }
 
-    // The right field sits in a black well of r 38 + 6 around (328, 246).
+    // The right field sits in a black well of r 38 + 6 around (328, 252).
     (:test)
     function rightFieldHasABlackWell(logger as Test.Logger) as Boolean {
-        var well = wellAt(328, 246);
+        var well = wellAt(328, 252);
         Test.assertEqual(44, well.radius);
         Test.assertEqual(0x000000, well.color);
         return true;
@@ -1457,7 +1506,7 @@ module FaceModelTest {
 
     // Story 22, design frame 1: "1.147" (22 px, 53 wide) right-aligned at
     // x 228, "/ 3.110" (Bold 15, 47 wide) left-aligned at x 233, the foot
-    // at (140, 338). It fits: 175 >= 164 and 280 <= 286.
+    // at (140, 344). It fits: 175 >= 164 and 280 <= 286.
     (:test)
     function stepsAndGoalSitAtTheirAnchors(logger as Test.Logger) as Boolean {
         var field = bottomAt(1147, 3110);
@@ -1468,7 +1517,7 @@ module FaceModelTest {
         Test.assertEqual(233, field.goalX);
         Test.assertEqual((0xE003).toChar().toString(), field.icon);
         Test.assertEqual(140, field.iconX);
-        Test.assertEqual(338, field.iconY);
+        Test.assertEqual(344, field.iconY);
         return true;
     }
 
@@ -1571,7 +1620,7 @@ module FaceModelTest {
     function goalReachedCentersFootAndNumber(logger as Test.Logger) as Boolean {
         var field = bottomAt(3512, 3110);
         Test.assertEqual(166, field.iconX);
-        Test.assertEqual(338, field.iconY);
+        Test.assertEqual(344, field.iconY);
         Test.assertEqual(FONT_NUMBER_22, field.numberFont);
         Test.assertEqual(194, field.numberX);
         Test.assertEqual("", field.goal);
@@ -1617,15 +1666,15 @@ module FaceModelTest {
         return true;
     }
 
-    // The pill is (126, 330, 164, 40) with radius 20, reached or not: 8 px
-    // below the center field's well, which ends at y 256 + 66 = 322.
+    // The pill is (126, 336, 164, 40) with radius 20, reached or not: 8 px
+    // below the center field's well, which ends at y 262 + 66 = 328.
     (:test)
     function bottomFieldPillIsTheDesignedRoundedRect(logger as Test.Logger) as Boolean {
         var values = [1147, 3512] as Array<Number>;
         for (var i = 0; i < values.size(); i++) {
             var pill = bottomAt(values[i], 3110).pill;
             Test.assertEqual(126, pill.x);
-            Test.assertEqual(330, pill.y);
+            Test.assertEqual(336, pill.y);
             Test.assertEqual(164, pill.width);
             Test.assertEqual(40, pill.height);
             Test.assertEqual(20, pill.radius);
@@ -1695,15 +1744,15 @@ module FaceModelTest {
         return true;
     }
 
-    // Digits centered on y 350: baseline 350 + 16 / 2 = 358 at 22 px and
-    // 350 + 13 / 2 = 356 at 18 px. The goal (Bold 15, cap 11) on y 351:
-    // baseline 351 + 5 = 356.
+    // Digits centered on y 356: baseline 356 + 16 / 2 = 364 at 22 px and
+    // 356 + 13 / 2 = 362 at 18 px. The goal (Bold 15, cap 11) on y 357:
+    // baseline 357 + 5 = 362.
     (:test)
     function stepTextSitsOnItsBaselines(logger as Test.Logger) as Boolean {
         var field = bottomAt(1147, 3110);
-        Test.assertEqual(358, field.numberY + baseOf(FONT_NUMBER_22));
-        Test.assertEqual(356, field.goalY + baseOf(FONT_GOAL_15));
-        Test.assertEqual(356, bottomAt(10000, 11111).numberY + baseOf(FONT_NUMBER_18));
+        Test.assertEqual(364, field.numberY + baseOf(FONT_NUMBER_22));
+        Test.assertEqual(362, field.goalY + baseOf(FONT_GOAL_15));
+        Test.assertEqual(362, bottomAt(10000, 11111).numberY + baseOf(FONT_NUMBER_18));
         return true;
     }
 
@@ -1840,15 +1889,17 @@ module FaceModelTest {
         return true;
     }
 
-    // Story 37: the AOD date is the normal date text at the normal position
-    // ("THU 12/11" measures 95 px, from x 208 - 47 = 161; baseline 176 -
-    // base 18 = line top 158), moved by the minute's offset.
+    // Stories 37, 38: the AOD date is the normal date text at the normal
+    // position ("THU 12/11" measures 95 px, from x 208 - 47 = 161; baseline
+    // 182 - base 18 = line top 164), moved by the minute's offset, as one
+    // run in the AOD color.
     (:test)
     function aodDateSitsWhereTheNormalDateIsMovedByTheOffset(logger as Test.Logger) as Boolean {
         var aod = aodOnDate("Thu", 5, 12, 11);
         Test.assertEqual("THU 12/11", aod.date);
         Test.assertEqual(161 + aod.offsetX, aod.dateX);
-        Test.assertEqual(158 + aod.offsetY, aod.dateY);
+        Test.assertEqual(164 + aod.offsetY, aod.dateY);
+        Test.assertEqual(0x6BAA8A, aod.dateColor);
         return true;
     }
 
@@ -1863,23 +1914,23 @@ module FaceModelTest {
     }
 
     // Q12: the date pill is an outline whose outer edge is the normal pill's
-    // edge, so the outer pill is the normal pill (147, 156, 123, 28), radius
+    // edge, so the outer pill is the normal pill (147, 162, 123, 28), radius
     // 14, filled in the AOD color and moved by the minute's offset.
     (:test)
     function aodOuterPillIsTheNormalPillMovedByTheOffset(logger as Test.Logger) as Boolean {
         var aod = aodOnDate("Thu", 5, 12, 11);
-        assertRoundedRect(aod.datePill, 147 + aod.offsetX, 156 + aod.offsetY, 123, 28, 14,
+        assertRoundedRect(aod.datePill, 147 + aod.offsetX, 162 + aod.offsetY, 123, 28, 14,
             0x6BAA8A);
         return true;
     }
 
     // Q12: the outline is 3 px: the inner pill is the outer one inset by 3
-    // on every side, (150, 159, 117, 22), radius 14 - 3 = 11, filled black
+    // on every side, (150, 165, 117, 22), radius 14 - 3 = 11, filled black
     // over it.
     (:test)
     function aodInnerPillIsTheOuterInsetBy3PxInBlack(logger as Test.Logger) as Boolean {
         var aod = aodOnDate("Thu", 5, 12, 11);
-        assertRoundedRect(aod.datePillInner, 150 + aod.offsetX, 159 + aod.offsetY, 117, 22, 11,
+        assertRoundedRect(aod.datePillInner, 150 + aod.offsetX, 165 + aod.offsetY, 117, 22, 11,
             0x000000);
         return true;
     }
@@ -1892,7 +1943,7 @@ module FaceModelTest {
             snapshot.minute = m;
             var aod = FaceModel.computeAod(snapshot, config());
             Test.assertEqual(147 + aod.offsetX, aod.datePill.x);
-            Test.assertEqual(156 + aod.offsetY, aod.datePill.y);
+            Test.assertEqual(162 + aod.offsetY, aod.datePill.y);
             Test.assertEqual(aod.datePill.x + 3, aod.datePillInner.x);
             Test.assertEqual(aod.datePill.y + 3, aod.datePillInner.y);
         }
@@ -1913,38 +1964,38 @@ module FaceModelTest {
     }
 
     // Story 41: holding the center field opens the metric it shows (Body
-    // Battery by default). Its well is the circle (208, 256) r 60 + 6.
+    // Battery by default). Its well is the circle (208, 262) r 60 + 6.
     (:test)
     function holdInTheCenterWellTargetsTheCenterField(logger as Test.Logger) as Boolean {
-        assertTarget(208, 256, FIELD_CENTER);
+        assertTarget(208, 262, FIELD_CENTER);
         return true;
     }
 
     // Story 42: holding the left field opens its metric (stress by
-    // default). (88, 289) is 43 px
-    // below the field's center (88, 246): outside the field (r 38) but
+    // default). (88, 295) is 43 px
+    // below the field's center (88, 252): outside the field (r 38) but
     // inside its well (r 44).
     (:test)
     function holdInTheLeftWellTargetsTheLeftField(logger as Test.Logger) as Boolean {
-        assertTarget(88, 289, FIELD_LEFT);
+        assertTarget(88, 295, FIELD_LEFT);
         return true;
     }
 
     // Story 43: holding the right field opens its metric (heart rate by
-    // default). (371, 246) is
-    // 43 px right of the field's center (328, 246).
+    // default). (371, 252) is
+    // 43 px right of the field's center (328, 252).
     (:test)
     function holdInTheRightWellTargetsTheRightField(logger as Test.Logger) as Boolean {
-        assertTarget(371, 246, FIELD_RIGHT);
+        assertTarget(371, 252, FIELD_RIGHT);
         return true;
     }
 
     // The well's edge is the limit: 44 px from the left field's center
-    // (y 290) hits, 45 px (y 291) misses.
+    // (y 296) hits, 45 px (y 297) misses.
     (:test)
     function leftWellEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(88, 290, FIELD_LEFT);
-        assertMiss(88, 291);
+        assertTarget(88, 296, FIELD_LEFT);
+        assertMiss(88, 297);
         return true;
     }
 
@@ -1952,101 +2003,101 @@ module FaceModelTest {
     // center (x 372) hits, 45 px (x 373) misses.
     (:test)
     function rightWellEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(372, 246, FIELD_RIGHT);
-        assertMiss(373, 246);
+        assertTarget(372, 252, FIELD_RIGHT);
+        assertMiss(373, 252);
         return true;
     }
 
-    // The center well's top edge is the limit: y 190 (256 - 66) hits, y 189
-    // misses. Nothing else is a target there: the date pill (y 156-184) is
-    // not one, and the time band's well and rim end at y 170.
+    // The center well's top edge is the limit: y 196 (262 - 66) hits, y 195
+    // misses. Nothing else is a target there: the date pill (y 162-190) is
+    // not one, and the time band's well and rim end at y 174.
     (:test)
     function centerWellTopEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(208, 190, FIELD_CENTER);
-        assertMiss(208, 189);
+        assertTarget(208, 196, FIELD_CENTER);
+        assertMiss(208, 195);
         return true;
     }
 
-    // The center well ends at y 322 (256 + 66): y 321 is still the center
+    // The center well ends at y 328 (262 + 66): y 327 is still the center
     // field.
     (:test)
     function holdJustAboveTheCenterWellEdgeIsTheCenterField(logger as Test.Logger) as Boolean {
-        assertTarget(208, 321, FIELD_CENTER);
+        assertTarget(208, 327, FIELD_CENTER);
         return true;
     }
 
-    // The center well's edge is the limit: y 322 (66 px below the center)
-    // hits, y 323 misses.
+    // The center well's edge is the limit: y 328 (66 px below the center)
+    // hits, y 329 misses.
     (:test)
     function centerWellEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(208, 322, FIELD_CENTER);
-        assertMiss(208, 323);
+        assertTarget(208, 328, FIELD_CENTER);
+        assertMiss(208, 329);
         return true;
     }
 
     // The well rims are not part of a target: 1-2 px outside a round well
-    // (center r 67-68 below (208, 256), left r 46 below (88, 246), right
-    // r 46 right of (328, 246)) and on the bottom field's rim (y 328-329,
-    // above the pill's top edge at 330) all miss.
+    // (center r 67-68 below (208, 262), left r 46 below (88, 252), right
+    // r 46 right of (328, 252)) and on the bottom field's rim (y 334-335,
+    // above the pill's top edge at 336) all miss.
     (:test)
     function holdOnAWellRimMisses(logger as Test.Logger) as Boolean {
-        assertMiss(208, 323);
-        assertMiss(208, 324);
-        assertMiss(88, 292);
-        assertMiss(374, 246);
-        assertMiss(208, 328);
         assertMiss(208, 329);
+        assertMiss(208, 330);
+        assertMiss(88, 298);
+        assertMiss(374, 252);
+        assertMiss(208, 334);
+        assertMiss(208, 335);
         return true;
     }
 
-    // The bottom field's top edge is the limit: y 330 hits, y 329 misses.
+    // The bottom field's top edge is the limit: y 336 hits, y 335 misses.
     (:test)
     function bottomFieldTopEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(208, 330, FIELD_BOTTOM);
-        assertMiss(208, 329);
+        assertTarget(208, 336, FIELD_BOTTOM);
+        assertMiss(208, 335);
         return true;
     }
 
-    // The bottom field's bottom edge is the limit: y 370 (330 + 40) hits,
-    // y 371 misses.
+    // The bottom field's bottom edge is the limit: y 376 (336 + 40) hits,
+    // y 377 misses.
     (:test)
     function bottomFieldBottomEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(208, 370, FIELD_BOTTOM);
-        assertMiss(208, 371);
+        assertTarget(208, 376, FIELD_BOTTOM);
+        assertMiss(208, 377);
         return true;
     }
 
-    // The 8 px of background between the center well (ends y 322) and the
-    // bottom field (starts y 330) is a miss.
+    // The 8 px of background between the center well (ends y 328) and the
+    // bottom field (starts y 336) is a miss.
     (:test)
     function holdInTheGapAboveTheBottomFieldMisses(logger as Test.Logger) as Boolean {
-        assertMiss(208, 326);
+        assertMiss(208, 332);
         return true;
     }
 
     // Story 44: holding the bottom field opens its metric (steps). Its pill is (126,
-    // 330, 164, 40), radius 20, unpadded.
+    // 336, 164, 40), radius 20, unpadded.
     (:test)
     function holdInTheBottomFieldTargetsTheBottomField(logger as Test.Logger) as Boolean {
-        assertTarget(208, 331, FIELD_BOTTOM);
-        assertTarget(208, 350, FIELD_BOTTOM);
+        assertTarget(208, 337, FIELD_BOTTOM);
+        assertTarget(208, 356, FIELD_BOTTOM);
         return true;
     }
 
-    // The bottom field's left end is a half circle around (146, 350), r 20.
-    // (130, 340) is 16 px left and 10 px up from it: inside (256 + 100 <=
+    // The bottom field's left end is a half circle around (146, 356), r 20.
+    // (130, 346) is 16 px left and 10 px up from it: inside (256 + 100 <=
     // 400).
     (:test)
     function holdJustInsideABottomFieldCornerHits(logger as Test.Logger) as Boolean {
-        assertTarget(130, 340, FIELD_BOTTOM);
+        assertTarget(130, 346, FIELD_BOTTOM);
         return true;
     }
 
-    // (130, 336) is inside the pill's bounding box but 16 px left and 14 px
+    // (130, 342) is inside the pill's bounding box but 16 px left and 14 px
     // up from the corner's center: outside the arc (256 + 196 > 400).
     (:test)
     function holdJustOutsideABottomFieldCornerMisses(logger as Test.Logger) as Boolean {
-        assertMiss(130, 336);
+        assertMiss(130, 342);
         return true;
     }
 
@@ -2090,11 +2141,11 @@ module FaceModelTest {
         return true;
     }
 
-    // Story 45: holding the date pill does nothing. Its middle is y 156 + 14
-    // = 170, above the center well's top edge (256 - 66 = 190).
+    // Story 45: holding the date pill does nothing. Its middle is y 162 + 14
+    // = 176, above the center well's top edge (262 - 66 = 196).
     (:test)
     function holdOnTheDatePillMisses(logger as Test.Logger) as Boolean {
-        assertMiss(208, 170);
+        assertMiss(208, 176);
         return true;
     }
 

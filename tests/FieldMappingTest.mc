@@ -86,12 +86,12 @@ module FieldMappingTest {
     function assertWellsAndRims(layer as StaticLayer) as Void {
         Test.assertEqual(3, layer.fieldWells.size());
         Test.assertEqual(3, layer.fieldRims.size());
-        assertCircleAt(layer.fieldWells, 88, 246, 44, 0x000000);
-        assertCircleAt(layer.fieldWells, 208, 256, 66, 0x000000);
-        assertCircleAt(layer.fieldWells, 328, 246, 44, 0x000000);
-        assertCircleAt(layer.fieldRims, 88, 246, 46, 0x446D58);
-        assertCircleAt(layer.fieldRims, 208, 256, 68, 0x446D58);
-        assertCircleAt(layer.fieldRims, 328, 246, 46, 0x446D58);
+        assertCircleAt(layer.fieldWells, 88, 252, 44, 0x000000);
+        assertCircleAt(layer.fieldWells, 208, 262, 66, 0x000000);
+        assertCircleAt(layer.fieldWells, 328, 252, 44, 0x000000);
+        assertCircleAt(layer.fieldRims, 88, 252, 46, 0x446D58);
+        assertCircleAt(layer.fieldRims, 208, 262, 68, 0x446D58);
+        assertCircleAt(layer.fieldRims, 328, 252, 46, 0x446D58);
     }
 
     // `count` lit zone segments on the ring (x, y, radius, pen), each in its
@@ -136,12 +136,12 @@ module FieldMappingTest {
     }
 
     // The number is centered on the field's x (to within half a pixel) and
-    // its 26 px digits on y 260 (baseline 269), as on the side fields today.
+    // its 26 px digits on y 266 (baseline 275), as on the side fields today.
     function assertSideNumberSlot(field as FieldFrame, x as Number) as Void {
         Test.assertEqual(FONT_NUMBER_26, field.numberFont);
         var twiceCenter = 2 * field.numberX + field.numberWidth;
         Test.assert(twiceCenter >= 2 * x - 1 && twiceCenter <= 2 * x + 1);
-        Test.assertEqual(269, field.numberY + FontCatalog.entry(FONT_NUMBER_26).base);
+        Test.assertEqual(275, field.numberY + FontCatalog.entry(FONT_NUMBER_26).base);
     }
 
     function iconText(codePoint as Number) as String {
@@ -149,37 +149,37 @@ module FieldMappingTest {
     }
 
     // Story 8: heart rate in the center shows its zone segments at the
-    // center field's ring (208, 256, r 56, pen 9) in the zone colors, the
+    // center field's ring (208, 262, r 56, pen 9) in the zone colors, the
     // heart at the center's icon slot and its number at 48 px.
     (:test)
     function heartRateInTheCenterKeepsItsLookAtTheCenterGeometry(logger as Test.Logger)
             as Boolean {
         var field = frameWith(swapped(), METRIC_HEART_RATE, 140).centerField;
-        assertZoneSegments(field.arcs, 3, 208, 256, 56, 9, null);
+        assertZoneSegments(field.arcs, 3, 208, 262, 56, 9, null);
         Test.assertEqual(iconText(0xE002), field.icon);
         Test.assertEqual(196, field.iconX);
-        Test.assertEqual(213, field.iconY);
+        Test.assertEqual(219, field.iconY);
         Test.assertEqual(GRAY, field.iconColor);
         Test.assertEqual("140", field.number);
         Test.assertEqual(WHITE, field.numberColor);
         Test.assertEqual(FONT_NUMBER_48, field.numberFont);
         var twiceCenter = 2 * field.numberX + field.numberWidth;
         Test.assert(twiceCenter >= 415 && twiceCenter <= 417);
-        // Digits centered on y 268: the 48 px baseline sits on 285.
-        Test.assertEqual(285, field.numberY + FontCatalog.entry(FONT_NUMBER_48).base);
+        // Digits centered on y 274: the 48 px baseline sits on 291.
+        Test.assertEqual(291, field.numberY + FontCatalog.entry(FONT_NUMBER_48).base);
         return true;
     }
 
     // Story 11: Body Battery on the right keeps its gauge and its red
-    // warning, at the right field's ring (328, 246, r 35, pen 6), icon slot
+    // warning, at the right field's ring (328, 252, r 35, pen 6), icon slot
     // and 26 px number.
     (:test)
     function bodyBatteryOnTheRightKeepsItsGaugeAndWarning(logger as Test.Logger) as Boolean {
         var field = frameWith(swapped(), METRIC_BODY_BATTERY, 10).rightField;
-        assertGauge(field.arcs, 36, 328, 246, 35, 6, RED);
+        assertGauge(field.arcs, 36, 328, 252, 35, 6, RED);
         Test.assertEqual(iconText(0xE000), field.icon);
         Test.assertEqual(316, field.iconX);
-        Test.assertEqual(216, field.iconY);
+        Test.assertEqual(222, field.iconY);
         Test.assertEqual(RED, field.iconColor);
         Test.assertEqual("10", field.number);
         Test.assertEqual(RED, field.numberColor);
@@ -195,9 +195,9 @@ module FieldMappingTest {
     (:test)
     function swappedTracksFollowTheMetric(logger as Test.Logger) as Boolean {
         var layer = layerOf(swapped());
-        var center = tracksAt(layer, 208, 256);
-        assertZoneSegments(center, 5, 208, 256, 56, 9, TRACK);
-        var right = tracksAt(layer, 328, 246);
+        var center = tracksAt(layer, 208, 262);
+        assertZoneSegments(center, 5, 208, 262, 56, 9, TRACK);
+        var right = tracksAt(layer, 328, 252);
         Test.assertEqual(1, right.size());
         Test.assertEqual(360, right[0].sweep);
         Test.assertEqual(35, right[0].radius);
@@ -210,23 +210,23 @@ module FieldMappingTest {
     // Story 12: a hold opens the page of the metric now shown there.
     (:test)
     function swappedLongPressFollowsTheMetric(logger as Test.Logger) as Boolean {
-        assertTarget(swapped(), 208, 256, FIELD_CENTER, METRIC_HEART_RATE);
-        assertTarget(swapped(), 328, 246, FIELD_RIGHT, METRIC_BODY_BATTERY);
-        assertTarget(swapped(), 88, 246, FIELD_LEFT, METRIC_STRESS);
-        assertTarget(swapped(), 208, 350, FIELD_BOTTOM, METRIC_STEPS);
+        assertTarget(swapped(), 208, 262, FIELD_CENTER, METRIC_HEART_RATE);
+        assertTarget(swapped(), 328, 252, FIELD_RIGHT, METRIC_BODY_BATTERY);
+        assertTarget(swapped(), 88, 252, FIELD_LEFT, METRIC_STRESS);
+        assertTarget(swapped(), 208, 356, FIELD_BOTTOM, METRIC_STEPS);
         assertTarget(swapped(), 208, 6, FIELD_BEZEL_RING, METRIC_STEPS);
         return true;
     }
 
     // Story 9: heart rate on the left looks as it does on the right today,
-    // at the left field's ring (88, 246) and icon slot (76, 216).
+    // at the left field's ring (88, 252) and icon slot (76, 222).
     (:test)
     function heartRateOnTheLeftLooksAsOnTheRight(logger as Test.Logger) as Boolean {
         var field = frameWith(heartRateLeft(), METRIC_HEART_RATE, 180).leftField;
-        assertZoneSegments(field.arcs, 5, 88, 246, 35, 6, null);
+        assertZoneSegments(field.arcs, 5, 88, 252, 35, 6, null);
         Test.assertEqual(iconText(0xE002), field.icon);
         Test.assertEqual(76, field.iconX);
-        Test.assertEqual(216, field.iconY);
+        Test.assertEqual(222, field.iconY);
         Test.assertEqual(GRAY, field.iconColor);
         Test.assertEqual("180", field.number);
         Test.assertEqual(WHITE, field.numberColor);
@@ -238,17 +238,17 @@ module FieldMappingTest {
     (:test)
     function stressOnTheRightKeepsItsWarnings(logger as Test.Logger) as Boolean {
         var red = frameWith(heartRateLeft(), METRIC_STRESS, 80).rightField;
-        assertGauge(red.arcs, 288, 328, 246, 35, 6, RED);
+        assertGauge(red.arcs, 288, 328, 252, 35, 6, RED);
         Test.assertEqual(iconText(0xE001), red.icon);
         Test.assertEqual(316, red.iconX);
         Test.assertEqual(RED, red.iconColor);
         Test.assertEqual(RED, red.numberColor);
         assertSideNumberSlot(red, 328);
         var orange = frameWith(heartRateLeft(), METRIC_STRESS, 60).rightField;
-        assertGauge(orange.arcs, 216, 328, 246, 35, 6, ORANGE);
+        assertGauge(orange.arcs, 216, 328, 252, 35, 6, ORANGE);
         Test.assertEqual(ORANGE, orange.numberColor);
         var calm = frameWith(heartRateLeft(), METRIC_STRESS, 27).rightField;
-        assertGauge(calm.arcs, 97, 328, 246, 35, 6, ACCENT);
+        assertGauge(calm.arcs, 97, 328, 252, 35, 6, ACCENT);
         Test.assertEqual(WHITE, calm.numberColor);
         return true;
     }
@@ -256,15 +256,15 @@ module FieldMappingTest {
     (:test)
     function heartRateLeftTracksAndLongPressFollowTheMetric(logger as Test.Logger) as Boolean {
         var layer = layerOf(heartRateLeft());
-        assertZoneSegments(tracksAt(layer, 88, 246), 5, 88, 246, 35, 6, TRACK);
-        var right = tracksAt(layer, 328, 246);
+        assertZoneSegments(tracksAt(layer, 88, 252), 5, 88, 252, 35, 6, TRACK);
+        var right = tracksAt(layer, 328, 252);
         Test.assertEqual(1, right.size());
         Test.assertEqual(360, right[0].sweep);
-        Test.assertEqual(1, tracksAt(layer, 208, 256).size());
+        Test.assertEqual(1, tracksAt(layer, 208, 262).size());
         assertWellsAndRims(layer);
-        assertTarget(heartRateLeft(), 88, 246, FIELD_LEFT, METRIC_HEART_RATE);
-        assertTarget(heartRateLeft(), 328, 246, FIELD_RIGHT, METRIC_STRESS);
-        assertTarget(heartRateLeft(), 208, 256, FIELD_CENTER, METRIC_BODY_BATTERY);
+        assertTarget(heartRateLeft(), 88, 252, FIELD_LEFT, METRIC_HEART_RATE);
+        assertTarget(heartRateLeft(), 328, 252, FIELD_RIGHT, METRIC_STRESS);
+        assertTarget(heartRateLeft(), 208, 262, FIELD_CENTER, METRIC_BODY_BATTERY);
         return true;
     }
 

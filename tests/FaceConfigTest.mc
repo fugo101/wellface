@@ -161,8 +161,8 @@ module FaceConfigTest {
     // Every color of a frame, member by member, of what is drawn (an empty
     // text or arc list draws nothing).
     function frameColors(frame as Frame) as Array<Number> {
-        var colors = [frame.timeColor, frame.dateColor, frame.datePill.color,
-            frame.bezelProgress.color] as Array<Number>;
+        var colors = [frame.timeColor, frame.weekdayColor, frame.dayMonthColor,
+            frame.datePill.color, frame.bezelProgress.color] as Array<Number>;
         addArcs(colors, frame.batteryLit);
         var head = frame.bezelHead;
         if (head != null) {

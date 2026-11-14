@@ -75,8 +75,11 @@ class Renderer {
 
         // The pill's width follows the text, so it is not in the static layer.
         fillRoundedRect(dc, frame.datePill);
-        dc.setColor(frame.dateColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(frame.dateX, frame.dateY, _fonts.get(FONT_DATE), frame.date,
+        var dateFont = _fonts.get(FONT_DATE);
+        dc.setColor(frame.weekdayColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(frame.dateX, frame.dateY, dateFont, frame.weekday, Graphics.TEXT_JUSTIFY_LEFT);
+        dc.setColor(frame.dayMonthColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(frame.dayMonthX, frame.dateY, dateFont, frame.dayMonth,
             Graphics.TEXT_JUSTIFY_LEFT);
     }
 

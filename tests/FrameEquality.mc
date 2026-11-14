@@ -42,7 +42,11 @@ module FrameEquality {
             + "|dateWidth=" + f.dateWidth
             + "|dateX=" + f.dateX
             + "|dateY=" + f.dateY
-            + "|dateColor=" + color(f.dateColor)
+            + "|weekday=" + f.weekday
+            + "|weekdayColor=" + color(f.weekdayColor)
+            + "|dayMonth=" + f.dayMonth
+            + "|dayMonthX=" + f.dayMonthX
+            + "|dayMonthColor=" + color(f.dayMonthColor)
             + "|datePill=" + rect(f.datePill)
             + "|batteryLit=" + arcs(f.batteryLit)
             + "|bezelProgress=" + arc(f.bezelProgress)

@@ -10,6 +10,7 @@ The final design is `design/claude-design/FR265 Watch Face.dc.html` (Claude Desi
 | Bezel head dot | At the exact fraction of the goal | At the whole-degree end of the progress arc, up to 1° (about 3.6 px) behind | spec, ticket 06 |
 | Text widths | Measured with the browser's Manrope, so pill widths and centered groups can differ by about 1 px | Measured with the glyph widths of the generated bitmap fonts (the font catalog) | spec |
 | Date fallback | Not shown | A weekday name that needs a pill wider than 272 px, or has letters the date font lacks (Cyrillic, CJK), falls back to the English abbreviation (`THU 12/11`) | Q21, Q33, Q38, ticket 05 |
+| Two-color date, weekday with a space | Splits the date at its first space, so only the first word of a weekday name with a space is in the accent | The whole weekday (everything before the day/month) is in the accent. Seen only in languages whose folded weekday name keeps a space; Vietnamese names are shortened to T2–T7 and CN first | Q21, Q38, second design update ticket 04 |
 | Time position | `08:42` starts at x 113.5 | Whole pixels: starts at x 114 (208 − 189 / 2 in integer math), half a pixel to the right | Q8/Q16, second design update ticket 03 |
 | Center field gauge | Centerline r 55.5 | r 56 (whole pixels; with pen 9 it lands on about r 50.4–59.5 in the simulator) | ticket 07 |
 

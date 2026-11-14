@@ -311,16 +311,20 @@ module GoldenTest {
             case 6: f.dateWidth++; break;
             case 7: f.dateX++; break;
             case 8: f.dateY++; break;
-            case 9: f.dateColor++; break;
-            case 10: f.datePill = otherRect(); break;
-            case 11: f.batteryLit = [] as Array<Arc>; break;
-            case 12: f.bezelProgress = otherArc(); break;
-            case 13: f.bezelHead = null; break;
-            case 14: f.bottomGoalReached = !f.bottomGoalReached; break;
-            case 15: f.bottomField.number += "0"; break;
-            case 16: f.leftField.number += "0"; break;
-            case 17: f.centerField.number += "0"; break;
-            case 18: f.rightField.number += "0"; break;
+            case 9: f.weekday += "0"; break;
+            case 10: f.weekdayColor++; break;
+            case 11: f.dayMonth += "0"; break;
+            case 12: f.dayMonthX++; break;
+            case 13: f.dayMonthColor++; break;
+            case 14: f.datePill = otherRect(); break;
+            case 15: f.batteryLit = [] as Array<Arc>; break;
+            case 16: f.bezelProgress = otherArc(); break;
+            case 17: f.bezelHead = null; break;
+            case 18: f.bottomGoalReached = !f.bottomGoalReached; break;
+            case 19: f.bottomField.number += "0"; break;
+            case 20: f.leftField.number += "0"; break;
+            case 21: f.centerField.number += "0"; break;
+            case 22: f.rightField.number += "0"; break;
             default: return false;
         }
         return true;
@@ -469,7 +473,7 @@ module GoldenTest {
     // description, a case in its change function and a count here. Monkey C
     // has no reflection, so a member added to a class without a case here
     // goes unnoticed.
-    const FRAME_MEMBERS = 19;
+    const FRAME_MEMBERS = 23;
     const FIELD_MEMBERS = 11;
     const BOTTOM_FIELD_MEMBERS = 15;
     const AOD_MEMBERS = 12;
