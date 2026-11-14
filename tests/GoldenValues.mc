@@ -5,8 +5,10 @@
 // (2026-11-15): only the time's width and position and the time band, its
 // well and rim changed. Re-recorded for the new layout and the two-color
 // date (2026-11-15): everything below the time band moved 6 px down, and
-// the frame's date gained its two runs. Re-record only for an intended
-// change to what is drawn; see GoldenTest.
+// the frame's date gained its two runs. Re-recorded for the round caps
+// (2026-11-15): the round fields gained their caps and the Body Battery dot,
+// the center ring is r 54, pen 12, and the zone segments have 9 deg gaps.
+// Re-record only for an intended change to what is drawn; see GoldenTest.
 import Toybox.Lang;
 
 (:test)
@@ -20,13 +22,13 @@ module GoldenValues {
             "goalReached=no|bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|" +
             "iconY=344|iconColor=8C8C8C|number=--|numberFont=Number22|numberWidth=18|" +
             "numberX=210|numberY=341|numberColor=8C8C8C|goal=|goalX=233|goalY=0|" +
-            "goalColor=000000}|left={arcs=[]|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
-            "number=--|numberColor=8C8C8C|numberFont=Number26|numberWidth=22|numberX=77|" +
-            "numberY=247}|center={arcs=[]|icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|" +
-            "number=--|numberColor=8C8C8C|numberFont=Number48|numberWidth=40|numberX=188|" +
-            "numberY=240}|right={arcs=[]|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|" +
-            "number=--|numberColor=8C8C8C|numberFont=Number26|numberWidth=22|numberX=317|" +
-            "numberY=247}",
+            "goalColor=000000}|left={arcs=[]|caps=[]|dot=none|icon=U+E001|iconX=76|iconY=222|" +
+            "iconColor=8C8C8C|number=--|numberColor=8C8C8C|numberFont=Number26|numberWidth=22|" +
+            "numberX=77|numberY=247}|center={arcs=[]|caps=[]|dot=none|icon=U+E000|iconX=196|" +
+            "iconY=219|iconColor=8C8C8C|number=--|numberColor=8C8C8C|numberFont=Number48|" +
+            "numberWidth=40|numberX=188|numberY=240}|right={arcs=[]|caps=[]|dot=none|" +
+            "icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=--|numberColor=8C8C8C|" +
+            "numberFont=Number26|numberWidth=22|numberX=317|numberY=247}",
         "typical" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -39,13 +41,15 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|right={arcs=[]|" +
-            "icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
+            "caps=[]|dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "warning1" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -55,14 +59,16 @@ module GoldenValues {
             "goalReached=no|bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|" +
             "iconY=344|iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|" +
             "numberX=175|numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|" +
-            "goalColor=8C8C8C}|left={arcs=[A(88,252,35,6,90,234,216,FF8A3D)]|icon=U+E001|" +
-            "iconX=76|iconY=222|iconColor=FF8A3D|number=60|numberColor=FF8A3D|" +
-            "numberFont=Number26|numberWidth=34|numberX=71|numberY=247}|" +
-            "center={arcs=[A(208,262,56,9,90,18,72,FF8A3D)]|icon=U+E000|iconX=196|iconY=219|" +
+            "goalColor=8C8C8C}|left={arcs=[A(88,252,35,6,90,234,216,FF8A3D)]|" +
+            "caps=[C(88,217,3,FF8A3D)C(67,280,3,FF8A3D)]|dot=none|icon=U+E001|iconX=76|" +
+            "iconY=222|iconColor=FF8A3D|number=60|numberColor=FF8A3D|numberFont=Number26|" +
+            "numberWidth=34|numberX=71|numberY=247}|" +
+            "center={arcs=[A(208,262,54,12,90,18,72,FF8A3D)]|caps=[C(208,208,6,FF8A3D)" +
+            "C(259,245,6,FF8A3D)]|dot=C(259,245,3,FFFFFF)|icon=U+E000|iconX=196|iconY=219|" +
             "iconColor=FF8A3D|number=20|numberColor=FF8A3D|numberFont=Number48|numberWidth=61|" +
-            "numberX=178|numberY=240}|right={arcs=[]|icon=U+E002|iconX=316|iconY=222|" +
-            "iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=313|numberY=247}",
+            "numberX=178|numberY=240}|right={arcs=[]|caps=[]|dot=none|icon=U+E002|iconX=316|" +
+            "iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|" +
+            "numberWidth=30|numberX=313|numberY=247}",
         "warning2" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -72,14 +78,16 @@ module GoldenValues {
             "goalReached=no|bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|" +
             "iconY=344|iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|" +
             "numberX=175|numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|" +
-            "goalColor=8C8C8C}|left={arcs=[A(88,252,35,6,90,162,288,FF4D4D)]|icon=U+E001|" +
-            "iconX=76|iconY=222|iconColor=FF4D4D|number=80|numberColor=FF4D4D|" +
-            "numberFont=Number26|numberWidth=34|numberX=71|numberY=247}|" +
-            "center={arcs=[A(208,262,56,9,90,54,36,FF4D4D)]|icon=U+E000|iconX=196|iconY=219|" +
+            "goalColor=8C8C8C}|left={arcs=[A(88,252,35,6,90,162,288,FF4D4D)]|" +
+            "caps=[C(88,217,3,FF4D4D)C(55,241,3,FF4D4D)]|dot=none|icon=U+E001|iconX=76|" +
+            "iconY=222|iconColor=FF4D4D|number=80|numberColor=FF4D4D|numberFont=Number26|" +
+            "numberWidth=34|numberX=71|numberY=247}|" +
+            "center={arcs=[A(208,262,54,12,90,54,36,FF4D4D)]|caps=[C(208,208,6,FF4D4D)" +
+            "C(240,218,6,FF4D4D)]|dot=C(240,218,3,FFFFFF)|icon=U+E000|iconX=196|iconY=219|" +
             "iconColor=FF4D4D|number=10|numberColor=FF4D4D|numberFont=Number48|numberWidth=54|" +
-            "numberX=181|numberY=240}|right={arcs=[]|icon=U+E002|iconX=316|iconY=222|" +
-            "iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=313|numberY=247}",
+            "numberX=181|numberY=240}|right={arcs=[]|caps=[]|dot=none|icon=U+E002|iconX=316|" +
+            "iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|" +
+            "numberWidth=30|numberX=313|numberY=247}",
         "zones1" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -92,14 +100,17 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|" +
-            "right={arcs=[A(328,252,35,6,86,22,64,B4B4B4)]|icon=U+E002|iconX=316|iconY=222|" +
-            "iconColor=8C8C8C|number=100|numberColor=FFFFFF|numberFont=Number26|numberWidth=48|" +
-            "numberX=304|numberY=247}",
+            "right={arcs=[A(328,252,35,6,81,27,54,B4B4B4)]|caps=[C(333,217,3,B4B4B4)" +
+            "C(359,236,3,B4B4B4)]|dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|" +
+            "number=100|numberColor=FFFFFF|numberFont=Number26|numberWidth=48|numberX=304|" +
+            "numberY=247}",
         "zones2" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -112,14 +123,17 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|" +
-            "right={arcs=[A(328,252,35,6,86,22,64,B4B4B4)A(328,252,35,6,14,310,64,4DA6FF)]|" +
-            "icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=120|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
+            "right={arcs=[A(328,252,35,6,81,27,54,B4B4B4)A(328,252,35,6,9,315,54,4DA6FF)]|" +
+            "caps=[C(333,217,3,B4B4B4)C(359,236,3,B4B4B4)C(363,247,3,4DA6FF)C(353,277,3,4DA6FF)" +
+            "]|dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=120|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
         "zones3" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -132,15 +146,18 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|" +
-            "right={arcs=[A(328,252,35,6,86,22,64,B4B4B4)A(328,252,35,6,14,310,64,4DA6FF)" +
-            "A(328,252,35,6,302,238,64,4CD964)]|icon=U+E002|iconX=316|iconY=222|" +
-            "iconColor=8C8C8C|number=140|numberColor=FFFFFF|numberFont=Number26|numberWidth=46|" +
-            "numberX=305|numberY=247}",
+            "right={arcs=[A(328,252,35,6,81,27,54,B4B4B4)A(328,252,35,6,9,315,54,4DA6FF)" +
+            "A(328,252,35,6,297,243,54,4CD964)]|caps=[C(333,217,3,B4B4B4)C(359,236,3,B4B4B4)" +
+            "C(363,247,3,4DA6FF)C(353,277,3,4DA6FF)C(344,283,3,4CD964)C(312,283,3,4CD964)]|" +
+            "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=140|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
         "zones4" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -153,15 +170,19 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|" +
-            "right={arcs=[A(328,252,35,6,86,22,64,B4B4B4)A(328,252,35,6,14,310,64,4DA6FF)" +
-            "A(328,252,35,6,302,238,64,4CD964)A(328,252,35,6,230,166,64,FF8A3D)]|icon=U+E002|" +
-            "iconX=316|iconY=222|iconColor=8C8C8C|number=160|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
+            "right={arcs=[A(328,252,35,6,81,27,54,B4B4B4)A(328,252,35,6,9,315,54,4DA6FF)" +
+            "A(328,252,35,6,297,243,54,4CD964)A(328,252,35,6,225,171,54,FF8A3D)]|" +
+            "caps=[C(333,217,3,B4B4B4)C(359,236,3,B4B4B4)C(363,247,3,4DA6FF)C(353,277,3,4DA6FF)" +
+            "C(344,283,3,4CD964)C(312,283,3,4CD964)C(303,277,3,FF8A3D)C(293,247,3,FF8A3D)]|" +
+            "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=160|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
         "zones5" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -174,16 +195,20 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|" +
-            "right={arcs=[A(328,252,35,6,86,22,64,B4B4B4)A(328,252,35,6,14,310,64,4DA6FF)" +
-            "A(328,252,35,6,302,238,64,4CD964)A(328,252,35,6,230,166,64,FF8A3D)" +
-            "A(328,252,35,6,158,94,64,FF4D4D)]|icon=U+E002|iconX=316|iconY=222|" +
-            "iconColor=8C8C8C|number=180|numberColor=FFFFFF|numberFont=Number26|numberWidth=46|" +
-            "numberX=305|numberY=247}",
+            "right={arcs=[A(328,252,35,6,81,27,54,B4B4B4)A(328,252,35,6,9,315,54,4DA6FF)" +
+            "A(328,252,35,6,297,243,54,4CD964)A(328,252,35,6,225,171,54,FF8A3D)" +
+            "A(328,252,35,6,153,99,54,FF4D4D)]|caps=[C(333,217,3,B4B4B4)C(359,236,3,B4B4B4)" +
+            "C(363,247,3,4DA6FF)C(353,277,3,4DA6FF)C(344,283,3,4CD964)C(312,283,3,4CD964)" +
+            "C(303,277,3,FF8A3D)C(293,247,3,FF8A3D)C(297,236,3,FF4D4D)C(323,217,3,FF4D4D)]|" +
+            "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=180|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
         "zonesMissing" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -196,13 +221,15 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|right={arcs=[]|" +
-            "icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=140|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
+            "caps=[]|dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=140|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
         "goalReached" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -215,13 +242,15 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,8EE3B8)|icon=U+E003|iconX=167|iconY=344|" +
             "iconColor=000000|number=3.110|numberFont=Number22|numberWidth=55|numberX=195|" +
             "numberY=341|numberColor=000000|goal=|goalX=0|goalY=0|goalColor=000000}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|right={arcs=[]|" +
-            "icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
+            "caps=[]|dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "goalReachedLong" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -234,13 +263,15 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,8EE3B8)|icon=U+E003|iconX=159|iconY=344|" +
             "iconColor=000000|number=12.345|numberFont=Number22|numberWidth=70|numberX=187|" +
             "numberY=341|numberColor=000000|goal=|goalX=0|goalY=0|goalColor=000000}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|right={arcs=[]|" +
-            "icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
+            "caps=[]|dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "steps100000" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -253,13 +284,15 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,8EE3B8)|icon=U+E003|iconX=148|iconY=344|" +
             "iconColor=000000|number=100.000|numberFont=Number22|numberWidth=92|numberX=176|" +
             "numberY=341|numberColor=000000|goal=|goalX=0|goalY=0|goalColor=000000}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|right={arcs=[]|" +
-            "icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
+            "caps=[]|dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "fiveDigits" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -272,14 +305,16 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=10.000|numberFont=Number18|numberWidth=62|numberX=166|" +
             "numberY=343|numberColor=FFFFFF|goal=/ 11.111|goalX=233|goalY=346|" +
-            "goalColor=8C8C8C}|left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|" +
-            "iconX=76|iconY=222|iconColor=8C8C8C|number=27|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=73|numberY=247}|" +
-            "center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|icon=U+E000|iconX=196|iconY=219|" +
+            "goalColor=8C8C8C}|left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|" +
+            "caps=[C(88,217,3,8EE3B8)C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|" +
+            "iconY=222|iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|" +
+            "numberWidth=30|numberX=73|numberY=247}|" +
+            "center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|caps=[C(208,208,6,8EE3B8)" +
+            "C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|iconX=196|iconY=219|" +
             "iconColor=8C8C8C|number=56|numberColor=FFFFFF|numberFont=Number48|numberWidth=58|" +
-            "numberX=179|numberY=240}|right={arcs=[]|icon=U+E002|iconX=316|iconY=222|" +
-            "iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=313|numberY=247}",
+            "numberX=179|numberY=240}|right={arcs=[]|caps=[]|dot=none|icon=U+E002|iconX=316|" +
+            "iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|" +
+            "numberWidth=30|numberX=313|numberY=247}",
         "negativeSteps" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -292,13 +327,15 @@ module GoldenValues {
             "icon=U+E003|iconX=140|iconY=344|iconColor=8C8C8C|number=--|numberFont=Number22|" +
             "numberWidth=18|numberX=210|numberY=341|numberColor=8C8C8C|goal=/ 3.110|goalX=233|" +
             "goalY=346|goalColor=8C8C8C}|left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|" +
-            "icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|number=27|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=73|numberY=247}|" +
-            "center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|icon=U+E000|iconX=196|iconY=219|" +
+            "caps=[C(88,217,3,8EE3B8)C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|" +
+            "iconY=222|iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|" +
+            "numberWidth=30|numberX=73|numberY=247}|" +
+            "center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|caps=[C(208,208,6,8EE3B8)" +
+            "C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|iconX=196|iconY=219|" +
             "iconColor=8C8C8C|number=56|numberColor=FFFFFF|numberFont=Number48|numberWidth=58|" +
-            "numberX=179|numberY=240}|right={arcs=[]|icon=U+E002|iconX=316|iconY=222|" +
-            "iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=313|numberY=247}",
+            "numberX=179|numberY=240}|right={arcs=[]|caps=[]|dot=none|icon=U+E002|iconX=316|" +
+            "iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|" +
+            "numberWidth=30|numberX=313|numberY=247}",
         "noGoal" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -310,14 +347,16 @@ module GoldenValues {
             "bezelHead=none|goalReached=no|bottom={pill=R(126,336,164,40,20,000000)|" +
             "icon=U+E003|iconX=140|iconY=344|iconColor=8C8C8C|number=1.147|numberFont=Number22|" +
             "numberWidth=53|numberX=175|numberY=341|numberColor=FFFFFF|goal=|goalX=233|goalY=0|" +
-            "goalColor=000000}|left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|" +
-            "iconX=76|iconY=222|iconColor=8C8C8C|number=27|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=73|numberY=247}|" +
-            "center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|icon=U+E000|iconX=196|iconY=219|" +
+            "goalColor=000000}|left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|" +
+            "caps=[C(88,217,3,8EE3B8)C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|" +
+            "iconY=222|iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|" +
+            "numberWidth=30|numberX=73|numberY=247}|" +
+            "center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|caps=[C(208,208,6,8EE3B8)" +
+            "C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|iconX=196|iconY=219|" +
             "iconColor=8C8C8C|number=56|numberColor=FFFFFF|numberFont=Number48|numberWidth=58|" +
-            "numberX=179|numberY=240}|right={arcs=[]|icon=U+E002|iconX=316|iconY=222|" +
-            "iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=313|numberY=247}",
+            "numberX=179|numberY=240}|right={arcs=[]|caps=[]|dot=none|icon=U+E002|iconX=316|" +
+            "iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|" +
+            "numberWidth=30|numberX=313|numberY=247}",
         "dateLong" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=WEDNESDAY 28/11|" +
             "dateWidth=183|dateX=117|dateY=164|weekday=WEDNESDAY|weekdayColor=8EE3B8|" +
@@ -330,14 +369,16 @@ module GoldenValues {
             "goalReached=no|bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|" +
             "iconY=344|iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|" +
             "numberX=175|numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|" +
-            "goalColor=8C8C8C}|left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|" +
-            "iconX=76|iconY=222|iconColor=8C8C8C|number=27|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=73|numberY=247}|" +
-            "center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|icon=U+E000|iconX=196|iconY=219|" +
+            "goalColor=8C8C8C}|left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|" +
+            "caps=[C(88,217,3,8EE3B8)C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|" +
+            "iconY=222|iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|" +
+            "numberWidth=30|numberX=73|numberY=247}|" +
+            "center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|caps=[C(208,208,6,8EE3B8)" +
+            "C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|iconX=196|iconY=219|" +
             "iconColor=8C8C8C|number=56|numberColor=FFFFFF|numberFont=Number48|numberWidth=58|" +
-            "numberX=179|numberY=240}|right={arcs=[]|icon=U+E002|iconX=316|iconY=222|" +
-            "iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=313|numberY=247}",
+            "numberX=179|numberY=240}|right={arcs=[]|caps=[]|dot=none|icon=U+E002|iconX=316|" +
+            "iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|" +
+            "numberWidth=30|numberX=313|numberY=247}",
         "dateTooLong" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=WED 28/11|" +
             "dateWidth=103|dateX=157|dateY=164|weekday=WED|weekdayColor=8EE3B8|dayMonth=28/11|" +
@@ -350,13 +391,15 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|right={arcs=[]|" +
-            "icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
+            "caps=[]|dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "dateCyrillic" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
             "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -369,13 +412,15 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|right={arcs=[]|" +
-            "icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
+            "caps=[]|dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "dateVietnamese" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=T5 12/11|" +
             "dateWidth=79|dateX=169|dateY=164|weekday=T5|weekdayColor=8EE3B8|dayMonth=12/11|" +
@@ -388,13 +433,15 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|right={arcs=[]|" +
-            "icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
+            "caps=[]|dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "dateVietnameseSunday" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=CN 15/11|" +
             "dateWidth=84|dateX=166|dateY=164|weekday=CN|weekdayColor=8EE3B8|dayMonth=15/11|" +
@@ -407,13 +454,15 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|right={arcs=[]|" +
-            "icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
+            "caps=[]|dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "dateDecember" =>
             "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=SAT 31/12|" +
             "dateWidth=96|dateX=160|dateY=164|weekday=SAT|weekdayColor=8EE3B8|dayMonth=31/12|" +
@@ -426,13 +475,15 @@ module GoldenValues {
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
-            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|icon=U+E001|iconX=76|iconY=222|" +
-            "iconColor=8C8C8C|number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|" +
-            "numberX=73|numberY=247}|center={arcs=[A(208,262,56,9,90,249,201,8EE3B8)]|" +
-            "icon=U+E000|iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
+            "left={arcs=[A(88,252,35,6,90,353,97,8EE3B8)]|caps=[C(88,217,3,8EE3B8)" +
+            "C(123,256,3,8EE3B8)]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
+            "number=27|numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=73|" +
+            "numberY=247}|center={arcs=[A(208,262,54,12,90,249,201,8EE3B8)]|" +
+            "caps=[C(208,208,6,8EE3B8)C(189,312,6,8EE3B8)]|dot=C(189,312,3,FFFFFF)|icon=U+E000|" +
+            "iconX=196|iconY=219|iconColor=8C8C8C|number=56|numberColor=FFFFFF|" +
             "numberFont=Number48|numberWidth=58|numberX=179|numberY=240}|right={arcs=[]|" +
-            "icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|" +
-            "numberFont=Number26|numberWidth=30|numberX=313|numberY=247}"
+            "caps=[]|dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
+            "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}"
     } as Dictionary<String, String>;
 
     const AOD_FRAMES = {
@@ -530,10 +581,13 @@ module GoldenValues {
         "A(208,208,180,4,68,63,5,2E3330)A(208,208,180,4,75,70,5,2E3330)" +
         "A(208,208,180,4,82,77,5,2E3330)A(208,208,180,4,89,84,5,2E3330)" +
         "A(208,208,180,4,96,91,5,2E3330)}|fieldWells={C(208,262,66,000000)C(328,252,44,000000)" +
-        "C(88,252,44,000000)}|fieldTracks={A(208,262,56,9,90,90,360,2E3330)" +
-        "A(328,252,35,6,14,310,64,2E3330)A(328,252,35,6,158,94,64,2E3330)" +
-        "A(328,252,35,6,230,166,64,2E3330)A(328,252,35,6,302,238,64,2E3330)" +
-        "A(328,252,35,6,86,22,64,2E3330)A(88,252,35,6,90,90,360,2E3330)}";
+        "C(88,252,44,000000)}|fieldTracks={A(208,262,54,12,90,90,360,2E3330)" +
+        "A(328,252,35,6,153,99,54,2E3330)A(328,252,35,6,225,171,54,2E3330)" +
+        "A(328,252,35,6,297,243,54,2E3330)A(328,252,35,6,81,27,54,2E3330)" +
+        "A(328,252,35,6,9,315,54,2E3330)A(88,252,35,6,90,90,360,2E3330)}|" +
+        "fieldTrackCaps={C(293,247,3,2E3330)C(297,236,3,2E3330)C(303,277,3,2E3330)" +
+        "C(312,283,3,2E3330)C(323,217,3,2E3330)C(333,217,3,2E3330)C(344,283,3,2E3330)" +
+        "C(353,277,3,2E3330)C(359,236,3,2E3330)C(363,247,3,2E3330)}";
     const BEZEL_NOTCHES =
         "[L(406,208,418,208,3,000000)L(208,406,208,418,3,000000)L(10,208,-2,208,3,000000)" +
         "]";

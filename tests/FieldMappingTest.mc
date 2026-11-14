@@ -95,7 +95,7 @@ module FieldMappingTest {
     }
 
     // `count` lit zone segments on the ring (x, y, radius, pen), each in its
-    // zone's color; segment 0 spans ciq 86 clockwise to 22.
+    // zone's color; segment 0 spans ciq 81 clockwise to 27.
     function assertZoneSegments(arcs as Array<Arc>, count as Number, x as Number, y as Number,
             radius as Number, pen as Number, color as Number?) as Void {
         Test.assertEqual(count, arcs.size());
@@ -104,12 +104,12 @@ module FieldMappingTest {
             Test.assertEqual(y, arcs[i].y);
             Test.assertEqual(radius, arcs[i].radius);
             Test.assertEqual(pen, arcs[i].pen);
-            Test.assertEqual(64, arcs[i].sweep);
+            Test.assertEqual(54, arcs[i].sweep);
             Test.assertEqual(color != null ? color : ZONE_COLORS[i], arcs[i].color);
         }
         if (count > 0) {
-            Test.assertEqual(86, arcs[0].start);
-            Test.assertEqual(22, arcs[0].end);
+            Test.assertEqual(81, arcs[0].start);
+            Test.assertEqual(27, arcs[0].end);
         }
     }
 
@@ -149,13 +149,13 @@ module FieldMappingTest {
     }
 
     // Story 8: heart rate in the center shows its zone segments at the
-    // center field's ring (208, 262, r 56, pen 9) in the zone colors, the
+    // center field's ring (208, 262, r 54, pen 12) in the zone colors, the
     // heart at the center's icon slot and its number at 48 px.
     (:test)
     function heartRateInTheCenterKeepsItsLookAtTheCenterGeometry(logger as Test.Logger)
             as Boolean {
         var field = frameWith(swapped(), METRIC_HEART_RATE, 140).centerField;
-        assertZoneSegments(field.arcs, 3, 208, 262, 56, 9, null);
+        assertZoneSegments(field.arcs, 3, 208, 262, 54, 12, null);
         Test.assertEqual(iconText(0xE002), field.icon);
         Test.assertEqual(196, field.iconX);
         Test.assertEqual(219, field.iconY);
@@ -196,7 +196,7 @@ module FieldMappingTest {
     function swappedTracksFollowTheMetric(logger as Test.Logger) as Boolean {
         var layer = layerOf(swapped());
         var center = tracksAt(layer, 208, 262);
-        assertZoneSegments(center, 5, 208, 262, 56, 9, TRACK);
+        assertZoneSegments(center, 5, 208, 262, 54, 12, TRACK);
         var right = tracksAt(layer, 328, 252);
         Test.assertEqual(1, right.size());
         Test.assertEqual(360, right[0].sweep);
@@ -313,6 +313,32 @@ module FieldMappingTest {
         Test.assertEqual("", frame.bottomField.goal);
         Test.assertEqual(0, frame.bezelProgress.sweep);
         Test.assert(frame.bezelHead == null);
+        return true;
+    }
+
+    // Story 34: caps and the dot follow Body Battery to the right field,
+    // at that field's ring (328, 252, r 35, pen 6): caps r 3, dot r 3 at the
+    // end of 56 (design 201: (315.46, 284.68) -> (315, 285)); heart rate in
+    // the center gets caps r 6 on the center ring.
+    (:test)
+    function capsAndDotFollowTheMetric(logger as Test.Logger) as Boolean {
+        var s = snapshotWith(METRIC_BODY_BATTERY, 56);
+        s.setValue(METRIC_HEART_RATE, 140);
+        var frame = FaceModel.compute(s, swapped());
+        var right = frame.rightField;
+        Test.assertEqual(2, right.caps.size());
+        Test.assertEqual(3, right.caps[0].radius);
+        Test.assertEqual(328, right.caps[0].x);
+        Test.assertEqual(217, right.caps[0].y);
+        var dot = right.dot;
+        Test.assert(dot != null);
+        Test.assertEqual(315, (dot as Circle).x);
+        Test.assertEqual(285, (dot as Circle).y);
+        Test.assertEqual(3, (dot as Circle).radius);
+        var center = frame.centerField;
+        Test.assertEqual(6, center.caps.size());
+        Test.assertEqual(6, center.caps[0].radius);
+        Test.assert(center.dot == null);
         return true;
     }
 

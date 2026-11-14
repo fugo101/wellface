@@ -60,6 +60,8 @@ module FrameEquality {
 
     function describeField(f as FieldFrame) as String {
         return "arcs=" + arcs(f.arcs)
+            + "|caps=" + circles(f.caps)
+            + "|dot=" + optionalCircle(f.dot)
             + "|icon=" + icon(f.icon)
             + "|iconX=" + f.iconX
             + "|iconY=" + f.iconY
@@ -117,7 +119,8 @@ module FrameEquality {
             + "|batteryCaps=" + unordered(circleTexts(l.batteryCaps))
             + "|batteryTrack=" + unordered(arcTexts(l.batteryTrack))
             + "|fieldWells=" + unordered(circleTexts(l.fieldWells))
-            + "|fieldTracks=" + unordered(arcTexts(l.fieldTracks));
+            + "|fieldTracks=" + unordered(arcTexts(l.fieldTracks))
+            + "|fieldTrackCaps=" + unordered(circleTexts(l.fieldTrackCaps));
     }
 
     // The static layer's arrays in sorted order: their elements never
@@ -226,6 +229,14 @@ module FrameEquality {
     // Circle(x,y,radius,color).
     function circle(c as Circle) as String {
         return "C(" + c.x + "," + c.y + "," + c.radius + "," + color(c.color) + ")";
+    }
+
+    function circles(list as Array<Circle>) as String {
+        var text = "[";
+        for (var i = 0; i < list.size(); i++) {
+            text += circle(list[i]);
+        }
+        return text + "]";
     }
 
     function optionalCircle(c as Circle?) as String {

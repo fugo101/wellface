@@ -190,6 +190,11 @@ class FieldFrame {
     // Drawn over the track. A gauge has one arc, or none when the value is
     // missing or 0; zone segments have one arc per zone reached.
     public var arcs as Array<Arc>;
+    // The arcs' round caps (FaceModel.roundCaps), drawn over them.
+    public var caps as Array<Circle> = [] as Array<Circle>;
+    // The white dot at the end of the gauge, over its cap; null when the
+    // metric has none or its value is 0 or missing.
+    public var dot as Circle? = null;
     // The metric's icon (one glyph in the icon font), its top-left corner
     // and its color.
     public var icon as String = "";
@@ -212,11 +217,12 @@ class FieldFrame {
 
 // The parts of the face that depend only on the face config, drawn once into
 // a buffer by the renderer, back to front: bezel track, background disc, well
-// rims, battery well and track, time band well and band, field wells and
-// tracks. They depend on both the theme and the field mapping: the metric
-// each round field shows decides its track. So the whole layer is rebuilt
-// whenever a face config is applied (WellfaceView.applyConfig), never for a
-// theme change alone. The disc's geometry is in Layout.
+// rims, battery well and track, time band well and band, field wells,
+// tracks and track caps. They depend on both the theme and the field
+// mapping: the metric each round field shows decides its track. So the whole
+// layer is rebuilt whenever a face config is applied
+// (WellfaceView.applyConfig), never for a theme change alone. The disc's
+// geometry is in Layout.
 class StaticLayer {
     public var backgroundColor as Number = 0;
     // The well rims (Q39): around the time band's well, around each round
@@ -239,6 +245,8 @@ class StaticLayer {
     // The track under each field's lit arcs: a full circle under a gauge,
     // the five unlit segments under zone segments.
     public var fieldTracks as Array<Arc> = [] as Array<Arc>;
+    // The tracks' round caps (the unlit segments'; a full circle has none).
+    public var fieldTrackCaps as Array<Circle> = [] as Array<Circle>;
 
     function initialize() {
     }
@@ -758,11 +766,19 @@ module FaceModel {
             theme as Theme) as FieldFrame {
         var value = metricValue(metric, snapshot);
         var warning = value != null ? warningColor(metric, value, theme) : null;
+        var entry = Metrics.entry(metric);
+        var isGauge = entry.style == STYLE_GAUGE;
         var arcs = value == null ? [] as Array<Arc>
-            : (Metrics.entry(metric).style == STYLE_ZONE_SEGMENTS
-                ? litZoneSegments(field, value, snapshot.heartRateZones, theme.zones)
-                : gauge(field, value, warning != null ? warning : theme.accent));
+            : (isGauge
+                ? gauge(field, value, warning != null ? warning : theme.accent)
+                : litZoneSegments(field, value, snapshot.heartRateZones, theme.zones));
         var content = new FieldFrame(arcs);
+        content.caps = roundCaps(arcs);
+        if (isGauge && entry.gaugeEndDot && value != null && value > 0) {
+            // A gauge above 0 always sweeps, so it has its arc.
+            var end = arcEnd(arcs[0]);
+            content.dot = new Circle(end[0], end[1], Layout.GAUGE_DOT_RADIUS, theme.text);
+        }
         content.icon = iconText(metric);
         content.iconX = field.iconX;
         content.iconY = field.iconY;
@@ -904,6 +920,7 @@ module FaceModel {
         for (var i = 0; i < round.size(); i++) {
             addRoundField(layer, Layout.roundField(round[i]), config.metricOf(round[i]), theme);
         }
+        layer.fieldTrackCaps = roundCaps(layer.fieldTracks);
         return layer;
     }
 
@@ -1007,6 +1024,29 @@ module FaceModel {
             color);
     }
 
+    // Round caps (stories 27, 31, 32): a filled circle of radius pen / 2 in
+    // the arc's color at each end of every arc, on its centerline. A full
+    // circle has no ends and a sweep of 0 draws nothing, so neither gets caps.
+    function roundCaps(arcs as Array<Arc>) as Array<Circle> {
+        var caps = [] as Array<Circle>;
+        for (var i = 0; i < arcs.size(); i++) {
+            var a = arcs[i];
+            if (a.sweep > 0 && a.sweep < 360) {
+                var start = pointAround(a.x, a.y, toCiq(a.start), a.radius);
+                var end = arcEnd(a);
+                caps.add(new Circle(start[0], start[1], a.pen / 2, a.color));
+                caps.add(new Circle(end[0], end[1], a.pen / 2, a.color));
+            }
+        }
+        return caps;
+    }
+
+    // The point at the end of an arc, on its centerline: [x, y]. toCiq turns
+    // Connect IQ degrees back into design degrees (it is its own inverse).
+    function arcEnd(a as Arc) as Array<Number> {
+        return pointAround(a.x, a.y, toCiq(a.end), a.radius);
+    }
+
     // A filled circle whose center sits `distance` from the face center at
     // `designDegrees`.
     function circleAt(designDegrees as Number, distance as Number, radius as Number,
@@ -1018,10 +1058,17 @@ module FaceModel {
     // The point `distance` from the face center at `designDegrees`, rounded
     // to whole pixels: [x, y].
     function pointAt(designDegrees as Number, distance as Number) as Array<Number> {
+        return pointAround(Layout.CENTER_X, Layout.CENTER_Y, designDegrees, distance);
+    }
+
+    // The point `distance` from (x, y) at `designDegrees`, rounded to whole
+    // pixels: [x, y].
+    function pointAround(x as Number, y as Number, designDegrees as Number,
+            distance as Number) as Array<Number> {
         var angle = Math.toRadians(designDegrees);
         return [
-            Math.round(Layout.CENTER_X + distance * Math.sin(angle)).toNumber(),
-            Math.round(Layout.CENTER_Y - distance * Math.cos(angle)).toNumber()
+            Math.round(x + distance * Math.sin(angle)).toNumber(),
+            Math.round(y - distance * Math.cos(angle)).toNumber()
         ] as Array<Number>;
     }
 

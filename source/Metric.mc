@@ -66,10 +66,14 @@ class MetricEntry {
     public var warningLevel1 as Number?;
     public var warningLevel2 as Number?;
     public var format as NumberFormat;
+    // A gauge ends in a white dot when the value is above 0 (Body Battery,
+    // story 29).
+    public var gaugeEndDot as Boolean;
 
     function initialize(style as DrawingStyle, icon as Number, source as ValueSource,
             complication as Complications.Type, cadence as ReadCadence, warningAbove as Boolean,
-            warningLevel1 as Number?, warningLevel2 as Number?, format as NumberFormat) {
+            warningLevel1 as Number?, warningLevel2 as Number?, format as NumberFormat,
+            gaugeEndDot as Boolean) {
         self.style = style;
         self.icon = icon;
         self.source = source;
@@ -79,6 +83,7 @@ class MetricEntry {
         self.warningLevel1 = warningLevel1;
         self.warningLevel2 = warningLevel2;
         self.format = format;
+        self.gaugeEndDot = gaugeEndDot;
     }
 }
 
@@ -100,19 +105,19 @@ module Metrics {
                 // Stress: orange at 51-75, red above 75.
                 new MetricEntry(STYLE_GAUGE, FontCatalog.ICON_STRESS, SOURCE_COMPLICATION,
                     Complications.COMPLICATION_TYPE_STRESS, CADENCE_EVERY_MINUTE, true, 50, 75,
-                    NUMBER_FORMAT_PLAIN),
+                    NUMBER_FORMAT_PLAIN, false),
                 // Body Battery: orange at 15-24, red below 15.
                 new MetricEntry(STYLE_GAUGE, FontCatalog.ICON_BOLT, SOURCE_COMPLICATION,
                     Complications.COMPLICATION_TYPE_BODY_BATTERY, CADENCE_EVERY_MINUTE, false,
-                    25, 15, NUMBER_FORMAT_PLAIN),
+                    25, 15, NUMBER_FORMAT_PLAIN, true),
                 // Heart rate: zone colors instead of warnings.
                 new MetricEntry(STYLE_ZONE_SEGMENTS, FontCatalog.ICON_HEART, SOURCE_COMPLICATION,
                     Complications.COMPLICATION_TYPE_HEART_RATE, CADENCE_EVERY_SECOND, false,
-                    null, null, NUMBER_FORMAT_PLAIN),
+                    null, null, NUMBER_FORMAT_PLAIN, false),
                 // Steps: the watch's own (auto) step goal instead of warnings.
                 new MetricEntry(STYLE_GOAL_PROGRESS, FontCatalog.ICON_FOOT,
                     SOURCE_ACTIVITY_STEPS, Complications.COMPLICATION_TYPE_STEPS,
-                    CADENCE_EVERY_MINUTE, false, null, null, NUMBER_FORMAT_DOT_THOUSANDS)
+                    CADENCE_EVERY_MINUTE, false, null, null, NUMBER_FORMAT_DOT_THOUSANDS, false)
             ] as Array<MetricEntry>;
             _entries = all;
         }

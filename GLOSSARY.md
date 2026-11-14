@@ -108,6 +108,14 @@ _Avoid_: Dial, meter
 Five ring segments that light up one per heart-rate zone reached.
 _Avoid_: HR gauge, zone ring
 
+**Round cap**:
+The filled circle that rounds each end of a gauge arc or zone segment, lit or unlit. A full ring has none; battery segments and bezel ticks keep flat ends.
+_Avoid_: End cap, rounded end
+
+**End dot**:
+The small white dot at the end of the Body Battery gauge, shown only when the value is above 0.
+_Avoid_: Head dot, knob, marker
+
 ## Modes and interaction
 
 **AOD**:

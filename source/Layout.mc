@@ -139,11 +139,17 @@ module Layout {
     }
 
     // Zone segments, in design degrees: segment i (zone i + 1) spans
-    // i x ZONE_STEP + ZONE_GAP for ZONE_SWEEP degrees, so 4 to 68 for zone 1.
+    // i x ZONE_STEP + ZONE_GAP for ZONE_SWEEP degrees, so 9 to 63 for zone 1:
+    // 18 deg between two segments, of which about 8 deg stays visible past
+    // the round caps on a pen-6 ring (about 5 deg on the pen-12 center ring).
     const ZONE_SEGMENTS = 5;
     const ZONE_STEP = 72;
-    const ZONE_GAP = 4;
-    const ZONE_SWEEP = 64;
+    const ZONE_GAP = 9;
+    const ZONE_SWEEP = 54;
+
+    // The dot at the end of a gauge whose metric has one (Body Battery), on
+    // the ring's centerline.
+    const GAUGE_DOT_RADIUS = 3;
 
     // Icons are square glyphs in the icon font.
     const ICON_SIZE = 24;
@@ -181,11 +187,9 @@ module Layout {
     const CENTER_FIELD_X = 208;
     const CENTER_FIELD_Y = 262;
     const CENTER_FIELD_RADIUS = 60;
-    // The design's gauge centerline is r 55.5. With pen 9, r 56 lands on
-    // about r 50.4-59.5 in the simulator (design 51-60); r 55 lands 1 px
-    // further in.
-    const CENTER_RING_RADIUS = 56;
-    const CENTER_RING_PEN = 9;
+    // The gauge's centerline, r 60 - 12 / 2, and its pen, as in the design.
+    const CENTER_RING_RADIUS = 54;
+    const CENTER_RING_PEN = 12;
     const CENTER_ICON_X = 196;
     const CENTER_ICON_Y = 219;
     const CENTER_NUMBER_Y = 274;

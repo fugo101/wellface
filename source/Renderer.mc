@@ -83,11 +83,18 @@ class Renderer {
             Graphics.TEXT_JUSTIFY_LEFT);
     }
 
-    // A field's arcs, icon and number, over its well and track in the static
-    // layer.
+    // A field's arcs, their round caps and the gauge's end dot, its icon and
+    // number, over its well and track in the static layer.
     private function paintField(dc as Dc, field as FieldFrame) as Void {
         for (var i = 0; i < field.arcs.size(); i++) {
             drawArc(dc, field.arcs[i]);
+        }
+        for (var i = 0; i < field.caps.size(); i++) {
+            fillCircle(dc, field.caps[i]);
+        }
+        var dot = field.dot;
+        if (dot != null) {
+            fillCircle(dc, dot);
         }
         dc.setColor(field.iconColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(field.iconX, field.iconY, _fonts.get(FONT_ICONS), field.icon,
@@ -202,6 +209,9 @@ class Renderer {
         }
         for (var i = 0; i < layer.fieldTracks.size(); i++) {
             drawArc(dc, layer.fieldTracks[i]);
+        }
+        for (var i = 0; i < layer.fieldTrackCaps.size(); i++) {
+            fillCircle(dc, layer.fieldTrackCaps[i]);
         }
         Timing.stop(TIMING_STATIC);
     }

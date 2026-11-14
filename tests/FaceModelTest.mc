@@ -1052,6 +1052,102 @@ module FaceModelTest {
         return true;
     }
 
+    // Stories 27, 28: a lit gauge has a round cap at each end, a filled
+    // circle of radius pen / 2 on the ring's centerline, in the arc's color.
+    // Body Battery 56 on the center ring (208, 262, r 54, pen 12) sweeps
+    // design 0 to 201: caps r 6 at (208, 208) and (208 + 54 sin 201, 262 -
+    // 54 cos 201) = (188.65, 312.41) -> (189, 312).
+    (:test)
+    function litGaugeHasRoundCapsAtBothEnds(logger as Test.Logger) as Boolean {
+        var caps = bodyBatteryAt(56).caps;
+        Test.assertEqual(2, caps.size());
+        assertCircle(caps[0], 208, 208, 6, 0x8EE3B8);
+        assertCircle(caps[1], 189, 312, 6, 0x8EE3B8);
+        return true;
+    }
+
+    // The caps take the warning color with the arc: stress 27 on the left
+    // ring (88, 252, r 35, pen 6) sweeps 97 deg, caps r 3 at (88, 217) and
+    // (122.74, 256.27) -> (123, 256); stress 80 is red.
+    (:test)
+    function capsFollowTheArcAndItsColor(logger as Test.Logger) as Boolean {
+        var caps = stressAt(27).caps;
+        Test.assertEqual(2, caps.size());
+        assertCircle(caps[0], 88, 217, 3, 0x8EE3B8);
+        assertCircle(caps[1], 123, 256, 3, 0x8EE3B8);
+        var red = stressAt(80).caps;
+        Test.assertEqual(0xFF4D4D, red[0].color);
+        Test.assertEqual(0xFF4D4D, red[1].color);
+        return true;
+    }
+
+    // A full ring (100) has no caps, and no arc means no caps (0, missing).
+    (:test)
+    function fullOrEmptyGaugeHasNoCaps(logger as Test.Logger) as Boolean {
+        var full = bodyBatteryAt(100);
+        Test.assertEqual(360, gaugeOf(full).sweep);
+        Test.assertEqual(0, full.caps.size());
+        Test.assertEqual(0, bodyBatteryAt(0).caps.size());
+        Test.assertEqual(0, bodyBatteryAt(null).caps.size());
+        Test.assertEqual(0, stressAt(null).caps.size());
+        return true;
+    }
+
+    // Stories 29, 30: a white dot of radius 3 at the end of the Body
+    // Battery gauge, on its centerline (the end cap's center), whatever the
+    // warning color: (189, 312) at 56; Body Battery 10 (red) sweeps 36 deg,
+    // dot at (239.74, 218.31) -> (240, 218).
+    (:test)
+    function bodyBatteryGaugeEndsInAWhiteDot(logger as Test.Logger) as Boolean {
+        var dot = bodyBatteryAt(56).dot;
+        Test.assert(dot != null);
+        assertCircle(dot as Circle, 189, 312, 3, 0xFFFFFF);
+        var red = bodyBatteryAt(10).dot;
+        Test.assert(red != null);
+        assertCircle(red as Circle, 240, 218, 3, 0xFFFFFF);
+        return true;
+    }
+
+    // Story 30: no dot at 0 or when the value is missing, and none on a
+    // gauge of another metric (stress).
+    (:test)
+    function noDotAt0OrMissingOrOnOtherMetrics(logger as Test.Logger) as Boolean {
+        Test.assert(bodyBatteryAt(0).dot == null);
+        Test.assert(bodyBatteryAt(null).dot == null);
+        Test.assert(stressAt(27).dot == null);
+        Test.assert(heartRateAt(140).dot == null);
+        return true;
+    }
+
+    // Story 31: lit zone segments have caps too, two per segment in its
+    // zone's color: zone 1 on the right ring (328, 252, r 35, pen 6) spans
+    // design 9 to 63, caps r 3 at (333.48, 217.43) -> (333, 217) and
+    // (359.19, 236.11) -> (359, 236).
+    (:test)
+    function litZoneSegmentsHaveRoundCaps(logger as Test.Logger) as Boolean {
+        var caps = heartRateAt(100).caps;
+        Test.assertEqual(2, caps.size());
+        assertCircle(caps[0], 333, 217, 3, 0xB4B4B4);
+        assertCircle(caps[1], 359, 236, 3, 0xB4B4B4);
+        Test.assertEqual(10, heartRateAt(200).caps.size());
+        Test.assertEqual(0, heartRateAt(95).caps.size());
+        return true;
+    }
+
+    // Story 32: the unlit zone segments in the static layer have caps in
+    // the track color, two per segment; the gauges' full-ring tracks have
+    // none.
+    (:test)
+    function unlitZoneSegmentsHaveRoundCapsAndRingTracksNone(logger as Test.Logger)
+            as Boolean {
+        var caps = mintLayer().fieldTrackCaps;
+        Test.assertEqual(10, caps.size());
+        assertCircle(circleAt(caps, 333, 217), 333, 217, 3, 0x2E3330);
+        assertCircle(circleAt(caps, 323, 217), 323, 217, 3, 0x2E3330);
+        assertCircle(circleAt(caps, 344, 283), 344, 283, 3, 0x2E3330);
+        return true;
+    }
+
     // Story 9: the value as a white number.
     (:test)
     function bodyBatteryIsAWhiteNumber(logger as Test.Logger) as Boolean {
@@ -1171,14 +1267,14 @@ module FaceModelTest {
 
     // Each round field's ring stays with the position, whatever track its
     // metric needs: left (88, 252) and right (328, 252) r 35 (the design's
-    // ring centerline, 38 - 6 / 2), pen 6; center (208, 262) r 56 (the
-    // design's 55.5), pen 9.
+    // ring centerline, 38 - 6 / 2), pen 6; center (208, 262) r 54 (60 -
+    // 12 / 2), pen 12.
     (:test)
     function ringsStayWithThePosition(logger as Test.Logger) as Boolean {
         var xs = [88, 208, 328] as Array<Number>;
         var ys = [252, 262, 252] as Array<Number>;
-        var radii = [35, 56, 35] as Array<Number>;
-        var pens = [6, 9, 6] as Array<Number>;
+        var radii = [35, 54, 35] as Array<Number>;
+        var pens = [6, 12, 6] as Array<Number>;
         for (var i = 0; i < xs.size(); i++) {
             var tracks = tracksAt(xs[i], ys[i]);
             Test.assert(tracks.size() > 0);
@@ -1346,17 +1442,17 @@ module FaceModelTest {
         return true;
     }
 
-    // Story 18: zone 1 lights segment 0, which spans design 4 to 68 deg
-    // (ciq 86 clockwise to 22) on its field's ring.
+    // Story 18: zone 1 lights segment 0, which spans design 9 to 63 deg
+    // (ciq 81 clockwise to 27) on its field's ring: 9 deg gaps on each side.
     (:test)
-    function zone1LightsSegment0FromDesign4To68(logger as Test.Logger) as Boolean {
+    function zone1LightsSegment0FromDesign9To63(logger as Test.Logger) as Boolean {
         var field = heartRateAt(100);
         var geometry = geometryOf(METRIC_HEART_RATE);
         Test.assertEqual(1, field.arcs.size());
         var segment = field.arcs[0];
-        Test.assertEqual(86, segment.start);
-        Test.assertEqual(22, segment.end);
-        Test.assertEqual(64, segment.sweep);
+        Test.assertEqual(81, segment.start);
+        Test.assertEqual(27, segment.end);
+        Test.assertEqual(54, segment.sweep);
         Test.assertEqual(geometry.x, segment.x);
         Test.assertEqual(geometry.y, segment.y);
         Test.assertEqual(geometry.ringRadius, segment.radius);
@@ -1388,12 +1484,12 @@ module FaceModelTest {
         return true;
     }
 
-    // Segment 4 (zone 5) spans design 292 to 356 deg: ciq 158 clockwise to 94.
+    // Segment 4 (zone 5) spans design 297 to 351 deg: ciq 153 clockwise to 99.
     (:test)
-    function zone5SegmentSpansDesign292To356(logger as Test.Logger) as Boolean {
+    function zone5SegmentSpansDesign297To351(logger as Test.Logger) as Boolean {
         var segment = heartRateAt(200).arcs[4];
-        Test.assertEqual(158, segment.start);
-        Test.assertEqual(94, segment.end);
+        Test.assertEqual(153, segment.start);
+        Test.assertEqual(99, segment.end);
         return true;
     }
 
@@ -1486,21 +1582,21 @@ module FaceModelTest {
     }
 
     // Heart rate's track is the five unlit segments in the gauge-track
-    // color, not a full circle, on its field's ring: segment 0 spans ciq 86
-    // to 22 like the lit one.
+    // color, not a full circle, on its field's ring: segment 0 spans ciq 81
+    // to 27 like the lit one.
     (:test)
     function heartRateTrackIsFiveUnlitSegments(logger as Test.Logger) as Boolean {
         var geometry = geometryOf(METRIC_HEART_RATE);
         var segments = tracksAt(geometry.x, geometry.y);
         Test.assertEqual(5, segments.size());
         for (var i = 0; i < segments.size(); i++) {
-            Test.assertEqual(64, segments[i].sweep);
+            Test.assertEqual(54, segments[i].sweep);
             Test.assertEqual(geometry.ringRadius, segments[i].radius);
             Test.assertEqual(geometry.ringPen, segments[i].pen);
             Test.assertEqual(0x2E3330, segments[i].color);
         }
-        Test.assertEqual(86, segments[0].start);
-        Test.assertEqual(22, segments[0].end);
+        Test.assertEqual(81, segments[0].start);
+        Test.assertEqual(27, segments[0].end);
         return true;
     }
 

@@ -333,16 +333,18 @@ module GoldenTest {
     function changeField(f as FieldFrame, i as Number) as Boolean {
         switch (i) {
             case 0: f.arcs = [] as Array<Arc>; break;
-            case 1: f.icon += "0"; break;
-            case 2: f.iconX++; break;
-            case 3: f.iconY++; break;
-            case 4: f.iconColor++; break;
-            case 5: f.number += "0"; break;
-            case 6: f.numberColor++; break;
-            case 7: f.numberFont = otherFont(f.numberFont); break;
-            case 8: f.numberWidth++; break;
-            case 9: f.numberX++; break;
-            case 10: f.numberY++; break;
+            case 1: f.caps = [] as Array<Circle>; break;
+            case 2: f.dot = f.dot == null ? otherCircle() : null; break;
+            case 3: f.icon += "0"; break;
+            case 4: f.iconX++; break;
+            case 5: f.iconY++; break;
+            case 6: f.iconColor++; break;
+            case 7: f.number += "0"; break;
+            case 8: f.numberColor++; break;
+            case 9: f.numberFont = otherFont(f.numberFont); break;
+            case 10: f.numberWidth++; break;
+            case 11: f.numberX++; break;
+            case 12: f.numberY++; break;
             default: return false;
         }
         return true;
@@ -403,6 +405,7 @@ module GoldenTest {
             case 9: l.batteryTrack = [] as Array<Arc>; break;
             case 10: l.fieldWells = [] as Array<Circle>; break;
             case 11: l.fieldTracks = [] as Array<Arc>; break;
+            case 12: l.fieldTrackCaps = [] as Array<Circle>; break;
             default: return false;
         }
         return true;
@@ -474,10 +477,10 @@ module GoldenTest {
     // has no reflection, so a member added to a class without a case here
     // goes unnoticed.
     const FRAME_MEMBERS = 23;
-    const FIELD_MEMBERS = 11;
+    const FIELD_MEMBERS = 13;
     const BOTTOM_FIELD_MEMBERS = 15;
     const AOD_MEMBERS = 12;
-    const LAYER_MEMBERS = 12;
+    const LAYER_MEMBERS = 13;
     const ARC_MEMBERS = 8;
     const RECT_MEMBERS = 6;
     const CIRCLE_MEMBERS = 4;
