@@ -22,9 +22,11 @@ The scripts never print the key or its path. If the VS Code extension generated 
 | `scripts/run-tests.sh [test name]` | `bin/test.log` | build the tests, start the simulator, run them |
 | `scripts/build-release.sh` | `bin/wellface-release.prg` | release build for the watch (`-r --build-stats 0`) |
 | `scripts/build-profile.sh` | `bin/wellface-profile.prg` | the release build with profiling support (`-r -k`), see "Profile" |
+| `scripts/build-timing.sh` | `bin/wellface-timing.prg` | the release build with the timing code built in, see "Timing build" |
 | `scripts/run-profile.sh [file.prg]` | `bin/wellface-profile.prg` | profile build (or the given PRG), start the simulator and load it |
 | `scripts/watch-logs.sh list \| create <NAME> \| get <NAME> <file> \| delete <NAME>` | — | the watch's `GARMIN/Apps/LOGS` over USB: list, create an empty log file, copy a log back, delete one |
 | `scripts/profile-sim.sh <file.prg> <dir> [run]` | `<dir>/<run>.PRF`, `.txt`, `-memory.txt` | the fixed profiling scenario in the simulator, unattended, see "Profile" |
+| `scripts/timing-sim.sh <file.prg> <log> [loads]` | `<log>` | a timing build in a fixed simulator scenario, unattended, then its summary, see "Timing build" |
 | `scripts/capture.sh <dir> [--compare <dir>]` | `<dir>/<scenario>.png` | simulator screenshots of fixed scenarios, compared pixel by pixel, see "Captures" |
 | `scripts/sideload.sh [file.prg]` | `GARMIN/Apps/WELLFACE.PRG` on the watch | release build, then copy it to the watch over USB (or copy the given PRG) |
 | `scripts/gen-fonts.sh` | `resources/fonts/`, `source/FontCatalog.mc` | regenerate the bitmap fonts, the icon font and the font catalog |
@@ -62,6 +64,38 @@ It writes `<run>.PRF` (the profiler's log), `<run>.txt` and `<run>-memory.txt`. 
 The script reads the log itself because the profiler window can show nothing: with SDK 9.3.0 the simulator wrote the log under the name of an earlier build of the same app (`WELLFACE-TEST.PRF`) and then looked for that build's debug file, failing with "Unable to load debug.xml data for this app". The `.PRF` format is not documented; `prf.py` describes what was read from it.
 
 On the watch (verified on the FR265, 2026-11-14): create the log files first with `scripts/watch-logs.sh create WELLFACE.PRF` (and `WELLFACE.TXT` for `System.println` output), sideload a profile build with `scripts/sideload.sh bin/wellface-profile.prg`, unplug and wear it, plug in again and copy the log back with `scripts/watch-logs.sh get WELLFACE.PRF <local file>`. `prf.py` reads it with the build's `.prg.debug.xml`. Two differences from the simulator's log: the watch starts a new log each time the face starts (a return from a widget included), so it holds only the last run; and its clock advances only while the face's code runs, so times are execution time, not wall time. Whether the files must exist beforehand was not tested (they did). Sideload the normal build afterwards and delete the log files (`scripts/watch-logs.sh delete <NAME>`).
+
+## Timing build
+
+The watch's profiler counts only the face's own code, not native drawing, and the simulator's profiler gives only averages, so update times on the watch come from the timing build. `scripts/build-timing.sh` builds `bin/wellface-timing.prg`: the release build (`-r`) plus `timing.jungle`, which swaps the `(:timing)` module in `source/Timing.mc` in for its `(:notiming)` no-op stand-in. Every other build (`monkey.jungle`, the capture face) leaves the timing code out; only the no-op calls remain.
+
+With `System.getTimer()` (milliseconds) it records:
+
+| Kind | What |
+|---|---|
+| `update` | a high-power update (`WellfaceView.onUpdate` after the display-mode check); the first after a start and wakes are filed under the next two kinds instead |
+| `first` / `firstAod` | the first update after a face start or after the view was hidden, in high power or AOD; on the watch a return from a widget starts the face again |
+| `wake` | the first high-power update after AOD (or a screen off, which comes after AOD) |
+| `aod` | an AOD update |
+| `frame` / `aodFrame` | `FaceModel.update` / `FaceModel.updateAod` on their own |
+| `static` | the static layer paint (`Renderer.paintStatic`) |
+
+An update's time covers the face's own code in `onUpdate`, the `frame` and `static` readings inside it included; whatever the system does after `onUpdate` returns (copying to the screen, and with `WatchUi.Layer`s compositing them) is outside it. `System.getTimer()` counts whole milliseconds, so compare medians over many updates, and note that a difference under about 1 ms cannot be seen.
+
+The readings stay in memory and are printed (`System.println`) only when the face enters AOD (`onEnterSleep`), when the view is hidden or the app stops (a return to the widgets stops the face without a sleep), and at the end of an update that leaves the buffer nearly full (240 readings), so no print falls inside a timed part. Each flush prints `timing flush <reason> <count>`, then one `timing <kind> <ms>` line per reading. `tools/timing/summary.py <log> [<log> ...]` prints per kind the count, median, 10th and 90th percentile, minimum, maximum and mean, for each log and pooled.
+
+On the watch:
+
+1. Fully quit Garmin Express and OpenMTP, connect the watch.
+2. `scripts/watch-logs.sh create WELLFACE.TXT`: the watch writes `System.println` output only into an existing file named after the PRG.
+3. `scripts/build-timing.sh`, then `scripts/sideload.sh bin/wellface-timing.prg`.
+4. Unplug, make sure Wellface is the active face, and wear it for 5–10 minutes: at least 10 wakes (raise the wrist or press a button, leave it awake a few seconds, let it fall back to Always On) and at least 5 returns from a widget (open the widget loop from the face with Up or Down or a swipe, then go back to the face; button names may differ slightly).
+5. Plug in again and copy the log back: `scripts/watch-logs.sh get WELLFACE.TXT <local file>`.
+6. Read it: `python3 -I tools/timing/summary.py <local file>`. Check that the flushes add up to the wear: about one `sleep` per wake and one `hide` or `stop` per return from a widget. Fewer would mean the watch kept only part of the log.
+7. Repeat steps 2–6 for a second wear (delete the log first with `scripts/watch-logs.sh delete WELLFACE.TXT`, then create it again, so each wear has its own log); the difference between the two wears is the noise.
+8. Afterwards: `scripts/watch-logs.sh delete WELLFACE.TXT` and `scripts/sideload.sh` to put the normal release build back.
+
+In the simulator, `scripts/timing-sim.sh bin/wellface-timing.prg <log file> [loads]` runs a fixed scenario unattended and prints the summary: it restarts the simulator and loads the PRG 5 times (by default), each time High Power with Data Simulation (heart rate changing about every second) for about 21 s, Always-On 5 s, High Power 5 s, Always-On 4 s. Like `profile-sim.sh` it drives the menus by UI scripting (macOS, the Accessibility permission, hands off for about 40 s per load); run it twice per build for the noise. By hand, `scripts/run-profile.sh bin/wellface-timing.prg` loads the PRG and prints the same lines when the display mode is switched to Always-On or the app is killed (File → Kill App). Simulator times are for information only; compare watch timings only with watch timings.
 
 ## Captures
 

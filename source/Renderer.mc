@@ -168,6 +168,7 @@ class Renderer {
     // Everything that depends only on the face config (its theme and field
     // mapping), back to front.
     private function paintStatic(dc as Dc, layer as StaticLayer) as Void {
+        Timing.start(TIMING_STATIC);
         clear(dc);
         drawArc(dc, layer.bezelTrack);
 
@@ -197,6 +198,7 @@ class Renderer {
         for (var i = 0; i < layer.fieldTracks.size(); i++) {
             drawArc(dc, layer.fieldTracks[i]);
         }
+        Timing.stop(TIMING_STATIC);
     }
 
     private function fillCircle(dc as Dc, circle as Circle) as Void {

@@ -6,3 +6,8 @@ project.typecheck = strict
 # Everything in tests/ is (:test) and is compiled only into test builds (-t).
 base.sourcePath = source;tests
 base.resourcePath = resources
+
+# The timing build (scripts/build-timing.sh) adds timing.jungle, which swaps
+# the (:timing) code in for its (:notiming) no-op stand-in. Every other build
+# leaves the timing code out.
+base.excludeAnnotations = timing

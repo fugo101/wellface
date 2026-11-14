@@ -7,6 +7,11 @@ class WellfaceApp extends Application.AppBase {
         AppBase.initialize();
     }
 
+    // The timing build prints its last readings.
+    function onStop(state as Dictionary?) as Void {
+        Timing.flush("stop");
+    }
+
     function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
         // The delegate reads the face config the view owns.
         var view = new WellfaceView();

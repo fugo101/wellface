@@ -10,3 +10,6 @@ project.typecheck = strict
 # sources, and the scenario that scripts/capture.sh writes before each build.
 base.sourcePath = ../../source;source;scenario
 base.resourcePath = ../../resources
+
+# Like the main jungle, leave out the timing build's code.
+base.excludeAnnotations = timing

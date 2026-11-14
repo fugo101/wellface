@@ -1,0 +1,4 @@
+# Timing build: given after monkey.jungle (scripts/build-timing.sh), it
+# overrides the exclusion there, so the (:timing) code is built in and its
+# (:notiming) no-op stand-in left out. See docs/build.md, "Timing build".
+base.excludeAnnotations = notiming

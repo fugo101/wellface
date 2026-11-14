@@ -63,6 +63,7 @@ class WellfaceView extends WatchUi.WatchFace {
             return;
         }
         var highPower = mode == System.DISPLAY_MODE_HIGH_POWER;
+        Timing.start(highPower ? TIMING_UPDATE : TIMING_AOD);
         var changes = _reader.update(highPower);
         _frameChanges |= changes;
         _aodChanges |= changes;
@@ -73,29 +74,44 @@ class WellfaceView extends WatchUi.WatchFace {
             // clock changed.
             var aodFrame = _aodFrame;
             if (aodFrame == null || _aodChanges != 0) {
-                aodFrame = FaceModel.updateAod(aodFrame, _reader.snapshot(), _config, _aodChanges);
+                var aodSnapshot = _reader.snapshot();
+                Timing.start(TIMING_AOD_FRAME);
+                aodFrame = FaceModel.updateAod(aodFrame, aodSnapshot, _config, _aodChanges);
+                Timing.stop(TIMING_AOD_FRAME);
                 _aodFrame = aodFrame;
                 _aodChanges = 0;
             }
             _renderer.paintAod(dc, aodFrame);
+            Timing.stop(TIMING_AOD);
             return;
         }
 
         var frame = _frame;
         if (frame == null || _frameChanges != 0) {
-            frame = FaceModel.update(frame, _reader.snapshot(), _config, _frameChanges);
+            var snapshot = _reader.snapshot();
+            Timing.start(TIMING_FRAME);
+            frame = FaceModel.update(frame, snapshot, _config, _frameChanges);
+            Timing.stop(TIMING_FRAME);
             _frame = frame;
             _frameChanges = 0;
         }
         _renderer.paint(dc, frame);
+        Timing.stop(TIMING_UPDATE);
     }
 
-    // The mode is read in onUpdate; these only ask for a repaint.
+    // The mode is read in onUpdate; these only ask for a repaint. The timing
+    // build prints its readings here, outside any timed update.
     function onEnterSleep() as Void {
+        Timing.flush("sleep");
         WatchUi.requestUpdate();
     }
 
     function onExitSleep() as Void {
         WatchUi.requestUpdate();
+    }
+
+    // A return to the widgets leaves the face without onEnterSleep.
+    function onHide() as Void {
+        Timing.flush("hide");
     }
 }
