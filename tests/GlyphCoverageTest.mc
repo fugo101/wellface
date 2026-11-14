@@ -119,12 +119,12 @@ module GlyphCoverageTest {
     // Every time of day, normal and Always On.
     (:test)
     function everyTimeIsDrawable(logger as Test.Logger) as Boolean {
-        var theme = Themes.mint();
+        var config = FaceModel.resolve(FaceConfigs.defaultConfig());
         for (var minute = 0; minute < 24 * 60; minute++) {
-            var aod = FaceModel.computeAod(new Snapshot(minute / 60, minute % 60), theme);
+            var aod = FaceModel.computeAod(new Snapshot(minute / 60, minute % 60), config);
             assertDrawable(aod.time, FONT_TIME, "time");
         }
-        var frame = FaceModel.compute(new Snapshot(23, 59), theme, Layout.defaultMapping());
+        var frame = FaceModel.compute(new Snapshot(23, 59), config);
         assertDrawable(frame.time, FONT_TIME, "time");
         return true;
     }

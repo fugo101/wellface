@@ -4,11 +4,14 @@ import Toybox.Lang;
 // Paints FaceModel output as-is. No display rules live here.
 //
 // The static layer is drawn once into a full-color buffer and copied to the
-// screen on every high-power update. The face is started again on every
-// return from a widget, so the buffer is rebuilt then too.
+// screen on every high-power update. It depends on the theme and the field
+// mapping (the metric each round field shows decides its track), so a new
+// one comes with every applied face config (setStatic) and the buffer is
+// repainted once then. The face is started again on every return from a
+// widget, so the buffer is rebuilt then too.
 class Renderer {
-    private var _layer as StaticLayer;
-    private var _notches as Array<Line>;
+    private var _layer as StaticLayer = new StaticLayer();
+    private var _notches as Array<Line> = [] as Array<Line>;
     private var _fonts as Fonts;
     // The reference and the bitmap it returned. Holding the bitmap keeps it
     // locked in the graphics pool, so it is drawn once and never purged
@@ -16,10 +19,19 @@ class Renderer {
     private var _reference as BufferedBitmapReference?;
     private var _bitmap as BufferedBitmap?;
 
-    function initialize(layer as StaticLayer, notches as Array<Line>, fonts as Fonts) {
+    // Nothing is painted before the first setStatic.
+    function initialize(fonts as Fonts) {
+        _fonts = fonts;
+    }
+
+    // The static layer and bezel notches of a newly applied face config. The
+    // buffer is kept and repainted once, on the next high-power update.
+    function setStatic(layer as StaticLayer, notches as Array<Line>) as Void {
         _layer = layer;
         _notches = notches;
-        _fonts = fonts;
+        // Dropping the bitmap makes staticBitmap get it again from the
+        // reference and paint the new layer into it.
+        _bitmap = null;
     }
 
     // A full high-power frame. The screen is not guaranteed to keep its
@@ -122,7 +134,8 @@ class Renderer {
         dc.clear();
     }
 
-    // The buffer holding the static layer, drawn when it is first created.
+    // The buffer holding the static layer, drawn when it is first created and
+    // after each setStatic.
     // Null if the graphics pool has no room for it. BufferedBitmap.isCached()
     // is not asked: it only says whether get() restored a released bitmap
     // from the pool, and stays false on a bitmap the face keeps holding, which
@@ -152,7 +165,8 @@ class Renderer {
         return bitmap;
     }
 
-    // Everything that depends only on the theme, back to front.
+    // Everything that depends only on the face config (its theme and field
+    // mapping), back to front.
     private function paintStatic(dc as Dc, layer as StaticLayer) as Void {
         clear(dc);
         drawArc(dc, layer.bezelTrack);

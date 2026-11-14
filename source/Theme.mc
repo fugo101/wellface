@@ -57,7 +57,18 @@ class Theme {
 }
 
 module Themes {
-    // The MVP's only theme. The active theme is hard-coded for now.
+    // Theme names, as a face config names them.
+    const MINT = "mint";
+
+    // The theme with this name, null when there is none. FaceModel.resolve
+    // turns an unknown name into the default theme.
+    function named(name as String) as Theme? {
+        if (name.equals(MINT)) {
+            return mint();
+        }
+        return null;
+    }
+
     function mint() as Theme {
         return new Theme(
             0x8EE3B8, // accent
@@ -74,9 +85,5 @@ module Themes {
             // were chosen to read well on the dark background.
             [0xB4B4B4, 0x4DA6FF, 0x4CD964, 0xFF8A3D, 0xFF4D4D] as Array<Number>
         );
-    }
-
-    function active() as Theme {
-        return mint();
     }
 }

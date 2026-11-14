@@ -16,16 +16,22 @@ module FieldMappingTest {
     const TRACK = 0x2E3330;
     const ZONE_COLORS = [0xB4B4B4, 0x4DA6FF, 0x4CD964, 0xFF8A3D, 0xFF4D4D] as Array<Number>;
 
+    // A face config in the mint theme with these metrics, resolved.
+    function configOf(left as Metric, center as Metric, right as Metric, bottom as Metric,
+            bezelRing as Metric) as ResolvedFaceConfig {
+        return FaceModel.resolve(new FaceConfig("mint", left, center, right, bottom, bezelRing));
+    }
+
     // Heart rate and Body Battery swapped: heart rate in the center, Body
     // Battery on the right.
-    function swapped() as FieldMapping {
-        return new FieldMapping(METRIC_STRESS, METRIC_HEART_RATE, METRIC_BODY_BATTERY,
+    function swapped() as ResolvedFaceConfig {
+        return configOf(METRIC_STRESS, METRIC_HEART_RATE, METRIC_BODY_BATTERY,
             METRIC_STEPS, METRIC_STEPS);
     }
 
     // Heart rate on the left, stress on the right.
-    function heartRateLeft() as FieldMapping {
-        return new FieldMapping(METRIC_HEART_RATE, METRIC_BODY_BATTERY, METRIC_STRESS,
+    function heartRateLeft() as ResolvedFaceConfig {
+        return configOf(METRIC_HEART_RATE, METRIC_BODY_BATTERY, METRIC_STRESS,
             METRIC_STEPS, METRIC_STEPS);
     }
 
@@ -41,12 +47,13 @@ module FieldMappingTest {
         return s;
     }
 
-    function frameWith(mapping as FieldMapping, metric as Metric, value as Number?) as Frame {
-        return FaceModel.compute(snapshotWith(metric, value), Themes.mint(), mapping);
+    function frameWith(config as ResolvedFaceConfig, metric as Metric, value as Number?)
+            as Frame {
+        return FaceModel.compute(snapshotWith(metric, value), config);
     }
 
-    function layerOf(mapping as FieldMapping) as StaticLayer {
-        return FaceModel.staticLayer(Themes.mint(), mapping);
+    function layerOf(config as ResolvedFaceConfig) as StaticLayer {
+        return FaceModel.staticLayer(config);
     }
 
     // The static layer's tracks centered on (x, y), in order.
@@ -120,9 +127,9 @@ module FieldMappingTest {
         Test.assertEqual(color, gauge.color);
     }
 
-    function assertTarget(mapping as FieldMapping, x as Number, y as Number, field as Field,
-            metric as Metric) as Void {
-        var target = FaceModel.longPressTarget(x, y, mapping);
+    function assertTarget(config as ResolvedFaceConfig, x as Number, y as Number,
+            field as Field, metric as Metric) as Void {
+        var target = FaceModel.longPressTarget(x, y, config);
         Test.assert(target != null);
         Test.assertEqual(field, (target as LongPressTarget).field);
         Test.assertEqual(metric, (target as LongPressTarget).metric);
@@ -270,7 +277,7 @@ module FieldMappingTest {
         var round = [METRIC_STRESS, METRIC_BODY_BATTERY, METRIC_HEART_RATE] as Array<Metric>;
         for (var i = 0; i < round.size(); i++) {
             var m = round[i];
-            var everywhere = new FieldMapping(m, m, m, METRIC_STEPS, METRIC_STEPS);
+            var everywhere = configOf(m, m, m, METRIC_STEPS, METRIC_STEPS);
             var frame = frameWith(everywhere, m, -1);
             var fields = [frame.leftField, frame.centerField, frame.rightField]
                 as Array<FieldFrame>;
@@ -285,7 +292,7 @@ module FieldMappingTest {
         var s = new Snapshot(8, 42);
         s.setValue(METRIC_STEPS, -5);
         s.setGoal(METRIC_STEPS, 3110);
-        var goalFrame = FaceModel.compute(s, Themes.mint(), Layout.defaultMapping());
+        var goalFrame = FaceModel.compute(s, FaceModel.resolve(FaceConfigs.defaultConfig()));
         Test.assertEqual("--", goalFrame.bottomField.number);
         Test.assertEqual(GRAY, goalFrame.bottomField.numberColor);
         Test.assertEqual("/ 3.110", goalFrame.bottomField.goal);
@@ -301,7 +308,7 @@ module FieldMappingTest {
         var s = new Snapshot(8, 42);
         s.setValue(METRIC_STEPS, 1147);
         s.setGoal(METRIC_STEPS, -3110);
-        var frame = FaceModel.compute(s, Themes.mint(), Layout.defaultMapping());
+        var frame = FaceModel.compute(s, FaceModel.resolve(FaceConfigs.defaultConfig()));
         Test.assertEqual("1.147", frame.bottomField.number);
         Test.assertEqual("", frame.bottomField.goal);
         Test.assertEqual(0, frame.bezelProgress.sweep);

@@ -19,39 +19,6 @@ enum FieldKind {
     FIELD_KIND_BEZEL_RING
 }
 
-// Which metric each field shows. The same metric may be in several fields,
-// as steps is on the bottom field and the bezel ring.
-class FieldMapping {
-    public var left as Metric;
-    public var center as Metric;
-    public var right as Metric;
-    public var bottom as Metric;
-    public var bezelRing as Metric;
-
-    function initialize(left as Metric, center as Metric, right as Metric, bottom as Metric,
-            bezelRing as Metric) {
-        self.left = left;
-        self.center = center;
-        self.right = right;
-        self.bottom = bottom;
-        self.bezelRing = bezelRing;
-    }
-
-    function metricOf(field as Field) as Metric {
-        switch (field) {
-            case FIELD_LEFT:
-                return left;
-            case FIELD_CENTER:
-                return center;
-            case FIELD_RIGHT:
-                return right;
-            case FIELD_BOTTOM:
-                return bottom;
-        }
-        return bezelRing;
-    }
-}
-
 // The field kinds and the drawing styles each accepts (Q40). With the
 // metric module, the only place that answers "can this metric go here".
 module FieldKinds {
@@ -112,23 +79,12 @@ class RoundField {
     }
 }
 
-// Fixed geometry from the final design, on the 416x416 canvas, and the
-// static MVP mapping of metrics to fields.
+// Fixed geometry from the final design, on the 416x416 canvas. Which metric
+// each field shows comes from the face config (FaceConfigs, FaceModel.resolve).
 module Layout {
-    // The default metric of each field (Q29), handed to FaceModel, the view
-    // and the delegate as a FieldMapping (defaultMapping).
-    const LEFT_METRIC = METRIC_STRESS;
-    const CENTER_METRIC = METRIC_BODY_BATTERY;
-    const RIGHT_METRIC = METRIC_HEART_RATE;
-    const BOTTOM_METRIC = METRIC_STEPS;
-    // The bezel ring only takes a goal metric (Q40). Steps is the only one in
-    // the MVP.
-    const BEZEL_METRIC = METRIC_STEPS;
-
-    function defaultMapping() as FieldMapping {
-        return new FieldMapping(LEFT_METRIC, CENTER_METRIC, RIGHT_METRIC, BOTTOM_METRIC,
-            BEZEL_METRIC);
-    }
+    // Every field, in enum order (so a field is its own index).
+    const FIELDS = [FIELD_LEFT, FIELD_CENTER, FIELD_RIGHT, FIELD_BOTTOM, FIELD_BEZEL_RING]
+        as Array<Field>;
 
     // The round fields, left to right.
     const ROUND_FIELDS = [FIELD_LEFT, FIELD_CENTER, FIELD_RIGHT] as Array<Field>;

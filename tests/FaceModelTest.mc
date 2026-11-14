@@ -7,15 +7,15 @@ module FaceModelTest {
 
     // Helpers stay unannotated: the (:test) module keeps them out of release builds.
 
-    // Frames are built from the default mapping. Tests of a metric's look
-    // find its field through the mapping (fieldOf); tests of a field's own
-    // geometry go by position, whatever metric it shows.
-    function mapping() as FieldMapping {
-        return Layout.defaultMapping();
+    // Frames are built from the built-in face config. Tests of a metric's
+    // look find its field through the config (fieldOf); tests of a field's
+    // own geometry go by position, whatever metric it shows.
+    function config() as ResolvedFaceConfig {
+        return FaceModel.resolve(FaceConfigs.defaultConfig());
     }
 
     function compute(snapshot as Snapshot) as Frame {
-        return FaceModel.compute(snapshot, Themes.mint(), mapping());
+        return FaceModel.compute(snapshot, config());
     }
 
     function frameAt(hour as Number, minute as Number) as Frame {
@@ -27,7 +27,7 @@ module FaceModelTest {
     function fieldOf(metric as Metric) as Field {
         var fields = Layout.ROUND_FIELDS;
         for (var i = 0; i < fields.size(); i++) {
-            if (mapping().metricOf(fields[i]) == metric) {
+            if (config().metricOf(fields[i]) == metric) {
                 return fields[i];
             }
         }
@@ -59,7 +59,7 @@ module FaceModelTest {
     // there) at `value`.
     function positionWith(field as Field, value as Number?) as FieldFrame {
         var snapshot = new Snapshot(8, 42);
-        snapshot.setValue(mapping().metricOf(field), value);
+        snapshot.setValue(config().metricOf(field), value);
         snapshot.heartRateZones = zones();
         return roundFieldIn(compute(snapshot), field);
     }
@@ -70,7 +70,7 @@ module FaceModelTest {
     }
 
     function mintLayer() as StaticLayer {
-        return FaceModel.staticLayer(Themes.mint(), mapping());
+        return FaceModel.staticLayer(config());
     }
 
     function frameWithBattery(battery as Number?) as Frame {
@@ -248,13 +248,12 @@ module FaceModelTest {
     }
 
     function aodAt(hour as Number, minute as Number) as AodFrame {
-        return FaceModel.computeAod(new Snapshot(hour, minute), Themes.mint());
+        return FaceModel.computeAod(new Snapshot(hour, minute), config());
     }
 
     function aodOnDate(weekdayName as String?, weekdayNumber as Number, day as Number,
             month as Number) as AodFrame {
-        return FaceModel.computeAod(snapshotOnDate(weekdayName, weekdayNumber, day, month),
-            Themes.mint());
+        return FaceModel.computeAod(snapshotOnDate(weekdayName, weekdayNumber, day, month), config());
     }
 
     // The AOD burn-in offset [x, y] for each minute of the hour, 0-59.
@@ -279,7 +278,7 @@ module FaceModelTest {
 
     // The long-press target at a touch point, asserted to be a hit.
     function targetAt(x as Number, y as Number) as LongPressTarget {
-        var target = FaceModel.longPressTarget(x, y, mapping());
+        var target = FaceModel.longPressTarget(x, y, config());
         Test.assert(target != null);
         return target as LongPressTarget;
     }
@@ -288,11 +287,11 @@ module FaceModelTest {
     function assertTarget(x as Number, y as Number, field as Field) as Void {
         var target = targetAt(x, y);
         Test.assertEqual(field, target.field);
-        Test.assertEqual(mapping().metricOf(field), target.metric);
+        Test.assertEqual(config().metricOf(field), target.metric);
     }
 
     function assertMiss(x as Number, y as Number) as Void {
-        Test.assert(FaceModel.longPressTarget(x, y, mapping()) == null);
+        Test.assert(FaceModel.longPressTarget(x, y, config()) == null);
     }
 
     (:test)
@@ -944,7 +943,7 @@ module FaceModelTest {
     // 90, 180 and 270 deg), from r 198 to r 210, pen 3, whatever the steps.
     (:test)
     function bezelNotchesCrossTheRingAt3And6And9OClock(logger as Test.Logger) as Boolean {
-        var notches = FaceModel.bezelNotches(Themes.mint());
+        var notches = FaceModel.bezelNotches(config());
         Test.assertEqual(3, notches.size());
         assertLine(notches[0], 406, 208, 418, 208);
         assertLine(notches[1], 208, 406, 208, 418);
@@ -1890,7 +1889,7 @@ module FaceModelTest {
         for (var m = 0; m < 12; m++) {
             var snapshot = snapshotOnDate("Thu", 5, 12, 11);
             snapshot.minute = m;
-            var aod = FaceModel.computeAod(snapshot, Themes.mint());
+            var aod = FaceModel.computeAod(snapshot, config());
             Test.assertEqual(147 + aod.offsetX, aod.datePill.x);
             Test.assertEqual(156 + aod.offsetY, aod.datePill.y);
             Test.assertEqual(aod.datePill.x + 3, aod.datePillInner.x);

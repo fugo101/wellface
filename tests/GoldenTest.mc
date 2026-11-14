@@ -182,7 +182,7 @@ module GoldenTest {
         var run = "";
         var count = 0;
         for (var x = TARGET_STEP / 2; x < 416; x += TARGET_STEP) {
-            var code = FrameEquality.describeTarget(FaceModel.longPressTarget(x, y, mapping()));
+            var code = FrameEquality.describeTarget(FaceModel.longPressTarget(x, y, config()));
             if (code.equals(run)) {
                 count++;
                 continue;
@@ -207,12 +207,9 @@ module GoldenTest {
         return false;
     }
 
-    function mint() as Theme {
-        return Themes.mint();
-    }
-
-    function mapping() as FieldMapping {
-        return Layout.defaultMapping();
+    // The built-in face config: the mint theme and today's mapping.
+    function config() as ResolvedFaceConfig {
+        return FaceModel.resolve(FaceConfigs.defaultConfig());
     }
 
     (:test)
@@ -221,7 +218,7 @@ module GoldenTest {
         for (var i = 0; i < FRAME_CASES.size(); i++) {
             var name = FRAME_CASES[i];
             var actual = FrameEquality.describeFrame(
-                FaceModel.compute(frameCase(name), mint(), mapping()));
+                FaceModel.compute(frameCase(name), config()));
             if (!matches("frame", name, actual, GoldenValues.FRAMES[name])) {
                 failed++;
             }
@@ -235,14 +232,14 @@ module GoldenTest {
         var failed = 0;
         for (var i = 0; i < DATE_CASES.size(); i++) {
             var name = DATE_CASES[i];
-            var actual = FrameEquality.describeAod(FaceModel.computeAod(dateCase(name), mint()));
+            var actual = FrameEquality.describeAod(FaceModel.computeAod(dateCase(name), config()));
             if (!matches("aod", name, actual, GoldenValues.AOD_FRAMES[name])) {
                 failed++;
             }
         }
         for (var i = 0; i < AOD_MINUTES; i++) {
             var name = "minute" + i;
-            var actual = FrameEquality.describeAod(FaceModel.computeAod(aodMinuteCase(i), mint()));
+            var actual = FrameEquality.describeAod(FaceModel.computeAod(aodMinuteCase(i), config()));
             if (!matches("aod", name, actual, GoldenValues.AOD_FRAMES[name])) {
                 failed++;
             }
@@ -253,14 +250,14 @@ module GoldenTest {
 
     (:test)
     function staticLayerMatchesTheGoldenValue(logger as Test.Logger) as Boolean {
-        var layer = FrameEquality.describeLayer(FaceModel.staticLayer(mint(), mapping()));
+        var layer = FrameEquality.describeLayer(FaceModel.staticLayer(config()));
         Test.assert(matches("layer", "mint", layer, GoldenValues.STATIC_LAYER));
         return true;
     }
 
     (:test)
     function bezelNotchesMatchTheGoldenValue(logger as Test.Logger) as Boolean {
-        var notches = FrameEquality.describeLines(FaceModel.bezelNotches(mint()));
+        var notches = FrameEquality.describeLines(FaceModel.bezelNotches(config()));
         Test.assert(matches("notches", "mint", notches, GoldenValues.BEZEL_NOTCHES));
         return true;
     }
@@ -279,11 +276,11 @@ module GoldenTest {
 
     // The reference values: everything known, so no member is at a default.
     function referenceFrame() as Frame {
-        return FaceModel.compute(withHeartRate(140, zones()), mint(), mapping());
+        return FaceModel.compute(withHeartRate(140, zones()), config());
     }
 
     function referenceAod() as AodFrame {
-        return FaceModel.computeAod(typical(), mint());
+        return FaceModel.computeAod(typical(), config());
     }
 
     function otherRect() as RoundedRect {
@@ -487,14 +484,14 @@ module GoldenTest {
     function equalFramesAreEqual(logger as Test.Logger) as Boolean {
         Test.assert(FrameEquality.framesEqual(referenceFrame(), referenceFrame()));
         Test.assert(FrameEquality.aodFramesEqual(referenceAod(), referenceAod()));
-        Test.assert(FrameEquality.layersEqual(FaceModel.staticLayer(mint(), mapping()),
-            FaceModel.staticLayer(mint(), mapping())));
-        Test.assert(FrameEquality.linesEqual(FaceModel.bezelNotches(mint()),
-            FaceModel.bezelNotches(mint())));
-        Test.assert(FrameEquality.targetsEqual(FaceModel.longPressTarget(208, 256, mapping()),
-            FaceModel.longPressTarget(208, 256, mapping())));
+        Test.assert(FrameEquality.layersEqual(FaceModel.staticLayer(config()),
+            FaceModel.staticLayer(config())));
+        Test.assert(FrameEquality.linesEqual(FaceModel.bezelNotches(config()),
+            FaceModel.bezelNotches(config())));
+        Test.assert(FrameEquality.targetsEqual(FaceModel.longPressTarget(208, 256, config()),
+            FaceModel.longPressTarget(208, 256, config())));
         Test.assert(FrameEquality.targetsEqual(null, null));
-        Test.assert(!FrameEquality.targetsEqual(FaceModel.longPressTarget(208, 256, mapping()),
+        Test.assert(!FrameEquality.targetsEqual(FaceModel.longPressTarget(208, 256, config()),
             null));
         return true;
     }
@@ -567,12 +564,12 @@ module GoldenTest {
     function everyStaticLayerMemberIsCompared(logger as Test.Logger) as Boolean {
         var i = 0;
         while (true) {
-            var changed = FaceModel.staticLayer(mint(), mapping());
+            var changed = FaceModel.staticLayer(config());
             if (!changeLayer(changed, i)) {
                 break;
             }
             Test.assertMessage(!FrameEquality.layersEqual(
-                FaceModel.staticLayer(mint(), mapping()), changed),
+                FaceModel.staticLayer(config()), changed),
                 "static layer member " + i + " is not compared");
             i++;
         }
@@ -624,11 +621,11 @@ module GoldenTest {
 
         i = 0;
         while (true) {
-            var changed = FaceModel.bezelNotches(mint());
+            var changed = FaceModel.bezelNotches(config());
             if (!changeLine(changed[0], i)) {
                 break;
             }
-            Test.assertMessage(!FrameEquality.linesEqual(FaceModel.bezelNotches(mint()), changed),
+            Test.assertMessage(!FrameEquality.linesEqual(FaceModel.bezelNotches(config()), changed),
                 "line member " + i + " is not compared");
             i++;
         }
@@ -636,12 +633,12 @@ module GoldenTest {
 
         i = 0;
         while (true) {
-            var changed = FaceModel.longPressTarget(88, 246, mapping()) as LongPressTarget;
+            var changed = FaceModel.longPressTarget(88, 246, config()) as LongPressTarget;
             if (!changeTarget(changed, i)) {
                 break;
             }
             Test.assertMessage(!FrameEquality.targetsEqual(
-                FaceModel.longPressTarget(88, 246, mapping()), changed),
+                FaceModel.longPressTarget(88, 246, config()), changed),
                 "long-press target member " + i + " is not compared");
             i++;
         }

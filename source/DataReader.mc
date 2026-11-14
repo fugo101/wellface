@@ -94,9 +94,11 @@ class DataReader {
         return changed;
     }
 
-    // Called when the screen is OFF, so the next high-power update counts
-    // as a wake and reads the sensors even within the same minute.
-    function screenOff() as Void {
+    // Makes the next high-power update count as a wake, so it reads every
+    // metric and the zones even within the same minute. Called when the
+    // screen is OFF and when a face config is applied (a newly shown metric
+    // never waits for the next minute).
+    function countNextUpdateAsWake() as Void {
         _wasHighPower = false;
     }
 

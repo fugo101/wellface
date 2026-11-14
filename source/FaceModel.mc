@@ -191,11 +191,13 @@ class FieldFrame {
     }
 }
 
-// The parts of the face that depend only on the theme and on which metric
-// each round field shows (its track), so the renderer draws them once into
-// a buffer, back to front: bezel track, background disc, well rims, battery
-// well and track, time band well and band, field wells and tracks. The
-// disc's geometry is in Layout.
+// The parts of the face that depend only on the face config, drawn once into
+// a buffer by the renderer, back to front: bezel track, background disc, well
+// rims, battery well and track, time band well and band, field wells and
+// tracks. They depend on both the theme and the field mapping: the metric
+// each round field shows decides its track. So the whole layer is rebuilt
+// whenever a face config is applied (WellfaceView.applyConfig), never for a
+// theme change alone. The disc's geometry is in Layout.
 class StaticLayer {
     public var backgroundColor as Number = 0;
     // The well rims (Q39): around the time band's well, around each round
@@ -327,7 +329,9 @@ module FaceModel {
         "AAAAAACCCCCCCCDDDDEEEEEEEEEEGGGGGGGGHHHHIIIIIIIIII??JJKK?LLLLLLLLLL" +
         "NNNNNN?NNOOOOOO??RRRRRRSSSSSSSSTTTTTTUUUUUUUUUUUUWWYYYZZZZZZS";
 
-    function compute(snapshot as Snapshot, theme as Theme, mapping as FieldMapping) as Frame {
+    // The high-power frame for a snapshot and a resolved face config.
+    function compute(snapshot as Snapshot, config as ResolvedFaceConfig) as Frame {
+        var theme = config.theme;
         var frame = new Frame();
         frame.time = formatTime(snapshot.hour, snapshot.minute);
         var timeFont = FontCatalog.entry(FONT_TIME);
@@ -338,8 +342,9 @@ module FaceModel {
         frame.batteryLit = batteryLit(snapshot.battery, theme);
 
         // The bezel ring: progress of its goal metric toward the goal.
-        var bezelValue = metricValue(mapping.bezelRing, snapshot);
-        var bezelGoal = goalOf(mapping.bezelRing, snapshot);
+        var bezelMetric = config.metricOf(FIELD_BEZEL_RING);
+        var bezelValue = metricValue(bezelMetric, snapshot);
+        var bezelGoal = goalOf(bezelMetric, snapshot);
         var sweep = bezelSweep(bezelValue, bezelGoal);
         frame.bezelProgress = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.BEZEL_RADIUS,
             Layout.BEZEL_PEN, 0, sweep, theme.accent);
@@ -347,14 +352,18 @@ module FaceModel {
             frame.bezelHead = circleAt(sweep, Layout.BEZEL_RADIUS, Layout.BEZEL_HEAD_RADIUS,
                 theme.text);
         }
-        var bottomValue = metricValue(mapping.bottom, snapshot);
-        var bottomGoal = goalOf(mapping.bottom, snapshot);
+        var bottomMetric = config.metricOf(FIELD_BOTTOM);
+        var bottomValue = metricValue(bottomMetric, snapshot);
+        var bottomGoal = goalOf(bottomMetric, snapshot);
         frame.bottomGoalReached = goalReached(bottomValue, bottomGoal);
-        frame.bottomField = bottomField(mapping.bottom, bottomValue, bottomGoal, theme);
+        frame.bottomField = bottomField(bottomMetric, bottomValue, bottomGoal, theme);
 
-        frame.leftField = roundField(Layout.leftField(), mapping.left, snapshot, theme);
-        frame.centerField = roundField(Layout.centerField(), mapping.center, snapshot, theme);
-        frame.rightField = roundField(Layout.rightField(), mapping.right, snapshot, theme);
+        frame.leftField = roundField(Layout.leftField(), config.metricOf(FIELD_LEFT), snapshot,
+            theme);
+        frame.centerField = roundField(Layout.centerField(), config.metricOf(FIELD_CENTER),
+            snapshot, theme);
+        frame.rightField = roundField(Layout.rightField(), config.metricOf(FIELD_RIGHT), snapshot,
+            theme);
         frame.date = dateText(snapshot);
         frame.dateWidth = dateTextWidth(frame.date);
         frame.dateX = Layout.CENTER_X - frame.dateWidth / 2;
@@ -368,8 +377,9 @@ module FaceModel {
         return frame;
     }
 
-    // The Always On frame for the snapshot's clock. Sensors are not used.
-    function computeAod(snapshot as Snapshot, theme as Theme) as AodFrame {
+    // The Always On frame for the snapshot's clock. Sensors are not used, and
+    // of the face config only the theme.
+    function computeAod(snapshot as Snapshot, config as ResolvedFaceConfig) as AodFrame {
         var frame = new AodFrame();
         var offsets = Layout.AOD_OFFSETS;
         var offset = offsets[snapshot.minute % offsets.size()];
@@ -385,7 +395,7 @@ module FaceModel {
         var dateFont = FontCatalog.entry(FONT_DATE);
         frame.dateY = digitsTop(Layout.DATE_CENTER_Y, dateFont.capHeight, dateFont.base)
             + frame.offsetY;
-        var color = aodColor(theme.accent);
+        var color = aodColor(config.theme.accent);
         frame.timeColor = color;
         frame.dateColor = color;
         // The outline's outer edge is the normal pill's edge.
@@ -410,6 +420,39 @@ module FaceModel {
         return color;
     }
 
+    // The face config to draw: the named theme, or the default theme for an
+    // unknown name, and in each field the metric asked for if the field
+    // accepts it, else that field's default metric (Q40). Never an empty
+    // field; duplicates are kept.
+    function resolve(config as FaceConfig) as ResolvedFaceConfig {
+        var defaults = FaceConfigs.defaultConfig();
+        var theme = Themes.named(config.themeName);
+        if (theme == null) {
+            // The default config names a built-in theme.
+            theme = Themes.named(defaults.themeName) as Theme;
+        }
+        var fields = Layout.FIELDS;
+        var metrics = new Array<Metric>[fields.size()];
+        for (var i = 0; i < fields.size(); i++) {
+            var field = fields[i];
+            var metric = config.metricOf(field);
+            metrics[i] = accepts(field, metric) ? metric : defaults.metricOf(field);
+        }
+        return new ResolvedFaceConfig(theme, metrics);
+    }
+
+    // The metrics a field can show, in metric order (for a settings menu).
+    function acceptedMetrics(field as Field) as Array<Metric> {
+        var accepted = [] as Array<Metric>;
+        var all = Metrics.ALL;
+        for (var i = 0; i < all.size(); i++) {
+            if (accepts(field, all[i])) {
+                accepted.add(all[i]);
+            }
+        }
+        return accepted;
+    }
+
     // Whether a field can show a metric: its field kind accepts the metric's
     // drawing style (Q40).
     function accepts(field as Field, metric as Metric) as Boolean {
@@ -418,10 +461,10 @@ module FaceModel {
 
     // The long-press target at a touch point, null on a miss. The metric
     // shown in the field held picks the page.
-    function longPressTarget(x as Number, y as Number, mapping as FieldMapping)
+    function longPressTarget(x as Number, y as Number, config as ResolvedFaceConfig)
             as LongPressTarget? {
         var field = fieldAt(x, y);
-        return field != null ? new LongPressTarget(field, mapping.metricOf(field)) : null;
+        return field != null ? new LongPressTarget(field, config.metricOf(field)) : null;
     }
 
     // The field at a touch point, null on a miss.
@@ -681,8 +724,10 @@ module FaceModel {
         return Metrics.isGoalMetric(metric) ? Metrics.reading(snapshot.goal(metric)) : null;
     }
 
-    // The static layer for a theme and the metric each round field shows.
-    function staticLayer(theme as Theme, mapping as FieldMapping) as StaticLayer {
+    // The static layer for a resolved face config: its theme, and the metric
+    // each round field shows (which decides the track).
+    function staticLayer(config as ResolvedFaceConfig) as StaticLayer {
+        var theme = config.theme;
         var layer = new StaticLayer();
         layer.backgroundColor = theme.background;
         var band = new RoundedRect(Layout.BAND_X, Layout.BAND_Y, Layout.BAND_W, Layout.BAND_H,
@@ -713,9 +758,10 @@ module FaceModel {
         layer.fieldRims = [] as Array<Circle>;
         layer.fieldWells = [] as Array<Circle>;
         layer.fieldTracks = [] as Array<Arc>;
-        addRoundField(layer, Layout.leftField(), mapping.left, theme);
-        addRoundField(layer, Layout.centerField(), mapping.center, theme);
-        addRoundField(layer, Layout.rightField(), mapping.right, theme);
+        var round = Layout.ROUND_FIELDS;
+        for (var i = 0; i < round.size(); i++) {
+            addRoundField(layer, Layout.roundField(round[i]), config.metricOf(round[i]), theme);
+        }
         return layer;
     }
 
@@ -770,17 +816,18 @@ module FaceModel {
 
     // The black notches across the bezel ring at 3, 6 and 9 o'clock (one per
     // design angle in Layout.BEZEL_NOTCHES), from the inner to the outer
-    // radius. They depend only on the theme, so the renderer gets them
-    // once; unlike the static layer they are drawn on every update, over
+    // radius. Of the face config they depend only on the theme, so the
+    // renderer gets them with the static layer when a face config is
+    // applied; unlike the static layer they are drawn on every update, over
     // the progress (they are not in the buffer).
-    function bezelNotches(theme as Theme) as Array<Line> {
+    function bezelNotches(config as ResolvedFaceConfig) as Array<Line> {
         var angles = Layout.BEZEL_NOTCHES;
         var notches = new Array<Line>[angles.size()];
         for (var i = 0; i < angles.size(); i++) {
             var inner = pointAt(angles[i], Layout.BEZEL_NOTCH_INNER);
             var outer = pointAt(angles[i], Layout.BEZEL_NOTCH_OUTER);
             notches[i] = new Line(inner[0], inner[1], outer[0], outer[1],
-                Layout.BEZEL_NOTCH_PEN, theme.ink);
+                Layout.BEZEL_NOTCH_PEN, config.theme.ink);
         }
         return notches;
     }

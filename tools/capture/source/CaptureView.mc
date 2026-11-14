@@ -7,26 +7,25 @@ import Toybox.WatchUi;
 // On frame, every other scenario the high-power frame. Keep the scenarios in
 // step with the face's entry points when they change.
 class CaptureView extends WatchUi.WatchFace {
-    private var _theme as Theme;
-    private var _mapping as FieldMapping;
+    private var _config as ResolvedFaceConfig;
     private var _renderer as Renderer;
 
+    // The built-in face config, set up as WellfaceView.applyConfig does.
     function initialize() {
         WatchFace.initialize();
-        _theme = Themes.active();
-        _mapping = Layout.defaultMapping();
-        _renderer = new Renderer(FaceModel.staticLayer(_theme, _mapping),
-            FaceModel.bezelNotches(_theme), new Fonts());
+        _config = FaceModel.resolve(FaceConfigs.defaultConfig());
+        _renderer = new Renderer(new Fonts());
+        _renderer.setStatic(FaceModel.staticLayer(_config), FaceModel.bezelNotches(_config));
     }
 
     function onUpdate(dc as Dc) as Void {
         dc.setAntiAlias(true);
         var name = CaptureScenario.NAME;
         if (name.equals("aod")) {
-            _renderer.paintAod(dc, FaceModel.computeAod(normal(), _theme));
+            _renderer.paintAod(dc, FaceModel.computeAod(normal(), _config));
             return;
         }
-        _renderer.paint(dc, FaceModel.compute(snapshot(name), _theme, _mapping));
+        _renderer.paint(dc, FaceModel.compute(snapshot(name), _config));
     }
 
     // Thursday 12/11, 08:42, every value known, heart rate in zone 2.

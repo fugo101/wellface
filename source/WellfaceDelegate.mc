@@ -4,10 +4,13 @@ import Toybox.System;
 import Toybox.WatchUi;
 
 // Opens the Garmin page for a held field. Thin and untested; FaceModel
-// decides what a touch point hits.
+// decides what a touch point hits, from the face config the view applied.
 class WellfaceDelegate extends WatchUi.WatchFaceDelegate {
-    function initialize() {
+    private var _view as WellfaceView;
+
+    function initialize(view as WellfaceView) {
         WatchFaceDelegate.initialize();
+        _view = view;
     }
 
     // A touch and hold. Only in high power: in AOD the fields are not shown,
@@ -18,8 +21,7 @@ class WellfaceDelegate extends WatchUi.WatchFaceDelegate {
             return false;
         }
         var point = clickEvent.getCoordinates();
-        // The default mapping until a face config owns it (ticket 03).
-        var target = FaceModel.longPressTarget(point[0], point[1], Layout.defaultMapping());
+        var target = FaceModel.longPressTarget(point[0], point[1], _view.config());
         if (target == null) {
             return false;
         }
