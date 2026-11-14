@@ -89,13 +89,19 @@ module Layout {
     // The round fields, left to right.
     const ROUND_FIELDS = [FIELD_LEFT, FIELD_CENTER, FIELD_RIGHT] as Array<Field>;
 
+    // The round fields' geometry, indexed by field; built on first use, then
+    // kept, so a frame never rebuilds it.
+    var _roundFields as Array<RoundField>? = null;
+
     // The geometry of a round field: left, center, or right for any other
-    // field (only round fields have one).
+    // field (only round fields have one). Shared: never change it.
     function roundField(field as Field) as RoundField {
-        if (field == FIELD_LEFT) {
-            return leftField();
+        var all = _roundFields;
+        if (all == null) {
+            all = [leftField(), centerField(), rightField()] as Array<RoundField>;
+            _roundFields = all;
         }
-        return field == FIELD_CENTER ? centerField() : rightField();
+        return all[field == FIELD_LEFT || field == FIELD_CENTER ? field : FIELD_RIGHT];
     }
 
     const CENTER_X = 208;

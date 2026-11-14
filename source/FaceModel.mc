@@ -23,10 +23,11 @@ class Snapshot {
     // HR_ZONE_SPORT_GENERIC thresholds), null when unreadable.
     public var heartRateZones as Array<Number>? = null;
     // Each metric's value and, for a goal metric, its goal (the step goal is
-    // the watch's own auto goal, never entered by hand), indexed by metric
-    // and read at the metric's cadence (Metrics). The data reader keeps only
-    // whole numbers; FaceModel treats a negative one as missing
-    // (Metrics.reading).
+    // the watch's own auto goal, never entered by hand), indexed by metric.
+    // Only the metrics the face config shows are read, each at its cadence
+    // (FaceModel.readPlan); a metric no longer shown keeps its last value.
+    // The data reader keeps only whole numbers; FaceModel treats a negative
+    // one as missing (Metrics.reading).
     private var _values as Array<Number?>;
     private var _goals as Array<Number?>;
 
@@ -56,7 +57,11 @@ class Snapshot {
 
 // What to draw on top of the static layer: every string, color and arc the
 // renderer needs. FaceModel fills in every field; the defaults only exist to
-// satisfy the type checker.
+// satisfy the type checker. FaceModel.update changes a frame in place, part
+// by part, so a frame is only made when there is none yet (at start and when
+// a face config is applied). Its placeholder objects are then allocated and
+// overwritten at once, but only then, never on a per-second or per-minute
+// update.
 class Frame {
     public var time as String = "";
     // Width of the time in the time font, from its catalog entry.
@@ -87,11 +92,12 @@ class Frame {
     // known and at least the goal. The bottom field switches style on it.
     public var bottomGoalReached as Boolean = false;
     // The bottom field's content.
-    public var bottomField as BottomFieldFrame = new BottomFieldFrame();
+    public var bottomField as BottomFieldFrame =
+        new BottomFieldFrame(new RoundedRect(0, 0, 0, 0, 0, 0));
     // The round fields' content.
-    public var leftField as FieldFrame = new FieldFrame();
-    public var centerField as FieldFrame = new FieldFrame();
-    public var rightField as FieldFrame = new FieldFrame();
+    public var leftField as FieldFrame = new FieldFrame([] as Array<Arc>);
+    public var centerField as FieldFrame = new FieldFrame([] as Array<Arc>);
+    public var rightField as FieldFrame = new FieldFrame([] as Array<Arc>);
 
     function initialize() {
     }
@@ -142,7 +148,7 @@ class LongPressTarget {
 // What the bottom field draws: its pill (which is its own well), the goal
 // metric's icon, its number and "/ goal", each placed from the font catalog.
 class BottomFieldFrame {
-    public var pill as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
+    public var pill as RoundedRect;
     // The metric's icon, "" when hidden to make room.
     public var icon as String = "";
     public var iconX as Number = 0;
@@ -162,7 +168,8 @@ class BottomFieldFrame {
     public var goalY as Number = 0;
     public var goalColor as Number = 0;
 
-    function initialize() {
+    function initialize(pill as RoundedRect) {
+        self.pill = pill;
     }
 }
 
@@ -171,7 +178,7 @@ class BottomFieldFrame {
 class FieldFrame {
     // Drawn over the track. A gauge has one arc, or none when the value is
     // missing or 0; zone segments have one arc per zone reached.
-    public var arcs as Array<Arc> = [] as Array<Arc>;
+    public var arcs as Array<Arc>;
     // The metric's icon (one glyph in the icon font), its top-left corner
     // and its color.
     public var icon as String = "";
@@ -187,7 +194,8 @@ class FieldFrame {
     public var numberX as Number = 0;
     public var numberY as Number = 0;
 
-    function initialize() {
+    function initialize(arcs as Array<Arc>) {
+        self.arcs = arcs;
     }
 }
 
@@ -325,56 +333,112 @@ module FaceModel {
     // color.
     const AOD_BLACK = 0x000000;
 
+    // The frame part of each field, indexed by field.
+    const FIELD_PARTS = [PART_LEFT, PART_CENTER, PART_RIGHT, PART_BOTTOM, PART_BEZEL_RING]
+        as Array<Number>;
+
     const LATIN_EXTENDED_A_BASE =
         "AAAAAACCCCCCCCDDDDEEEEEEEEEEGGGGGGGGHHHHIIIIIIIIII??JJKK?LLLLLLLLLL" +
         "NNNNNN?NNOOOOOO??RRRRRRSSSSSSSSTTTTTTUUUUUUUUUUUUWWYYYZZZZZZS";
 
-    // The high-power frame for a snapshot and a resolved face config.
+    // Every part of the high-power frame (FramePart bits, all but the AOD
+    // frame).
+    const HIGH_POWER_PARTS = PART_LEFT | PART_CENTER | PART_RIGHT | PART_BOTTOM
+        | PART_BEZEL_RING | PART_TIME | PART_DATE | PART_BATTERY;
+
+    // The high-power frame for a snapshot and a resolved face config, all of
+    // it computed.
     function compute(snapshot as Snapshot, config as ResolvedFaceConfig) as Frame {
-        var theme = config.theme;
-        var frame = new Frame();
-        frame.time = formatTime(snapshot.hour, snapshot.minute);
-        var timeFont = FontCatalog.entry(FONT_TIME);
-        frame.timeWidth = textWidth(frame.time, timeFont);
-        frame.timeX = Layout.TIME_CENTER_X - frame.timeWidth / 2;
-        frame.timeY = Layout.TIME_BASELINE_Y - timeFont.base;
-        frame.timeColor = theme.ink;
-        frame.batteryLit = batteryLit(snapshot.battery, theme);
+        return update(null, snapshot, config, CHANGE_ALL);
+    }
 
-        // The bezel ring: progress of its goal metric toward the goal.
-        var bezelMetric = config.metricOf(FIELD_BEZEL_RING);
-        var bezelValue = metricValue(bezelMetric, snapshot);
-        var bezelGoal = goalOf(bezelMetric, snapshot);
-        var sweep = bezelSweep(bezelValue, bezelGoal);
-        frame.bezelProgress = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.BEZEL_RADIUS,
-            Layout.BEZEL_PEN, 0, sweep, theme.accent);
-        if (hasGoalProgress(bezelValue, bezelGoal)) {
-            frame.bezelHead = circleAt(sweep, Layout.BEZEL_RADIUS, Layout.BEZEL_HEAD_RADIUS,
-                theme.text);
+    // The high-power frame for a snapshot and a resolved face config,
+    // recomputing only the parts `changes` (ChangeKind bits) invalidate.
+    // `previous` is updated in place and returned; without one, a new frame
+    // is computed in full. The result equals compute(snapshot, config)
+    // provided `changes` covers every change since `previous` was computed
+    // for the same face config (a new face config needs a null previous).
+    function update(previous as Frame?, snapshot as Snapshot, config as ResolvedFaceConfig,
+            changes as Number) as Frame {
+        var frame = previous;
+        var parts = HIGH_POWER_PARTS;
+        if (frame == null) {
+            frame = new Frame();
+        } else {
+            parts = invalidated(changes, config);
         }
-        var bottomMetric = config.metricOf(FIELD_BOTTOM);
-        var bottomValue = metricValue(bottomMetric, snapshot);
-        var bottomGoal = goalOf(bottomMetric, snapshot);
-        frame.bottomGoalReached = goalReached(bottomValue, bottomGoal);
-        frame.bottomField = bottomField(bottomMetric, bottomValue, bottomGoal, theme);
-
-        frame.leftField = roundField(Layout.leftField(), config.metricOf(FIELD_LEFT), snapshot,
-            theme);
-        frame.centerField = roundField(Layout.centerField(), config.metricOf(FIELD_CENTER),
-            snapshot, theme);
-        frame.rightField = roundField(Layout.rightField(), config.metricOf(FIELD_RIGHT), snapshot,
-            theme);
-        frame.date = dateText(snapshot);
-        frame.dateWidth = dateTextWidth(frame.date);
-        frame.dateX = Layout.CENTER_X - frame.dateWidth / 2;
-        // Upper case only, so the capitals are centered, as in the design.
-        var dateFont = FontCatalog.entry(FONT_DATE);
-        frame.dateY = digitsTop(Layout.DATE_CENTER_Y, dateFont.capHeight, dateFont.base);
-        frame.dateColor = theme.text;
-        var pillWidth = datePillWidth(frame.dateWidth);
-        frame.datePill = new RoundedRect(Layout.CENTER_X - pillWidth / 2, Layout.DATE_PILL_Y,
-            pillWidth, Layout.DATE_PILL_HEIGHT, Layout.DATE_PILL_RADIUS, theme.ink);
+        var theme = config.theme;
+        if ((parts & PART_TIME) != 0) {
+            frame.time = formatTime(snapshot.hour, snapshot.minute);
+            var timeFont = FontCatalog.entry(FONT_TIME);
+            frame.timeWidth = textWidth(frame.time, timeFont);
+            frame.timeX = Layout.TIME_CENTER_X - frame.timeWidth / 2;
+            frame.timeY = Layout.TIME_BASELINE_Y - timeFont.base;
+            frame.timeColor = theme.ink;
+        }
+        if ((parts & PART_DATE) != 0) {
+            frame.date = dateText(snapshot);
+            frame.dateWidth = dateTextWidth(frame.date);
+            frame.dateX = Layout.CENTER_X - frame.dateWidth / 2;
+            // Upper case only, so the capitals are centered, as in the design.
+            var dateFont = FontCatalog.entry(FONT_DATE);
+            frame.dateY = digitsTop(Layout.DATE_CENTER_Y, dateFont.capHeight, dateFont.base);
+            frame.dateColor = theme.text;
+            var pillWidth = datePillWidth(frame.dateWidth);
+            frame.datePill = new RoundedRect(Layout.CENTER_X - pillWidth / 2, Layout.DATE_PILL_Y,
+                pillWidth, Layout.DATE_PILL_HEIGHT, Layout.DATE_PILL_RADIUS, theme.ink);
+        }
+        if ((parts & PART_BATTERY) != 0) {
+            frame.batteryLit = batteryLit(snapshot.battery, theme);
+        }
+        if ((parts & PART_BEZEL_RING) != 0) {
+            // Progress of its goal metric toward the goal.
+            var bezelMetric = config.metricOf(FIELD_BEZEL_RING);
+            var bezelValue = metricValue(bezelMetric, snapshot);
+            var bezelGoal = goalOf(bezelMetric, snapshot);
+            var sweep = bezelSweep(bezelValue, bezelGoal);
+            frame.bezelProgress = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.BEZEL_RADIUS,
+                Layout.BEZEL_PEN, 0, sweep, theme.accent);
+            frame.bezelHead = hasGoalProgress(bezelValue, bezelGoal)
+                ? circleAt(sweep, Layout.BEZEL_RADIUS, Layout.BEZEL_HEAD_RADIUS, theme.text)
+                : null;
+        }
+        if ((parts & PART_BOTTOM) != 0) {
+            var bottomMetric = config.metricOf(FIELD_BOTTOM);
+            var bottomValue = metricValue(bottomMetric, snapshot);
+            var bottomGoal = goalOf(bottomMetric, snapshot);
+            frame.bottomGoalReached = goalReached(bottomValue, bottomGoal);
+            frame.bottomField = bottomField(bottomMetric, bottomValue, bottomGoal, theme);
+        }
+        var round = Layout.ROUND_FIELDS;
+        for (var i = 0; i < round.size(); i++) {
+            var field = round[i];
+            if ((parts & FIELD_PARTS[field]) == 0) {
+                continue;
+            }
+            var content = roundField(Layout.roundField(field), config.metricOf(field), snapshot,
+                theme);
+            if (field == FIELD_LEFT) {
+                frame.leftField = content;
+            } else if (field == FIELD_CENTER) {
+                frame.centerField = content;
+            } else {
+                frame.rightField = content;
+            }
+        }
         return frame;
+    }
+
+    // The Always On frame for a snapshot and a resolved face config:
+    // `previous` itself unless `changes` (ChangeKind bits) invalidate it
+    // (only a clock change does), else a new one. A new face config needs a
+    // null previous.
+    function updateAod(previous as AodFrame?, snapshot as Snapshot,
+            config as ResolvedFaceConfig, changes as Number) as AodFrame {
+        if (previous != null && (invalidated(changes, config) & PART_AOD) == 0) {
+            return previous;
+        }
+        return computeAod(snapshot, config);
     }
 
     // The Always On frame for the snapshot's clock. Sensors are not used, and
@@ -439,6 +503,72 @@ module FaceModel {
             metrics[i] = accepts(field, metric) ? metric : defaults.metricOf(field);
         }
         return new ResolvedFaceConfig(theme, metrics);
+    }
+
+    // What the data reader reads for a resolved face config: each metric
+    // shown in any field, once, at its own cadence (Metrics), and the zones
+    // when a field draws zone segments. High power only; the battery is
+    // always read (ReadPlan).
+    function readPlan(config as ResolvedFaceConfig) as ReadPlan {
+        var everySecond = [] as Array<Metric>;
+        var everyMinute = [] as Array<Metric>;
+        var zones = false;
+        var all = Metrics.ALL;
+        for (var i = 0; i < all.size(); i++) {
+            var metric = all[i];
+            if (!shows(config, metric)) {
+                continue;
+            }
+            if (Metrics.readsEverySecond(metric)) {
+                everySecond.add(metric);
+            } else {
+                everyMinute.add(metric);
+            }
+            zones = zones || Metrics.needsZones(metric);
+        }
+        return new ReadPlan(everySecond, everyMinute, zones);
+    }
+
+    // The frame parts a set of change kinds makes stale (FramePart bits).
+    // The clock: the time, the date and the AOD frame. The minute data: the
+    // battery bar, the bezel ring, the bottom field and every other field
+    // whose metric is read once a minute or draws zone segments (the zones
+    // are minute data). The per-second metrics: only the fields, of any
+    // kind, showing one. Neither minute data nor per-second metrics touch
+    // the AOD frame.
+    function invalidated(changes as Number, config as ResolvedFaceConfig) as Number {
+        var parts = 0;
+        if ((changes & CHANGE_CLOCK) != 0) {
+            parts |= PART_TIME | PART_DATE | PART_AOD;
+        }
+        var minuteData = (changes & CHANGE_MINUTE_DATA) != 0;
+        var perSecond = (changes & CHANGE_PER_SECOND) != 0;
+        if (minuteData) {
+            parts |= PART_BATTERY | PART_BEZEL_RING | PART_BOTTOM;
+        }
+        if (minuteData || perSecond) {
+            var fields = Layout.FIELDS;
+            for (var i = 0; i < fields.size(); i++) {
+                var metric = config.metricOf(fields[i]);
+                var everySecond = Metrics.readsEverySecond(metric);
+                if ((perSecond && everySecond)
+                        || (minuteData && (!everySecond || Metrics.needsZones(metric)))) {
+                    parts |= FIELD_PARTS[i];
+                }
+            }
+        }
+        return parts;
+    }
+
+    // Whether any field of the config shows the metric.
+    function shows(config as ResolvedFaceConfig, metric as Metric) as Boolean {
+        var fields = Layout.FIELDS;
+        for (var i = 0; i < fields.size(); i++) {
+            if (config.metricOf(fields[i]) == metric) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // The metrics a field can show, in metric order (for a settings menu).
@@ -520,10 +650,10 @@ module FaceModel {
     // not fit) centered as a group in ink, without "/ goal".
     function bottomField(metric as Metric, value as Number?, goal as Number?, theme as Theme)
             as BottomFieldFrame {
-        var content = new BottomFieldFrame();
         var reached = goalReached(value, goal);
-        content.pill = new RoundedRect(Layout.BOTTOM_X, Layout.BOTTOM_Y, Layout.BOTTOM_W,
-            Layout.BOTTOM_H, Layout.BOTTOM_RADIUS, reached ? theme.accent : theme.ink);
+        var content = new BottomFieldFrame(new RoundedRect(Layout.BOTTOM_X, Layout.BOTTOM_Y,
+            Layout.BOTTOM_W, Layout.BOTTOM_H, Layout.BOTTOM_RADIUS,
+            reached ? theme.accent : theme.ink));
         content.icon = iconText(metric);
         content.iconY = Layout.BOTTOM_ICON_Y;
         content.number = value != null ? Metrics.format(metric, value) : "--";
@@ -616,7 +746,12 @@ module FaceModel {
     function roundField(field as RoundField, metric as Metric, snapshot as Snapshot,
             theme as Theme) as FieldFrame {
         var value = metricValue(metric, snapshot);
-        var content = new FieldFrame();
+        var warning = value != null ? warningColor(metric, value, theme) : null;
+        var arcs = value == null ? [] as Array<Arc>
+            : (Metrics.entry(metric).style == STYLE_ZONE_SEGMENTS
+                ? litZoneSegments(field, value, snapshot.heartRateZones, theme.zones)
+                : gauge(field, value, warning != null ? warning : theme.accent));
+        var content = new FieldFrame(arcs);
         content.icon = iconText(metric);
         content.iconX = field.iconX;
         content.iconY = field.iconY;
@@ -626,14 +761,10 @@ module FaceModel {
         if (value != null) {
             content.number = Metrics.format(metric, value);
             content.numberColor = theme.text;
-            var warning = warningColor(metric, value, theme);
             if (warning != null) {
                 content.iconColor = warning;
                 content.numberColor = warning;
             }
-            content.arcs = Metrics.entry(metric).style == STYLE_ZONE_SEGMENTS
-                ? litZoneSegments(field, value, snapshot.heartRateZones, theme.zones)
-                : gauge(field, value, warning != null ? warning : theme.accent);
         }
         content.numberFont = numberFontFor(field, content.number);
         var font = FontCatalog.entry(content.numberFont);

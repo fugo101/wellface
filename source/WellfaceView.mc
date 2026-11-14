@@ -9,11 +9,15 @@ class WellfaceView extends WatchUi.WatchFace {
     private var _config as ResolvedFaceConfig;
     private var _reader as DataReader;
     private var _renderer as Renderer;
-    // The last computed frames, one per mode. FaceModel runs again only
-    // when the reader reports a change or a face config is applied, which
-    // drop both.
+    // The last computed frames, one per mode, and for each the change kinds
+    // (ChangeKind bits) the reader reported since it was last computed. A
+    // frame is updated only for those (FaceModel.update), so a clock change
+    // seen in AOD reaches the high-power frame on the next wake. Applying a
+    // face config drops both frames.
     private var _frame as Frame?;
     private var _aodFrame as AodFrame?;
+    private var _frameChanges as Number = 0;
+    private var _aodChanges as Number = 0;
 
     function initialize() {
         WatchFace.initialize();
@@ -36,15 +40,19 @@ class WellfaceView extends WatchUi.WatchFace {
     // The apply-config path, the only place a face config takes effect:
     // resolves it, hands the renderer the static layer and bezel notches
     // built for it (the buffer is repainted once), drops both cached frames
-    // and makes the next high-power update count as a wake, so every metric
-    // it shows is read before the next frame. Returns the resolved config
-    // for the caller to keep in _config.
+    // (a config change counts as every change kind) and gives the reader the
+    // config's read plan, which makes its next high-power update count as a
+    // wake, so every metric it shows (and the zones, if needed) is read
+    // before the next frame. Returns the resolved config for the caller to
+    // keep in _config.
     private function apply(config as FaceConfig) as ResolvedFaceConfig {
         var resolved = FaceModel.resolve(config);
         _renderer.setStatic(FaceModel.staticLayer(resolved), FaceModel.bezelNotches(resolved));
         _frame = null;
         _aodFrame = null;
-        _reader.countNextUpdateAsWake();
+        _frameChanges = CHANGE_ALL;
+        _aodChanges = CHANGE_ALL;
+        _reader.setReadPlan(FaceModel.readPlan(resolved));
         return resolved;
     }
 
@@ -55,27 +63,29 @@ class WellfaceView extends WatchUi.WatchFace {
             return;
         }
         var highPower = mode == System.DISPLAY_MODE_HIGH_POWER;
-        if (_reader.update(highPower)) {
-            _frame = null;
-            _aodFrame = null;
-        }
+        var changes = _reader.update(highPower);
+        _frameChanges |= changes;
+        _aodChanges |= changes;
         dc.setAntiAlias(true);
 
         if (!highPower) {
-            // Always On: only the clock was read, no sensors.
+            // Always On: only the clock was read, no sensors. Kept unless the
+            // clock changed.
             var aodFrame = _aodFrame;
-            if (aodFrame == null) {
-                aodFrame = FaceModel.computeAod(_reader.snapshot(), _config);
+            if (aodFrame == null || _aodChanges != 0) {
+                aodFrame = FaceModel.updateAod(aodFrame, _reader.snapshot(), _config, _aodChanges);
                 _aodFrame = aodFrame;
+                _aodChanges = 0;
             }
             _renderer.paintAod(dc, aodFrame);
             return;
         }
 
         var frame = _frame;
-        if (frame == null) {
-            frame = FaceModel.compute(_reader.snapshot(), _config);
+        if (frame == null || _frameChanges != 0) {
+            frame = FaceModel.update(frame, _reader.snapshot(), _config, _frameChanges);
             _frame = frame;
+            _frameChanges = 0;
         }
         _renderer.paint(dc, frame);
     }

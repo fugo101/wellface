@@ -31,8 +31,8 @@ enum ValueSource {
     SOURCE_ACTIVITY_STEPS
 }
 
-// How often the data reader reads a metric while the screen is awake
-// (nothing is read in AOD, Q36).
+// How often the data reader reads a metric while the screen is awake, when
+// the face config shows it (FaceModel.readPlan; nothing is read in AOD, Q36).
 enum ReadCadence {
     // On every high-power update, about once a second.
     CADENCE_EVERY_SECOND,
@@ -124,6 +124,12 @@ module Metrics {
     // disagree.
     function isGoalMetric(metric as Metric) as Boolean {
         return entry(metric).style == STYLE_GOAL_PROGRESS;
+    }
+
+    // Read on every high-power update (heart rate, Q36), rather than once a
+    // minute.
+    function readsEverySecond(metric as Metric) as Boolean {
+        return entry(metric).cadence == CADENCE_EVERY_SECOND;
     }
 
     // The heart-rate zones are needed exactly to draw zone segments.
