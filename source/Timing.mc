@@ -45,6 +45,10 @@ enum TimingKind {
     // A high-power update while the face sleeps (after onEnterSleep, the
     // screen still lit, once a minute). Never filed under another kind.
     TIMING_ASLEEP,
+    // The contour texture alone, drawn with lines on the screen (the frame
+    // after a face start) and into the static buffer.
+    TIMING_CONTOURS,
+    TIMING_CONTOURS_BUFFER,
 }
 
 (:notiming)
@@ -62,8 +66,9 @@ module Timing {
 (:timing)
 module Timing {
     // The one-letter code printed before each reading's milliseconds, in
-    // TimingKind order (tools/timing/summary.py has the same table).
-    const CODES = ["u", "a", "F", "A", "w", "h", "f", "d", "s", "m", "i"];
+    // TimingKind order (tools/timing/summary.py reads them, and also the
+    // codes of ticket 09's strip trial, no longer recorded).
+    const CODES = ["u", "a", "F", "A", "w", "h", "f", "d", "s", "m", "i", "c", "b"];
     // Readings kept before a flush; an update adds at most three.
     const CAPACITY = 240;
     // Readings per printed line.
@@ -85,6 +90,7 @@ module Timing {
     function start(kind as TimingKind) as Void {
         _starts[kind] = System.getTimer();
     }
+
 
     function stop(kind as TimingKind) as Void {
         var ms = System.getTimer() - _starts[kind];

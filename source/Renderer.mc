@@ -24,6 +24,12 @@ import Toybox.System;
 // from the widget loop only hides and shows the view and keeps them
 // (docs/build.md, "Timing build"). When the graphics pool has no room for a
 // buffer, every update is a full repaint (logged once).
+//
+// The contour texture (Q43) is part of the static layer: it is painted into
+// the static buffer, and once on the screen with the frame drawn straight
+// there after a face start or a new face config, so that frame shows it
+// too. A full repaint without a static buffer leaves it out, or it would be
+// drawn every second.
 class Renderer {
     private var _layer as StaticLayer = new StaticLayer();
     private var _fonts as Fonts;
@@ -50,6 +56,22 @@ class Renderer {
     // The graphics pool had no room for a buffer: full repaints, without
     // asking for a buffer again until the next wake, show or face config.
     private var _noRoom as Boolean = false;
+    // The last try for the static buffer found no room in the pool, so a
+    // frame drawn straight on the screen leaves the texture out like the
+    // full repaints after it (rather than show it for one frame); a later
+    // try that gets the buffer brings it back.
+    private var _noStaticRoom as Boolean = false;
+    // The contour table (Contours.table), loaded for the static layer's
+    // paint on the screen and kept for its paint into the buffer that
+    // follows, then dropped.
+    private var _contours as Array<Number>? = null;
+
+    // Where the static layer's paint draws the contour texture.
+    enum ContourTarget {
+        CONTOURS_NONE,
+        CONTOURS_SCREEN,
+        CONTOURS_BUFFER
+    }
 
     // Always repaint in full, as when the graphics pool has no room for the
     // minute layer (the capture face forces it to compare the two).
@@ -74,6 +96,7 @@ class Renderer {
         _minuteStale = true;
         _rebuildDue = false;
         _noRoom = false;
+        _noStaticRoom = false;
     }
 
     // The next frame is to be shown at once: the first after a wake or a
@@ -115,7 +138,7 @@ class Renderer {
             if (held != null) {
                 dc.drawBitmap(0, 0, held);
             } else {
-                paintStatic(dc, _layer);
+                paintStatic(dc, _layer, _noStaticRoom ? CONTOURS_NONE : CONTOURS_SCREEN);
             }
             paintParts(dc, frame, _everySecond | _everyMinute);
             return;
@@ -124,6 +147,8 @@ class Renderer {
         } else if (_bitmap == null) {
             // The static buffer this update, the minute layer on the next.
             if (staticBitmap(width, height) == null) {
+                _noStaticRoom = true;
+                _contours = null;
                 noRoom("static buffer");
             }
         } else if (minuteBitmap(width, height) != null) {
@@ -139,7 +164,7 @@ class Renderer {
         if (bitmap != null) {
             dc.drawBitmap(0, 0, bitmap);
         } else {
-            paintStatic(dc, _layer);
+            paintStatic(dc, _layer, CONTOURS_NONE);
         }
         paintParts(dc, frame, _everySecond | _everyMinute);
     }
@@ -307,7 +332,9 @@ class Renderer {
         }
         var bufferDc = bitmap.getDc();
         bufferDc.setAntiAlias(true);
-        paintStatic(bufferDc, _layer);
+        paintStatic(bufferDc, _layer, CONTOURS_BUFFER);
+        _contours = null;
+        _noStaticRoom = false;
         _bitmap = bitmap;
         return bitmap;
     }
@@ -333,13 +360,21 @@ class Renderer {
     }
 
     // Everything that depends only on the face config (its theme and field
-    // mapping), back to front.
-    private function paintStatic(dc as Dc, layer as StaticLayer) as Void {
+    // mapping), back to front; the contour texture only where `contours`
+    // says.
+    private function paintStatic(dc as Dc, layer as StaticLayer, contours as ContourTarget)
+            as Void {
         Timing.start(TIMING_STATIC);
         clear(dc);
 
         dc.setColor(layer.backgroundColor, layer.backgroundColor);
         dc.fillCircle(Layout.CENTER_X, Layout.CENTER_Y, Layout.DISC_RADIUS);
+        if (contours != CONTOURS_NONE) {
+            var kind = contours == CONTOURS_SCREEN ? TIMING_CONTOURS : TIMING_CONTOURS_BUFFER;
+            Timing.start(kind);
+            drawContours(dc, layer.contourColor);
+            Timing.stop(kind);
+        }
         drawArc(dc, layer.edgeMask);
         drawLines(dc, layer.bezelTicks);
 
@@ -370,6 +405,50 @@ class Renderer {
             fillCircle(dc, layer.fieldTrackCaps[i]);
         }
         Timing.stop(TIMING_STATIC);
+    }
+
+    // ---- Contour texture ----
+
+    // The contour pieces (Contours) as lines in `color`: each piece's points
+    // joined by drawLine, the pen set only when it changes (pieces come line
+    // by line). The pieces stay clear of every well, so nothing drawn later
+    // in the static layer depends on them.
+    private function drawContours(dc as Dc, color as Number) as Void {
+        var table = _contours;
+        if (table == null) {
+            table = Contours.table();
+            _contours = table;
+        }
+        // Locals, so the loop does no lookups.
+        var byteMask = Contours.BYTE_MASK;
+        var penShift = Contours.PEN_SHIFT;
+        var pointShift = Contours.POINT_SHIFT;
+        var pointMask = Contours.POINT_MASK;
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        var pen = 0;
+        var size = table.size();
+        var i = 0;
+        while (i < size) {
+            var header = -table[i];
+            var piecePen = (header >> penShift) & byteMask;
+            if (piecePen != pen) {
+                pen = piecePen;
+                dc.setPenWidth(pen);
+            }
+            var last = i + (header & byteMask);
+            var point = table[i + 1];
+            var x = point >> pointShift;
+            var y = point & pointMask;
+            for (var k = i + 2; k <= last; k++) {
+                point = table[k];
+                var nextX = point >> pointShift;
+                var nextY = point & pointMask;
+                dc.drawLine(x, y, nextX, nextY);
+                x = nextX;
+                y = nextY;
+            }
+            i = last + 1;
+        }
     }
 
     // ---- Primitives ----

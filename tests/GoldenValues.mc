@@ -14,6 +14,9 @@
 // ring order); every new value checked against an independent computation
 // of the design's stepRing. Re-recorded for the seconds (2026-11-15): every
 // frame gained the seconds, 00 at (309, 127) in the ink; nothing else changed.
+// Re-recorded for the contour texture (2026-11-15): the static layer gained
+// the texture's color, accent x 0.36; nothing else changed (the pieces are
+// fixed and checked by ContourTest).
 // Re-record only for an intended change to what is drawn; see GoldenTest.
 import Toybox.Lang;
 
@@ -771,7 +774,7 @@ module GoldenValues {
     } as Dictionary<String, String>;
 
     const STATIC_LAYER =
-        "background=22362C|edgeMask=A(208,208,201,14,90,90,360,000000)|" +
+        "background=22362C|contourColor=335242|edgeMask=A(208,208,201,14,90,90,360,000000)|" +
         "bezelTicks=[L(208,12,208,0,5,69736D)L(229,8,230,1,3,343B37)L(250,11,251,5,3,343B37)" +
         "L(270,17,272,10,3,343B37)L(290,24,293,18,3,343B37)L(307,37,312,28,4,4A524D)" +
         "L(326,45,330,40,3,343B37)L(342,59,347,53,3,343B37)L(357,74,363,69,3,343B37)" +

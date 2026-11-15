@@ -14,7 +14,7 @@ class Theme {
     public var accent as Number;
     // The background disc: accent x 0.24.
     public var background as Number;
-    // The contour texture (Q43): accent x 0.36. Not drawn yet.
+    // The contour texture (Q43): accent x 0.36.
     public var contourTexture as Number;
     // Well rims (Q39): accent x 0.48, lighter than the background.
     public var wellRim as Number;

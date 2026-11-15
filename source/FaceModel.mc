@@ -237,6 +237,10 @@ class FieldFrame {
 // geometry is in Layout.
 class StaticLayer {
     public var backgroundColor as Number = 0;
+    // The contour texture's color (Q43). Its pieces are fixed, generated at
+    // build time into the Contours resource; the renderer draws them over
+    // the background, before the edge mask (see Renderer for when).
+    public var contourColor as Number = 0;
     // The black ring over the disc's edge, before the bezel ticks.
     public var edgeMask as Arc = new Arc(0, 0, 0, 0, 0, 0, 0, 0);
     // The 60 bezel ticks, all unlit, tick i at index i. The frame's lit
@@ -956,6 +960,7 @@ module FaceModel {
         var theme = config.theme;
         var layer = new StaticLayer();
         layer.backgroundColor = theme.background;
+        layer.contourColor = theme.contourTexture;
         layer.edgeMask = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.EDGE_MASK_RADIUS,
             Layout.EDGE_MASK_PEN, 0, 360, theme.ink);
         var ticks = Layout.bezelTicks();

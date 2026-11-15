@@ -404,6 +404,7 @@ module GoldenTest {
             case 11: l.fieldWells = [] as Array<Circle>; break;
             case 12: l.fieldTracks = [] as Array<Arc>; break;
             case 13: l.fieldTrackCaps = [] as Array<Circle>; break;
+            case 14: l.contourColor++; break;
             default: return false;
         }
         return true;
@@ -478,7 +479,7 @@ module GoldenTest {
     const FIELD_MEMBERS = 13;
     const BOTTOM_FIELD_MEMBERS = 15;
     const AOD_MEMBERS = 12;
-    const LAYER_MEMBERS = 14;
+    const LAYER_MEMBERS = 15;
     const ARC_MEMBERS = 8;
     const RECT_MEMBERS = 6;
     const CIRCLE_MEMBERS = 4;

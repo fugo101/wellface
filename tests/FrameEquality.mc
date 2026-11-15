@@ -109,6 +109,7 @@ module FrameEquality {
 
     function describeLayer(l as StaticLayer) as String {
         return "background=" + color(l.backgroundColor)
+            + "|contourColor=" + color(l.contourColor)
             + "|edgeMask=" + arc(l.edgeMask)
             + "|bezelTicks=" + describeLines(l.bezelTicks)
             + "|timeBandRim=" + rect(l.timeBandRim)

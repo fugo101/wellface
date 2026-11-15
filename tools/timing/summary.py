@@ -23,14 +23,18 @@ view was hidden and shown again without a restart), wake (w, the first
 high-power update after AOD), aod (a, an AOD update), frame (f,
 FaceModel.update), aodFrame (d, FaceModel.updateAod), static (s, the static
 layer paint), minute (m, a rebuild of the minute layer: the static buffer
-copied into it, then the parts that change at most once a minute). An update's time includes the frame, static and minute readings
+copied into it, then the parts that change at most once a minute), contours
+(c) and contoursBuffer (b, the contour texture alone, drawn with lines on the
+screen and into the static buffer; inside a static reading), strips (C) and
+stripsBuffer (B, the same drawn as filled strips; a trial of ticket 09). An update's time includes the frame, static and minute readings
 taken inside it. Before the show kind existed, a show was filed as first.
 
 Prints, for each log and, with several logs, for all of them pooled: per
 kind the count, median, 10th and 90th percentile, minimum, maximum and mean
 in ms, the high-power updates also split by whether the frame was
 recomputed in them (update+frame, update-frame) and those that rebuilt the
-minute layer (update+minute); the summed high-power update time of each
+minute layer (update+minute), the first updates by how their contour texture
+was drawn (first+lines, first+strips); the summed high-power update time of each
 time awake (perWake: a wake and the updates after it, up to the sleep flush
 that ends them); the flushes per reason; and a warning when readings are missing (a
 flush with fewer readings than its header says, or readings before the first
@@ -47,9 +51,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 CODES = {"u": "update", "a": "aod", "F": "first", "A": "firstAod", "w": "wake",
-         "h": "show", "f": "frame", "d": "aodFrame", "s": "static", "m": "minute", "i": "asleep"}
+         "h": "show", "f": "frame", "d": "aodFrame", "s": "static", "m": "minute", "i": "asleep",
+         "c": "contours", "b": "contoursBuffer", "C": "strips", "B": "stripsBuffer"}
 KINDS = ["update", "wake", "show", "first", "firstAod", "aod", "asleep", "frame", "aodFrame",
-         "static", "minute"]
+         "static", "minute", "contours", "contoursBuffer", "strips", "stripsBuffer"]
 # Every kind that times a whole update; the other kinds are timed inside
 # one and logged before it.
 UPDATES = {"update", "wake", "show", "first", "firstAod", "aod", "asleep"}
@@ -64,6 +69,9 @@ PER_WAKE = "perWake"
 # rebuilt the minute layer (a minute reading inside them) are also listed
 # on their own (update+minute); they are in one of the first two groups too.
 SPLIT = ["update+frame", "update-frame", "update+minute"]
+# First updates split by how the contour texture painted inside them was
+# drawn: lines or (trial, ticket 09) filled strips.
+FIRST_SPLIT = ["first+lines", "first+strips"]
 READING = re.compile(r"^([A-Za-z])(\d+)$")
 
 
@@ -110,6 +118,11 @@ def read(path: Path) -> Log:
             log.readings[SPLIT[0] if "frame" in inside else SPLIT[1]].append(ms)
             if "minute" in inside:
                 log.readings[SPLIT[2]].append(ms)
+        if kind == "first":
+            if "contours" in inside:
+                log.readings[FIRST_SPLIT[0]].append(ms)
+            elif "strips" in inside:
+                log.readings[FIRST_SPLIT[1]].append(ms)
         if kind in UPDATES:
             inside.clear()
         else:
@@ -154,7 +167,7 @@ def percentile(values: list[int], p: float) -> float:
 def report(title: str, log: Log) -> None:
     print(f"== {title}")
     print(f"{'kind':<12} {'n':>5} {'median':>7} {'p10':>6} {'p90':>6} {'min':>5} {'max':>5} {'mean':>7}")
-    for kind in KINDS[:1] + SPLIT + KINDS[1:] + [PER_WAKE]:
+    for kind in KINDS[:1] + SPLIT + KINDS[1:4] + FIRST_SPLIT + KINDS[4:] + [PER_WAKE]:
         values = log.readings.get(kind)
         if not values:
             continue
