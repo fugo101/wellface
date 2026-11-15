@@ -696,15 +696,11 @@ module FaceModel {
                 return round[i];
             }
         }
-        // The bottom field's pill is its own well, so it is not padded.
-        if (insideRoundedRect(x, y, Layout.BOTTOM_X, Layout.BOTTOM_Y, Layout.BOTTOM_W,
-                Layout.BOTTOM_H, Layout.BOTTOM_RADIUS)) {
+        // The bottom field's pill, padded (Q45). The bezel ring is no
+        // target: its band at the screen's edge was too hard to hold.
+        if (insideRoundedRect(x, y, Layout.BOTTOM_HOLD_X, Layout.BOTTOM_HOLD_Y,
+                Layout.BOTTOM_HOLD_W, Layout.BOTTOM_HOLD_H, Layout.BOTTOM_HOLD_RADIUS)) {
             return FIELD_BOTTOM;
-        }
-        // The bezel ring: outside the background disc, on the screen.
-        if (!insideCircle(x, y, Layout.CENTER_X, Layout.CENTER_Y, Layout.DISC_RADIUS)
-                && insideCircle(x, y, Layout.CENTER_X, Layout.CENTER_Y, Layout.SCREEN_RADIUS)) {
-            return FIELD_BEZEL_RING;
         }
         return null;
     }

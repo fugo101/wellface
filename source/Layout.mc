@@ -225,6 +225,14 @@ module Layout {
     const BOTTOM_GROUP_RIGHT = 276;
     // Goal reached: the gap between the icon's 24 px box and the number.
     const BOTTOM_REACHED_GAP = 4;
+    // The bottom field's long-press target (Q45): the pill padded 10 px
+    // left, right and below and 4 px above (still 4 px clear of the center
+    // field's target), a rounded rect with half-circle ends.
+    const BOTTOM_HOLD_X = BOTTOM_X - 10;
+    const BOTTOM_HOLD_Y = BOTTOM_Y - 4;
+    const BOTTOM_HOLD_W = BOTTOM_W + 20;
+    const BOTTOM_HOLD_H = BOTTOM_H + 14;
+    const BOTTOM_HOLD_RADIUS = BOTTOM_HOLD_H / 2;
 
     // The center field.
     const CENTER_FIELD_X = 208;
@@ -313,9 +321,6 @@ module Layout {
 
     // The background disc.
     const DISC_RADIUS = 194;
-    // The round screen. A hold between the disc and the screen's edge is a
-    // hold on the bezel ring.
-    const SCREEN_RADIUS = 208;
 
     // Width of the black well around an element.
     const WELL = 6;

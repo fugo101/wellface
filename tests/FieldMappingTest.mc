@@ -214,7 +214,6 @@ module FieldMappingTest {
         assertTarget(swapped(), 328, 252, FIELD_RIGHT, METRIC_BODY_BATTERY);
         assertTarget(swapped(), 88, 252, FIELD_LEFT, METRIC_STRESS);
         assertTarget(swapped(), 208, 356, FIELD_BOTTOM, METRIC_STEPS);
-        assertTarget(swapped(), 208, 6, FIELD_BEZEL_RING, METRIC_STEPS);
         return true;
     }
 

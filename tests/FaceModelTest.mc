@@ -1975,90 +1975,97 @@ module FaceModelTest {
         return true;
     }
 
-    // The well rims are not part of a target: 1-2 px outside a round well
-    // (center r 67-68 below (208, 262), left r 46 below (88, 252), right
-    // r 46 right of (328, 252)) and on the bottom field's rim (y 334-335,
-    // above the pill's top edge at 336) all miss.
+    // The round wells' rims are not part of a target: 1-2 px outside a
+    // round well (center r 67-68 below (208, 262), left r 46 below (88,
+    // 252), right r 46 right of (328, 252)) all miss.
     (:test)
     function holdOnAWellRimMisses(logger as Test.Logger) as Boolean {
         assertMiss(208, 329);
         assertMiss(208, 330);
         assertMiss(88, 298);
         assertMiss(374, 252);
-        assertMiss(208, 334);
-        assertMiss(208, 335);
         return true;
     }
 
-    // The bottom field's top edge is the limit: y 336 hits, y 335 misses.
+    // Q45: the bottom field's target is its pill (126, 336, 164, 40) padded
+    // 10 px left, right and below and 4 px above: the rounded rect (116,
+    // 332, 184, 54) with radius 27, its ends half circles around (143, 359)
+    // and (273, 359). Its top edge is the limit: y 332 hits, y 331 misses;
+    // the pill's rim (y 334-335) is inside it.
     (:test)
     function bottomFieldTopEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(208, 336, FIELD_BOTTOM);
-        assertMiss(208, 335);
+        assertTarget(208, 332, FIELD_BOTTOM);
+        assertTarget(208, 334, FIELD_BOTTOM);
+        assertMiss(208, 331);
         return true;
     }
 
-    // The bottom field's bottom edge is the limit: y 376 (336 + 40) hits,
-    // y 377 misses.
+    // Its bottom edge: y 386 (332 + 54) hits, y 387 misses.
     (:test)
     function bottomFieldBottomEdgeIsTheLimit(logger as Test.Logger) as Boolean {
-        assertTarget(208, 376, FIELD_BOTTOM);
-        assertMiss(208, 377);
+        assertTarget(208, 386, FIELD_BOTTOM);
+        assertMiss(208, 387);
         return true;
     }
 
-    // The 8 px of background between the center well (ends y 328) and the
-    // bottom field (starts y 336) is a miss.
+    // Its sides, on the ends' centers' line (y 359): x 116 and 300 hit,
+    // x 115 and 301 miss.
+    (:test)
+    function bottomFieldSidesAreTheLimit(logger as Test.Logger) as Boolean {
+        assertTarget(116, 359, FIELD_BOTTOM);
+        assertTarget(300, 359, FIELD_BOTTOM);
+        assertMiss(115, 359);
+        assertMiss(301, 359);
+        return true;
+    }
+
+    // The 4 px of background between the center well (ends y 328) and the
+    // bottom field's target (starts y 332) is a miss.
     (:test)
     function holdInTheGapAboveTheBottomFieldMisses(logger as Test.Logger) as Boolean {
-        assertMiss(208, 332);
+        assertMiss(208, 330);
+        assertMiss(208, 331);
         return true;
     }
 
-    // Story 44: holding the bottom field opens its metric (steps). Its pill is (126,
-    // 336, 164, 40), radius 20, unpadded.
+    // Story 44: holding the bottom field opens its metric (steps), on the
+    // pill and in the padding around it.
     (:test)
     function holdInTheBottomFieldTargetsTheBottomField(logger as Test.Logger) as Boolean {
         assertTarget(208, 337, FIELD_BOTTOM);
         assertTarget(208, 356, FIELD_BOTTOM);
+        assertTarget(208, 380, FIELD_BOTTOM);
+        assertTarget(120, 359, FIELD_BOTTOM);
         return true;
     }
 
-    // The bottom field's left end is a half circle around (146, 356), r 20.
-    // (130, 346) is 16 px left and 10 px up from it: inside (256 + 100 <=
-    // 400).
+    // The target's left end is a half circle around (143, 359), r 27.
+    // (125, 340) is 18 px left and 19 px up from it: inside (324 + 361 <=
+    // 729).
     (:test)
     function holdJustInsideABottomFieldCornerHits(logger as Test.Logger) as Boolean {
-        assertTarget(130, 346, FIELD_BOTTOM);
+        assertTarget(125, 340, FIELD_BOTTOM);
         return true;
     }
 
-    // (130, 342) is inside the pill's bounding box but 16 px left and 14 px
-    // up from the corner's center: outside the arc (256 + 196 > 400).
+    // (122, 340) is inside the target's bounding box but 21 px left and 19
+    // px up from the end's center: outside the arc (441 + 361 > 729).
     (:test)
     function holdJustOutsideABottomFieldCornerMisses(logger as Test.Logger) as Boolean {
-        assertMiss(130, 342);
+        assertMiss(122, 340);
         return true;
     }
 
-    // Story 44: holding the bezel ring opens its metric (steps) too. (208, 6) is 202 px
-    // above the face center, in the band outside the background disc.
+    // Q45: the bezel ring is no longer a target (a 14 px band at the
+    // screen's edge was too hard to hold): its band (194 < distance <= 208),
+    // at the top, the bottom and the side, misses.
     (:test)
-    function holdOnTheBezelRingTargetsTheBezelRing(logger as Test.Logger) as Boolean {
-        assertTarget(208, 6, FIELD_BEZEL_RING);
-        return true;
-    }
-
-    // The band is 194 < distance <= 208: the disc's own edge (y 14, 194 px
-    // from the center) misses, 195 px (y 13) hits, and so does the screen's
-    // edge (208 px).
-    (:test)
-    function bezelRingBandExcludesTheDiscEdgeAndIncludesTheScreenEdge(logger as Test.Logger)
-            as Boolean {
-        assertMiss(208, 14);
-        assertTarget(208, 13, FIELD_BEZEL_RING);
-        assertTarget(208, 0, FIELD_BEZEL_RING);
-        assertTarget(0, 208, FIELD_BEZEL_RING);
+    function holdOnTheBezelRingMisses(logger as Test.Logger) as Boolean {
+        assertMiss(208, 6);
+        assertMiss(208, 13);
+        assertMiss(208, 0);
+        assertMiss(0, 208);
+        assertMiss(208, 410);
         return true;
     }
 
