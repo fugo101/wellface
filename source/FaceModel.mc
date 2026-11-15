@@ -8,8 +8,8 @@ class Snapshot {
     // 0-23, whatever the watch's 12/24 h setting is (Q22).
     public var hour as Number;
     public var minute as Number;
-    // 0-59. Not read from the clock or drawn yet (seconds, Q41); the capture
-    // face sets it for its scenarios.
+    // 0-59, from the clock reading made on every update, in high power only
+    // (seconds, Q41): in Always On it keeps its last value.
     public var second as Number = 0;
     // Day of month, 1-31, and month, 1-12.
     public var day as Number = 1;
@@ -73,6 +73,13 @@ class Frame {
     public var timeX as Number = 0;
     public var timeY as Number = 0;
     public var timeColor as Number = 0;
+    // The seconds after the minutes (Q41), two digits from FaceModel.SECONDS
+    // (no allocation), drawn in FaceModel.SECONDS_FONT from this top-left
+    // corner (left-justified, line top), so the time never moves.
+    public var seconds as String = "";
+    public var secondsX as Number = 0;
+    public var secondsY as Number = 0;
+    public var secondsColor as Number = 0;
     // The date text, for example "THU 12/11", its width (dateTextWidth) and
     // the top-left corner of the whole text (left-justified, line top),
     // centered as one group.
@@ -371,7 +378,21 @@ module FaceModel {
     // Every part of the high-power frame (FramePart bits, all but the AOD
     // frame).
     const HIGH_POWER_PARTS = PART_LEFT | PART_CENTER | PART_RIGHT | PART_BOTTOM
-        | PART_BEZEL_RING | PART_TIME | PART_DATE | PART_BATTERY;
+        | PART_BEZEL_RING | PART_TIME | PART_SECONDS | PART_DATE | PART_BATTERY;
+
+    // The seconds' text for each second, made once, so a frame never
+    // allocates one.
+    const SECONDS = [
+        "00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
+        "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
+        "20", "21", "22", "23", "24", "25", "26", "27", "28", "29",
+        "30", "31", "32", "33", "34", "35", "36", "37", "38", "39",
+        "40", "41", "42", "43", "44", "45", "46", "47", "48", "49",
+        "50", "51", "52", "53", "54", "55", "56", "57", "58", "59"
+    ] as Array<String>;
+    // The seconds' font: Manrope ExtraBold 26, the number font that already
+    // has every digit.
+    const SECONDS_FONT = FONT_NUMBER_26;
 
     // The high-power frame for a snapshot and a resolved face config, all of
     // it computed.
@@ -385,8 +406,14 @@ module FaceModel {
     // is computed in full. The result equals compute(snapshot, config)
     // provided `changes` covers every change since `previous` was computed
     // for the same face config (a new face config needs a null previous).
+    // A change of the second alone takes a fast path: it sets the seconds'
+    // text and touches nothing else (Q41, Q44).
     function update(previous as Frame?, snapshot as Snapshot, config as ResolvedFaceConfig,
             changes as Number) as Frame {
+        if (previous != null && changes == CHANGE_SECOND) {
+            previous.seconds = secondsText(snapshot.second);
+            return previous;
+        }
         var frame = previous;
         var parts = HIGH_POWER_PARTS;
         if (frame == null) {
@@ -402,6 +429,12 @@ module FaceModel {
             frame.timeX = Layout.TIME_CENTER_X - frame.timeWidth / 2;
             frame.timeY = Layout.TIME_BASELINE_Y - timeFont.base;
             frame.timeColor = theme.ink;
+        }
+        if ((parts & PART_SECONDS) != 0) {
+            frame.seconds = secondsText(snapshot.second);
+            frame.secondsX = Layout.SECONDS_X;
+            frame.secondsY = Layout.TIME_BASELINE_Y - FontCatalog.entry(SECONDS_FONT).base;
+            frame.secondsColor = theme.ink;
         }
         if ((parts & PART_DATE) != 0) {
             var date = dateParts(snapshot);
@@ -551,7 +584,8 @@ module FaceModel {
     }
 
     // The frame parts a set of change kinds makes stale (FramePart bits).
-    // The clock: the time, the date and the AOD frame. The minute data: the
+    // The clock's second: only the seconds. The clock: the time, the date
+    // and the AOD frame. The minute data: the
     // battery bar, the bezel ring, the bottom field and every other field
     // whose metric is read once a minute or draws zone segments (the zones
     // are minute data). The per-second metrics: only the fields, of any
@@ -559,6 +593,9 @@ module FaceModel {
     // the AOD frame.
     function invalidated(changes as Number, config as ResolvedFaceConfig) as Number {
         var parts = 0;
+        if ((changes & CHANGE_SECOND) != 0) {
+            parts |= PART_SECONDS;
+        }
         if ((changes & CHANGE_CLOCK) != 0) {
             parts |= PART_TIME | PART_DATE | PART_AOD;
         }
@@ -579,6 +616,19 @@ module FaceModel {
             }
         }
         return parts;
+    }
+
+    // The high-power frame parts that can change every second (FramePart
+    // bits): the seconds and each field showing a metric read every second
+    // (heart rate). Ticket 08 redraws only these each second.
+    function everySecondParts(config as ResolvedFaceConfig) as Number {
+        return invalidated(CHANGE_SECOND | CHANGE_PER_SECOND, config);
+    }
+
+    // The high-power frame parts that change at most once a minute: every
+    // other one (FramePart bits).
+    function everyMinuteParts(config as ResolvedFaceConfig) as Number {
+        return HIGH_POWER_PARTS & ~everySecondParts(config);
     }
 
     // Whether any field of the config shows the metric.
@@ -1263,6 +1313,12 @@ module FaceModel {
             return 'O';
         }
         return offset < 82 ? 'U' : 'Y';
+    }
+
+    // The seconds as two digits, from the fixed table; a second outside
+    // 0-59 is clamped to it.
+    function secondsText(second as Number) as String {
+        return SECONDS[clamp(second, 0, SECONDS.size() - 1)];
     }
 
     // Always 24 h with a leading zero, for example "08:42" (Q22).

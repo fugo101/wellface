@@ -34,6 +34,10 @@ module FrameEquality {
             + "|timeX=" + f.timeX
             + "|timeY=" + f.timeY
             + "|timeColor=" + color(f.timeColor)
+            + "|seconds=" + f.seconds
+            + "|secondsX=" + f.secondsX
+            + "|secondsY=" + f.secondsY
+            + "|secondsColor=" + color(f.secondsColor)
             + "|date=" + f.date
             + "|dateWidth=" + f.dateWidth
             + "|dateX=" + f.dateX

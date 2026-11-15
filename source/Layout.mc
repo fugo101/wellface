@@ -360,6 +360,10 @@ module Layout {
     // The time: centered on this x, with its baseline on this y.
     const TIME_CENTER_X = CENTER_X;
     const TIME_BASELINE_Y = 155;
+    // The seconds: left-aligned at this x on the time's baseline, a fixed
+    // place after the minutes, so the time stays centered whatever the
+    // seconds' width.
+    const SECONDS_X = 309;
 
     // The battery bar, in design degrees (0 = 12 o'clock, clockwise).
     // Segment i spans BATTERY_FIRST + i * BATTERY_STEP for BATTERY_SEGMENT

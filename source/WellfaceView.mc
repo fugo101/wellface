@@ -41,9 +41,9 @@ class WellfaceView extends WatchUi.WatchFace {
     // resolves it, hands the renderer the static layer built for it (the
     // buffer is repainted once), drops both cached frames (a config change
     // counts as every change kind) and gives the reader the config's read
-    // plan, which makes its next high-power update count as a
-    // wake, so every metric it shows (and the zones, if needed) is read
-    // before the next frame. Returns the resolved config for the caller to
+    // plan, which makes its next high-power update count as a wake, so
+    // every metric it shows (and the zones, if needed) is read before the
+    // next frame. Returns the resolved config for the caller to
     // keep in _config.
     private function apply(config as FaceConfig) as ResolvedFaceConfig {
         var resolved = FaceModel.resolve(config);
@@ -66,7 +66,9 @@ class WellfaceView extends WatchUi.WatchFace {
         Timing.start(highPower ? TIMING_UPDATE : TIMING_AOD);
         var changes = _reader.update(highPower);
         _frameChanges |= changes;
-        _aodChanges |= changes;
+        // The Always On frame has no seconds, so a second change alone never
+        // makes it stale (AOD does no work for the seconds, Q41).
+        _aodChanges |= changes & ~CHANGE_SECOND;
         dc.setAntiAlias(true);
 
         if (!highPower) {
@@ -89,9 +91,18 @@ class WellfaceView extends WatchUi.WatchFace {
         var frame = _frame;
         if (frame == null || _frameChanges != 0) {
             var snapshot = _reader.snapshot();
-            Timing.start(TIMING_FRAME);
+            // A change of the second alone is FaceModel.update's fast path
+            // (the seconds' text only). It is not timed as a frame, so the
+            // timing log still splits updates into those that recomputed
+            // data and those that did not, as in the baseline (ticket 01).
+            var timed = frame == null || _frameChanges != CHANGE_SECOND;
+            if (timed) {
+                Timing.start(TIMING_FRAME);
+            }
             frame = FaceModel.update(frame, snapshot, _config, _frameChanges);
-            Timing.stop(TIMING_FRAME);
+            if (timed) {
+                Timing.stop(TIMING_FRAME);
+            }
             _frame = frame;
             _frameChanges = 0;
         }

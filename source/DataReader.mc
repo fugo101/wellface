@@ -49,6 +49,12 @@ class DataReader {
     // (no 23:59 with the next day's date). The weekday name is read with it,
     // so a change of watch language is followed within a minute.
     //
+    // The clock's second, in high power only (Q41): taken from the same
+    // clock reading, and a change of it is CHANGE_SECOND. In AOD the
+    // snapshot keeps its last second, so the first update after a wake
+    // reports CHANGE_SECOND unless the clock is on that same second again
+    // (then the frame already shows it).
+    //
     // The sensors, in high power only (nothing is read in AOD, Q36): the
     // battery and the plan's once-a-minute metrics when the minute changed
     // since the last sensor read or the previous update was not high power
@@ -64,6 +70,10 @@ class DataReader {
         }
 
         if (highPower) {
+            if (clock.sec != _snapshot.second) {
+                _snapshot.second = clock.sec;
+                changes |= CHANGE_SECOND;
+            }
             var wake = !_wasHighPower;
             var minuteOfDay = _snapshot.hour * 60 + _snapshot.minute;
             if (wake && _plan.zones) {

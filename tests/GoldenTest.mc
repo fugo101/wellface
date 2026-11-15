@@ -300,24 +300,28 @@ module GoldenTest {
             case 2: f.timeX++; break;
             case 3: f.timeY++; break;
             case 4: f.timeColor++; break;
-            case 5: f.date += "0"; break;
-            case 6: f.dateWidth++; break;
-            case 7: f.dateX++; break;
-            case 8: f.dateY++; break;
-            case 9: f.weekday += "0"; break;
-            case 10: f.weekdayColor++; break;
-            case 11: f.dayMonth += "0"; break;
-            case 12: f.dayMonthX++; break;
-            case 13: f.dayMonthColor++; break;
-            case 14: f.datePill = otherRect(); break;
-            case 15: f.batteryLit = [] as Array<Arc>; break;
-            case 16: f.bezelLit = [] as Array<Line>; break;
-            case 17: f.bezelLead = null; break;
-            case 18: f.bottomGoalReached = !f.bottomGoalReached; break;
-            case 19: f.bottomField.number += "0"; break;
-            case 20: f.leftField.number += "0"; break;
-            case 21: f.centerField.number += "0"; break;
-            case 22: f.rightField.number += "0"; break;
+            case 5: f.seconds += "0"; break;
+            case 6: f.secondsX++; break;
+            case 7: f.secondsY++; break;
+            case 8: f.secondsColor++; break;
+            case 9: f.date += "0"; break;
+            case 10: f.dateWidth++; break;
+            case 11: f.dateX++; break;
+            case 12: f.dateY++; break;
+            case 13: f.weekday += "0"; break;
+            case 14: f.weekdayColor++; break;
+            case 15: f.dayMonth += "0"; break;
+            case 16: f.dayMonthX++; break;
+            case 17: f.dayMonthColor++; break;
+            case 18: f.datePill = otherRect(); break;
+            case 19: f.batteryLit = [] as Array<Arc>; break;
+            case 20: f.bezelLit = [] as Array<Line>; break;
+            case 21: f.bezelLead = null; break;
+            case 22: f.bottomGoalReached = !f.bottomGoalReached; break;
+            case 23: f.bottomField.number += "0"; break;
+            case 24: f.leftField.number += "0"; break;
+            case 25: f.centerField.number += "0"; break;
+            case 26: f.rightField.number += "0"; break;
             default: return false;
         }
         return true;
@@ -470,7 +474,7 @@ module GoldenTest {
     // description, a case in its change function and a count here. Monkey C
     // has no reflection, so a member added to a class without a case here
     // goes unnoticed.
-    const FRAME_MEMBERS = 23;
+    const FRAME_MEMBERS = 27;
     const FIELD_MEMBERS = 13;
     const BOTTOM_FIELD_MEMBERS = 15;
     const AOD_MEMBERS = 12;

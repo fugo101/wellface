@@ -129,6 +129,22 @@ module GlyphCoverageTest {
         return true;
     }
 
+    // Every second, in the font the seconds are drawn in (the 26 px number
+    // font, Q41): a missing glyph would be drawn as nothing.
+    (:test)
+    function everySecondIsDrawable(logger as Test.Logger) as Boolean {
+        var config = FaceModel.resolve(FaceConfigs.defaultConfig());
+        Test.assertEqual(FONT_NUMBER_26, FaceModel.SECONDS_FONT);
+        for (var second = 0; second < 60; second++) {
+            var s = new Snapshot(8, 42);
+            s.second = second;
+            var seconds = FaceModel.compute(s, config).seconds;
+            Test.assertEqual(2, seconds.length());
+            assertDrawable(seconds, FaceModel.SECONDS_FONT, "seconds");
+        }
+        return true;
+    }
+
     // Every character a weekday name can fold to is in the date font, so
     // every folded name is drawable: Basic Latin to Latin Extended B, the
     // combining marks and Vietnamese (Latin Extended Additional).

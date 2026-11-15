@@ -78,7 +78,7 @@ With `System.getTimer()` (milliseconds) it records:
 | `show` | the first high-power update after the view was hidden and shown again without a restart; the static buffer is kept |
 | `wake` | the first high-power update after AOD (or a screen off, which comes after AOD) |
 | `aod` | an AOD update |
-| `frame` / `aodFrame` | `FaceModel.update` / `FaceModel.updateAod` on their own |
+| `frame` / `aodFrame` | `FaceModel.update` / `FaceModel.updateAod` on their own; a change of the second alone (the seconds' fast path) is not timed as a `frame` |
 | `static` | the static layer paint (`Renderer.paintStatic`) |
 
 An update's time covers the face's own code in `onUpdate`, the `frame` and `static` readings inside it included; whatever the system does after `onUpdate` returns (copying to the screen, and with `WatchUi.Layer`s compositing them) is outside it. `System.getTimer()` counts whole milliseconds, so compare medians over many updates, and note that a difference under about 1 ms cannot be seen.
@@ -96,7 +96,7 @@ On the watch:
    - at least 12 wakes (raise the wrist or press a button), each kept awake 10–15 s by tapping the screen now and then (short taps; a long press on a field opens its page), then left to fall back to Always On. This gives the 100 or more per-second updates a wear needs; wakes of a few seconds gave 57 in 12 wakes;
    - at least 3 returns from the widget loop (Up or Down or a swipe from the face, scroll, then back to the face) and at least 3 from a widget opened in full (select a widget in the loop, then Back to the face). Button names may differ slightly.
 5. Plug in again, list the logs with `scripts/watch-logs.sh list` and copy them back: `scripts/watch-logs.sh get WELLFACE.TXT <dir>/wearN.txt`, and if a `WELLFACE.BAK` is listed, `scripts/watch-logs.sh get WELLFACE.BAK <dir>/wearN.bak`; then `cat <dir>/wearN.bak <dir>/wearN.txt > <dir>/wearN-all.txt` (the `.BAK` first).
-6. Read it: `python3 -I tools/timing/summary.py <dir>/wearN-all.txt`. There must be no warning, and the flushes must add up to the wear: about one `sleep` per wake, one `hide` per return from the widget loop and one `stop` per widget opened in full. High-power updates come in two groups about 4 ms apart on the watch, with and without a recomputed frame (heart rate changed or not), so the plain median jumps with the mix; compare the `update+frame` and `update-frame` medians (or the mean) between builds. The baseline is in `.scratch/design-refresh-2/issues/01-baseline-measurements.md`.
+6. Read it: `python3 -I tools/timing/summary.py <dir>/wearN-all.txt`. There must be no warning, and the flushes must add up to the wear: about one `sleep` per wake, one `hide` per return from the widget loop and one `stop` per widget opened in full. High-power updates come in two groups about 4 ms apart on the watch, with and without a recomputed frame (heart rate changed or not; a second that only moves the seconds counts as without), so the plain median jumps with the mix; compare the `update+frame` and `update-frame` medians (or the mean) between builds. The baseline is in `.scratch/design-refresh-2/issues/01-baseline-measurements.md`.
 7. Repeat steps 2–6 for a second wear (first `scripts/watch-logs.sh delete WELLFACE.TXT` and, if present, `delete WELLFACE.BAK`, then create `WELLFACE.TXT` again, so each wear has its own log); the difference between the two wears is the noise.
 8. Afterwards: delete `WELLFACE.TXT` and `WELLFACE.BAK` the same way and run `scripts/sideload.sh` to put the normal release build back.
 

@@ -94,7 +94,7 @@ module RefreshPlanTest {
 
     // Every frame part that is not the AOD frame.
     const HIGH_POWER_PARTS = PART_LEFT | PART_CENTER | PART_RIGHT | PART_BOTTOM
-        | PART_BEZEL_RING | PART_TIME | PART_DATE | PART_BATTERY;
+        | PART_BEZEL_RING | PART_TIME | PART_SECONDS | PART_DATE | PART_BATTERY;
 
     (:test)
     function clockInvalidatesTimeDateAndAod(logger as Test.Logger) as Boolean {

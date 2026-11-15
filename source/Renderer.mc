@@ -67,6 +67,11 @@ class Renderer {
         dc.setColor(frame.timeColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(frame.timeX, frame.timeY, _fonts.get(FONT_TIME), frame.time,
             Graphics.TEXT_JUSTIFY_LEFT);
+        // The seconds, at a fixed place after the minutes (high power only:
+        // the Always On frame has none).
+        dc.setColor(frame.secondsColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(frame.secondsX, frame.secondsY, _fonts.get(FaceModel.SECONDS_FONT),
+            frame.seconds, Graphics.TEXT_JUSTIFY_LEFT);
 
         // The pill's width follows the text, so it is not in the static layer.
         fillRoundedRect(dc, frame.datePill);

@@ -38,12 +38,16 @@ enum ChangeKind {
     CHANGE_MINUTE_DATA = 2,
     // A metric read every second.
     CHANGE_PER_SECOND = 4,
-    CHANGE_ALL = 7
+    // The clock's second, in high power only (Q41): never the hour or
+    // minute, which are CHANGE_CLOCK.
+    CHANGE_SECOND = 8,
+    CHANGE_ALL = 15
 }
 
 // The parts of the frames that a set of change kinds can make stale, as
 // bits; a set of parts is their bitwise or (a Number). One part per field,
-// plus the time, the date, the battery bar and the whole AOD frame.
+// plus the time, the seconds, the date, the battery bar and the whole AOD
+// frame.
 enum FramePart {
     PART_LEFT = 1,
     PART_CENTER = 2,
@@ -53,5 +57,6 @@ enum FramePart {
     PART_TIME = 32,
     PART_DATE = 64,
     PART_BATTERY = 128,
-    PART_AOD = 256
+    PART_AOD = 256,
+    PART_SECONDS = 512
 }

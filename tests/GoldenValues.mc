@@ -12,7 +12,8 @@
 // head dot became the lit bezel ticks and the lead tick, and the static
 // layer's bezel track became the edge mask and the 60 unlit ticks (in
 // ring order); every new value checked against an independent computation
-// of the design's stepRing.
+// of the design's stepRing. Re-recorded for the seconds (2026-11-15): every
+// frame gained the seconds, 00 at (309, 127) in the ink; nothing else changed.
 // Re-record only for an intended change to what is drawn; see GoldenTest.
 import Toybox.Lang;
 
@@ -20,24 +21,25 @@ import Toybox.Lang;
 module GoldenValues {
     const FRAMES = {
         "missing" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=SUN 01/01|" +
-            "dateWidth=100|dateX=158|dateY=164|weekday=SUN|weekdayColor=8EE3B8|dayMonth=01/01|" +
-            "dayMonthX=204|dayMonthColor=FFFFFF|datePill=R(144,162,128,28,14,000000)|" +
-            "batteryLit=[]|bezelLit=[]|bezelLead=none|goalReached=no|" +
-            "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
-            "iconColor=8C8C8C|number=--|numberFont=Number22|numberWidth=18|numberX=210|" +
-            "numberY=341|numberColor=8C8C8C|goal=|goalX=233|goalY=0|goalColor=000000}|" +
-            "left={arcs=[]|caps=[]|dot=none|icon=U+E001|iconX=76|iconY=222|iconColor=8C8C8C|" +
-            "number=--|numberColor=8C8C8C|numberFont=Number26|numberWidth=22|numberX=77|" +
-            "numberY=247}|center={arcs=[]|caps=[]|dot=none|icon=U+E000|iconX=196|iconY=219|" +
-            "iconColor=8C8C8C|number=--|numberColor=8C8C8C|numberFont=Number48|numberWidth=40|" +
-            "numberX=188|numberY=240}|right={arcs=[]|caps=[]|dot=none|icon=U+E002|iconX=316|" +
-            "iconY=222|iconColor=8C8C8C|number=--|numberColor=8C8C8C|numberFont=Number26|" +
-            "numberWidth=22|numberX=317|numberY=247}",
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=SUN 01/01|dateWidth=100|" +
+            "dateX=158|dateY=164|weekday=SUN|weekdayColor=8EE3B8|dayMonth=01/01|dayMonthX=204|" +
+            "dayMonthColor=FFFFFF|datePill=R(144,162,128,28,14,000000)|batteryLit=[]|bezelLit=[]|" +
+            "bezelLead=none|goalReached=no|bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|" +
+            "iconX=140|iconY=344|iconColor=8C8C8C|number=--|numberFont=Number22|numberWidth=18|" +
+            "numberX=210|numberY=341|numberColor=8C8C8C|goal=|goalX=233|goalY=0|" +
+            "goalColor=000000}|left={arcs=[]|caps=[]|dot=none|icon=U+E001|iconX=76|iconY=222|" +
+            "iconColor=8C8C8C|number=--|numberColor=8C8C8C|numberFont=Number26|numberWidth=22|" +
+            "numberX=77|numberY=247}|center={arcs=[]|caps=[]|dot=none|icon=U+E000|iconX=196|" +
+            "iconY=219|iconColor=8C8C8C|number=--|numberColor=8C8C8C|numberFont=Number48|" +
+            "numberWidth=40|numberX=188|numberY=240}|right={arcs=[]|caps=[]|dot=none|icon=U+E002|" +
+            "iconX=316|iconY=222|iconColor=8C8C8C|number=--|numberColor=8C8C8C|" +
+            "numberFont=Number26|numberWidth=22|numberX=317|numberY=247}",
         "typical" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -63,9 +65,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "warning1" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,FF8A3D)A(208,208,180,4,117,112,5,FF8A3D)]|" +
             "bezelLit=[L(208,12,208,0,5,436C57)L(229,8,230,1,3,47715C)L(250,11,251,5,3,4A7660)" +
             "L(270,17,272,10,3,4D7C64)L(290,24,293,18,3,518169)L(307,37,312,28,4,54876D)" +
@@ -88,9 +91,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "warning2" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,FF4D4D)]|bezelLit=[L(208,12,208,0,5,436C57)" +
             "L(229,8,230,1,3,47715C)L(250,11,251,5,3,4A7660)L(270,17,272,10,3,4D7C64)" +
             "L(290,24,293,18,3,518169)L(307,37,312,28,4,54876D)L(326,45,330,40,3,588C72)" +
@@ -113,9 +117,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "zones1" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -143,9 +148,10 @@ module GoldenValues {
             "number=100|numberColor=FFFFFF|numberFont=Number26|numberWidth=48|numberX=304|" +
             "numberY=247}",
         "zones2" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -173,9 +179,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=120|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
         "zones3" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -204,9 +211,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=140|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
         "zones4" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -236,9 +244,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=160|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
         "zones5" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -269,9 +278,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=180|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
         "zonesMissing" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -297,9 +307,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=140|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=46|numberX=305|numberY=247}",
         "goalReached" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -337,9 +348,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "goalReachedLong" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -377,9 +389,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "steps100000" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -417,9 +430,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "fiveDigits" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -456,9 +470,10 @@ module GoldenValues {
             "iconY=222|iconColor=8C8C8C|number=72|numberColor=FFFFFF|numberFont=Number26|" +
             "numberWidth=30|numberX=313|numberY=247}",
         "negativeSteps" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -476,9 +491,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "noGoal" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -496,21 +512,22 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "dateLong" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=WEDNESDAY 28/11|" +
-            "dateWidth=183|dateX=117|dateY=164|weekday=WEDNESDAY|weekdayColor=8EE3B8|" +
-            "dayMonth=28/11|dayMonthX=247|dayMonthColor=FFFFFF|" +
-            "datePill=R(103,162,211,28,14,000000)|batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)" +
-            "A(208,208,180,4,117,112,5,8EE3B8)A(208,208,180,4,110,105,5,8EE3B8)" +
-            "A(208,208,180,4,103,98,5,8EE3B8)A(208,208,180,4,96,91,5,8EE3B8)" +
-            "A(208,208,180,4,89,84,5,8EE3B8)A(208,208,180,4,82,77,5,8EE3B8)]|" +
-            "bezelLit=[L(208,12,208,0,5,436C57)L(229,8,230,1,3,47715C)L(250,11,251,5,3,4A7660)" +
-            "L(270,17,272,10,3,4D7C64)L(290,24,293,18,3,518169)L(307,37,312,28,4,54876D)" +
-            "L(326,45,330,40,3,588C72)L(342,59,347,53,3,5B9276)L(357,74,363,69,3,5E977A)" +
-            "L(371,90,376,86,3,629C7F)L(379,109,388,104,4,65A283)L(392,126,398,123,3,69A788)" +
-            "L(399,146,406,144,3,6CAD8C)L(405,166,411,165,3,6FB290)L(408,187,415,186,3,73B895)" +
-            "L(404,208,416,208,5,76BD99)L(408,229,415,230,3,7AC29E)L(405,250,411,251,3,7DC8A2)" +
-            "L(399,270,406,272,3,80CDA6)L(392,290,398,293,3,84D3AB)L(379,307,388,312,4,87D8AF)" +
-            "L(371,326,376,330,3,8BDEB4)]|bezelLead=L(353,338,363,347,4,FFFFFF)|goalReached=no|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=WEDNESDAY 28/11|dateWidth=183|" +
+            "dateX=117|dateY=164|weekday=WEDNESDAY|weekdayColor=8EE3B8|dayMonth=28/11|" +
+            "dayMonthX=247|dayMonthColor=FFFFFF|datePill=R(103,162,211,28,14,000000)|" +
+            "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
+            "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
+            "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
+            "A(208,208,180,4,82,77,5,8EE3B8)]|bezelLit=[L(208,12,208,0,5,436C57)" +
+            "L(229,8,230,1,3,47715C)L(250,11,251,5,3,4A7660)L(270,17,272,10,3,4D7C64)" +
+            "L(290,24,293,18,3,518169)L(307,37,312,28,4,54876D)L(326,45,330,40,3,588C72)" +
+            "L(342,59,347,53,3,5B9276)L(357,74,363,69,3,5E977A)L(371,90,376,86,3,629C7F)" +
+            "L(379,109,388,104,4,65A283)L(392,126,398,123,3,69A788)L(399,146,406,144,3,6CAD8C)" +
+            "L(405,166,411,165,3,6FB290)L(408,187,415,186,3,73B895)L(404,208,416,208,5,76BD99)" +
+            "L(408,229,415,230,3,7AC29E)L(405,250,411,251,3,7DC8A2)L(399,270,406,272,3,80CDA6)" +
+            "L(392,290,398,293,3,84D3AB)L(379,307,388,312,4,87D8AF)L(371,326,376,330,3,8BDEB4)]|" +
+            "bezelLead=L(353,338,363,347,4,FFFFFF)|goalReached=no|" +
             "bottom={pill=R(126,336,164,40,20,000000)|icon=U+E003|iconX=140|iconY=344|" +
             "iconColor=8C8C8C|number=1.147|numberFont=Number22|numberWidth=53|numberX=175|" +
             "numberY=341|numberColor=FFFFFF|goal=/ 3.110|goalX=233|goalY=346|goalColor=8C8C8C}|" +
@@ -524,9 +541,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "dateTooLong" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=WED 28/11|" +
-            "dateWidth=103|dateX=157|dateY=164|weekday=WED|weekdayColor=8EE3B8|dayMonth=28/11|" +
-            "dayMonthX=207|dayMonthColor=FFFFFF|datePill=R(143,162,131,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=WED 28/11|dateWidth=103|" +
+            "dateX=157|dateY=164|weekday=WED|weekdayColor=8EE3B8|dayMonth=28/11|dayMonthX=207|" +
+            "dayMonthColor=FFFFFF|datePill=R(143,162,131,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -552,9 +570,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "dateCyrillic" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=THU 12/11|" +
-            "dateWidth=95|dateX=161|dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=206|dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=THU 12/11|dateWidth=95|dateX=161|" +
+            "dateY=164|weekday=THU|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=206|" +
+            "dayMonthColor=FFFFFF|datePill=R(147,162,123,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -580,9 +599,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "dateVietnamese" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=T5 12/11|" +
-            "dateWidth=79|dateX=169|dateY=164|weekday=T5|weekdayColor=8EE3B8|dayMonth=12/11|" +
-            "dayMonthX=198|dayMonthColor=FFFFFF|datePill=R(155,162,107,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=T5 12/11|dateWidth=79|dateX=169|" +
+            "dateY=164|weekday=T5|weekdayColor=8EE3B8|dayMonth=12/11|dayMonthX=198|" +
+            "dayMonthColor=FFFFFF|datePill=R(155,162,107,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -608,9 +628,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "dateVietnameseSunday" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=CN 15/11|" +
-            "dateWidth=84|dateX=166|dateY=164|weekday=CN|weekdayColor=8EE3B8|dayMonth=15/11|" +
-            "dayMonthX=200|dayMonthColor=FFFFFF|datePill=R(152,162,112,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=CN 15/11|dateWidth=84|dateX=166|" +
+            "dateY=164|weekday=CN|weekdayColor=8EE3B8|dayMonth=15/11|dayMonthX=200|" +
+            "dayMonthColor=FFFFFF|datePill=R(152,162,112,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
@@ -636,9 +657,10 @@ module GoldenValues {
             "dot=none|icon=U+E002|iconX=316|iconY=222|iconColor=8C8C8C|number=72|" +
             "numberColor=FFFFFF|numberFont=Number26|numberWidth=30|numberX=313|numberY=247}",
         "dateDecember" =>
-            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|date=SAT 31/12|" +
-            "dateWidth=96|dateX=160|dateY=164|weekday=SAT|weekdayColor=8EE3B8|dayMonth=31/12|" +
-            "dayMonthX=204|dayMonthColor=FFFFFF|datePill=R(146,162,124,28,14,000000)|" +
+            "time=08:42|timeWidth=189|timeX=114|timeY=70|timeColor=000000|seconds=00|" +
+            "secondsX=309|secondsY=127|secondsColor=000000|date=SAT 31/12|dateWidth=96|dateX=160|" +
+            "dateY=164|weekday=SAT|weekdayColor=8EE3B8|dayMonth=31/12|dayMonthX=204|" +
+            "dayMonthColor=FFFFFF|datePill=R(146,162,124,28,14,000000)|" +
             "batteryLit=[A(208,208,180,4,124,119,5,8EE3B8)A(208,208,180,4,117,112,5,8EE3B8)" +
             "A(208,208,180,4,110,105,5,8EE3B8)A(208,208,180,4,103,98,5,8EE3B8)" +
             "A(208,208,180,4,96,91,5,8EE3B8)A(208,208,180,4,89,84,5,8EE3B8)" +
