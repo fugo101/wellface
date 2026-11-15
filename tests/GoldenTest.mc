@@ -7,8 +7,8 @@ import Toybox.Test;
 // refactor, for a fixed set of snapshots (missing data, each warning level,
 // goal reached, zones 0-5, short and long dates with the English fallback
 // and the Vietnamese short forms, steps at 100.000, twelve consecutive
-// minutes of burn-in offsets), plus the static layer, the bezel notches and
-// the long-press targets. Every later change must leave them equal.
+// minutes of burn-in offsets), plus the static layer and the long-press
+// targets. Every later change must leave them equal.
 //
 // A failing golden test prints each differing value as
 // "GOLDEN <group> <name>=<actual>". Re-record only for an intended change
@@ -256,13 +256,6 @@ module GoldenTest {
     }
 
     (:test)
-    function bezelNotchesMatchTheGoldenValue(logger as Test.Logger) as Boolean {
-        var notches = FrameEquality.describeLines(FaceModel.bezelNotches(config()));
-        Test.assert(matches("notches", "mint", notches, GoldenValues.BEZEL_NOTCHES));
-        return true;
-    }
-
-    (:test)
     function longPressTargetsMatchTheGoldenValue(logger as Test.Logger) as Boolean {
         var rows = "";
         for (var y = TARGET_STEP / 2; y < 416; y += TARGET_STEP) {
@@ -318,8 +311,8 @@ module GoldenTest {
             case 13: f.dayMonthColor++; break;
             case 14: f.datePill = otherRect(); break;
             case 15: f.batteryLit = [] as Array<Arc>; break;
-            case 16: f.bezelProgress = otherArc(); break;
-            case 17: f.bezelHead = null; break;
+            case 16: f.bezelLit = [] as Array<Line>; break;
+            case 17: f.bezelLead = null; break;
             case 18: f.bottomGoalReached = !f.bottomGoalReached; break;
             case 19: f.bottomField.number += "0"; break;
             case 20: f.leftField.number += "0"; break;
@@ -394,18 +387,19 @@ module GoldenTest {
     function changeLayer(l as StaticLayer, i as Number) as Boolean {
         switch (i) {
             case 0: l.backgroundColor++; break;
-            case 1: l.timeBandRim = otherRect(); break;
-            case 2: l.fieldRims = [] as Array<Circle>; break;
-            case 3: l.bottomFieldRim = otherRect(); break;
-            case 4: l.timeBandWell = otherRect(); break;
-            case 5: l.timeBand = otherRect(); break;
-            case 6: l.bezelTrack = otherArc(); break;
-            case 7: l.batteryWell = otherArc(); break;
-            case 8: l.batteryCaps = [] as Array<Circle>; break;
-            case 9: l.batteryTrack = [] as Array<Arc>; break;
-            case 10: l.fieldWells = [] as Array<Circle>; break;
-            case 11: l.fieldTracks = [] as Array<Arc>; break;
-            case 12: l.fieldTrackCaps = [] as Array<Circle>; break;
+            case 1: l.edgeMask = otherArc(); break;
+            case 2: l.bezelTicks = [] as Array<Line>; break;
+            case 3: l.timeBandRim = otherRect(); break;
+            case 4: l.fieldRims = [] as Array<Circle>; break;
+            case 5: l.bottomFieldRim = otherRect(); break;
+            case 6: l.timeBandWell = otherRect(); break;
+            case 7: l.timeBand = otherRect(); break;
+            case 8: l.batteryWell = otherArc(); break;
+            case 9: l.batteryCaps = [] as Array<Circle>; break;
+            case 10: l.batteryTrack = [] as Array<Arc>; break;
+            case 11: l.fieldWells = [] as Array<Circle>; break;
+            case 12: l.fieldTracks = [] as Array<Arc>; break;
+            case 13: l.fieldTrackCaps = [] as Array<Circle>; break;
             default: return false;
         }
         return true;
@@ -480,7 +474,7 @@ module GoldenTest {
     const FIELD_MEMBERS = 13;
     const BOTTOM_FIELD_MEMBERS = 15;
     const AOD_MEMBERS = 12;
-    const LAYER_MEMBERS = 13;
+    const LAYER_MEMBERS = 14;
     const ARC_MEMBERS = 8;
     const RECT_MEMBERS = 6;
     const CIRCLE_MEMBERS = 4;
@@ -493,8 +487,6 @@ module GoldenTest {
         Test.assert(FrameEquality.aodFramesEqual(referenceAod(), referenceAod()));
         Test.assert(FrameEquality.layersEqual(FaceModel.staticLayer(config()),
             FaceModel.staticLayer(config())));
-        Test.assert(FrameEquality.linesEqual(FaceModel.bezelNotches(config()),
-            FaceModel.bezelNotches(config())));
         Test.assert(FrameEquality.targetsEqual(FaceModel.longPressTarget(208, 256, config()),
             FaceModel.longPressTarget(208, 256, config())));
         Test.assert(FrameEquality.targetsEqual(null, null));
@@ -584,14 +576,14 @@ module GoldenTest {
         return true;
     }
 
-    // Arcs, rounded rects and circles through a frame, lines through the
-    // notches, targets on their own.
+    // Arcs, rounded rects, circles and lines through a frame, targets on
+    // their own.
     (:test)
     function everyNestedMemberIsCompared(logger as Test.Logger) as Boolean {
         var i = 0;
         while (true) {
             var changed = referenceFrame();
-            if (!changeArc(changed.bezelProgress, i)) {
+            if (!changeArc(changed.batteryLit[0], i)) {
                 break;
             }
             Test.assertMessage(!FrameEquality.framesEqual(referenceFrame(), changed),
@@ -615,9 +607,7 @@ module GoldenTest {
         i = 0;
         while (true) {
             var changed = referenceFrame();
-            var head = changed.bezelHead;
-            Test.assert(head != null);
-            if (!changeCircle(head as Circle, i)) {
+            if (!changeCircle(changed.centerField.caps[0], i)) {
                 break;
             }
             Test.assertMessage(!FrameEquality.framesEqual(referenceFrame(), changed),
@@ -628,11 +618,13 @@ module GoldenTest {
 
         i = 0;
         while (true) {
-            var changed = FaceModel.bezelNotches(config());
-            if (!changeLine(changed[0], i)) {
+            var changed = referenceFrame();
+            var lead = changed.bezelLead;
+            Test.assert(lead != null);
+            if (!changeLine(lead as Line, i)) {
                 break;
             }
-            Test.assertMessage(!FrameEquality.linesEqual(FaceModel.bezelNotches(config()), changed),
+            Test.assertMessage(!FrameEquality.framesEqual(referenceFrame(), changed),
                 "line member " + i + " is not compared");
             i++;
         }

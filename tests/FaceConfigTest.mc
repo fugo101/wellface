@@ -152,6 +152,12 @@ module FaceConfigTest {
         }
     }
 
+    function addLines(colors as Array<Number>, lines as Array<Line>) as Void {
+        for (var i = 0; i < lines.size(); i++) {
+            colors.add(lines[i].color);
+        }
+    }
+
     function addCircles(colors as Array<Number>, circles as Array<Circle>) as Void {
         for (var i = 0; i < circles.size(); i++) {
             colors.add(circles[i].color);
@@ -162,11 +168,15 @@ module FaceConfigTest {
     // text or arc list draws nothing).
     function frameColors(frame as Frame) as Array<Number> {
         var colors = [frame.timeColor, frame.weekdayColor, frame.dayMonthColor,
-            frame.datePill.color, frame.bezelProgress.color] as Array<Number>;
+            frame.datePill.color] as Array<Number>;
         addArcs(colors, frame.batteryLit);
-        var head = frame.bezelHead;
-        if (head != null) {
-            colors.add(head.color);
+        // Before the goal the lit ticks are comet colors (assertCometColors);
+        // once it is reached they are the accent.
+        var lead = frame.bezelLead;
+        if (lead != null) {
+            colors.add(lead.color);
+        } else {
+            addLines(colors, frame.bezelLit);
         }
         var bottom = frame.bottomField;
         colors.add(bottom.pill.color);
@@ -186,19 +196,18 @@ module FaceConfigTest {
         return colors;
     }
 
-    // Every color of the static layer and the notches, member by member.
-    function staticColors(layer as StaticLayer, notches as Array<Line>) as Array<Number> {
-        var colors = [layer.backgroundColor, layer.timeBandRim.color, layer.bottomFieldRim.color,
-            layer.timeBandWell.color, layer.timeBand.color, layer.bezelTrack.color,
+    // Every color of the static layer, member by member.
+    function staticColors(layer as StaticLayer) as Array<Number> {
+        var colors = [layer.backgroundColor, layer.edgeMask.color, layer.timeBandRim.color,
+            layer.bottomFieldRim.color, layer.timeBandWell.color, layer.timeBand.color,
             layer.batteryWell.color] as Array<Number>;
         addCircles(colors, layer.fieldRims);
         addCircles(colors, layer.batteryCaps);
         addArcs(colors, layer.batteryTrack);
         addCircles(colors, layer.fieldWells);
         addArcs(colors, layer.fieldTracks);
-        for (var i = 0; i < notches.size(); i++) {
-            colors.add(notches[i].color);
-        }
+        addCircles(colors, layer.fieldTrackCaps);
+        addLines(colors, layer.bezelTicks);
         return colors;
     }
 
@@ -244,9 +253,27 @@ module FaceConfigTest {
         }
     }
 
+    // Story 51: every comet color lies between the theme's comet base and
+    // its accent in each channel, so it comes from the theme's accent.
+    function assertCometColors(frame as Frame, roles as Array<Number>, what as String) as Void {
+        if (frame.bezelLead == null) {
+            return;
+        }
+        var base = roles[ThemeTest.COMET_BASE];
+        var accent = roles[ThemeTest.ACCENT];
+        for (var i = 0; i < frame.bezelLit.size(); i++) {
+            var color = frame.bezelLit[i].color;
+            for (var shift = 16; shift >= 0; shift -= 8) {
+                var c = (color >> shift) & 0xFF;
+                Test.assertMessage(c >= ((base >> shift) & 0xFF) && c <= ((accent >> shift) & 0xFF),
+                    what + " comet color " + color.format("%06X") + " is not from the accent");
+            }
+        }
+    }
+
     // Stories 20, 51, 52: with a non-mint accent (orchid), every themed color
-    // of the frame, the static layer and the bezel notches (background, well
-    // rims, the accent's uses) differs from mint's and is orchid's derived
+    // of the frame and the static layer (background, well rims, the
+    // accent's uses, the comet) differs from mint's and is orchid's derived
     // value; every other color is one of the fixed roles. The AOD frame is
     // drawn in orchid's AOD color and the black of Always On (Q17).
     (:test)
@@ -260,12 +287,14 @@ module FaceConfigTest {
         allowed.addAll(ThemeTest.FIXED);
         var config = resolve(Themes.ORCHID, METRIC_STRESS, METRIC_BODY_BATTERY, METRIC_HEART_RATE,
             METRIC_STEPS, METRIC_STEPS);
-        var used = staticColors(FaceModel.staticLayer(config), FaceModel.bezelNotches(config));
+        var used = staticColors(FaceModel.staticLayer(config));
         assertThemeColors(used, allowed, "static");
         var snapshots = themeSnapshots();
         for (var i = 0; i < snapshots.size(); i++) {
-            var colors = frameColors(FaceModel.compute(snapshots[i], config));
+            var frame = FaceModel.compute(snapshots[i], config);
+            var colors = frameColors(frame);
             assertThemeColors(colors, allowed, "frame " + i);
+            assertCometColors(frame, orchid, "frame " + i);
             used.addAll(colors);
 
             var aod = FaceModel.computeAod(snapshots[i], config);
@@ -274,15 +303,9 @@ module FaceConfigTest {
             Test.assertEqual(0x000000, aod.datePillInner.color);
         }
         // The snapshots use every role drawn today, so none is left
-        // untested. The every-5th and quarter unlit tick colors wait for the
-        // bezel ticks.
+        // untested.
         var drawn = themed;
-        var fixed = ThemeTest.FIXED;
-        for (var i = 0; i < fixed.size(); i++) {
-            if (i != ThemeTest.TICK_UNLIT_FIFTH && i != ThemeTest.TICK_UNLIT_QUARTER) {
-                drawn.add(fixed[i]);
-            }
-        }
+        drawn.addAll(ThemeTest.FIXED);
         for (var i = 0; i < drawn.size(); i++) {
             Test.assertMessage(used.indexOf(drawn[i]) >= 0,
                 "color " + drawn[i].format("%06X") + " is not used");

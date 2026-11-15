@@ -24,10 +24,6 @@ module FrameEquality {
         return describeLayer(a).equals(describeLayer(b));
     }
 
-    function linesEqual(a as Array<Line>, b as Array<Line>) as Boolean {
-        return describeLines(a).equals(describeLines(b));
-    }
-
     function targetsEqual(a as LongPressTarget?, b as LongPressTarget?) as Boolean {
         return describeTarget(a).equals(describeTarget(b));
     }
@@ -49,8 +45,8 @@ module FrameEquality {
             + "|dayMonthColor=" + color(f.dayMonthColor)
             + "|datePill=" + rect(f.datePill)
             + "|batteryLit=" + arcs(f.batteryLit)
-            + "|bezelProgress=" + arc(f.bezelProgress)
-            + "|bezelHead=" + optionalCircle(f.bezelHead)
+            + "|bezelLit=" + describeLines(f.bezelLit)
+            + "|bezelLead=" + optionalLine(f.bezelLead)
             + "|goalReached=" + flag(f.bottomGoalReached)
             + "|bottom={" + describeBottomField(f.bottomField) + "}"
             + "|left={" + describeField(f.leftField) + "}"
@@ -109,12 +105,13 @@ module FrameEquality {
 
     function describeLayer(l as StaticLayer) as String {
         return "background=" + color(l.backgroundColor)
+            + "|edgeMask=" + arc(l.edgeMask)
+            + "|bezelTicks=" + describeLines(l.bezelTicks)
             + "|timeBandRim=" + rect(l.timeBandRim)
             + "|fieldRims=" + unordered(circleTexts(l.fieldRims))
             + "|bottomFieldRim=" + rect(l.bottomFieldRim)
             + "|timeBandWell=" + rect(l.timeBandWell)
             + "|timeBand=" + rect(l.timeBand)
-            + "|bezelTrack=" + arc(l.bezelTrack)
             + "|batteryWell=" + arc(l.batteryWell)
             + "|batteryCaps=" + unordered(circleTexts(l.batteryCaps))
             + "|batteryTrack=" + unordered(arcTexts(l.batteryTrack))
@@ -123,7 +120,8 @@ module FrameEquality {
             + "|fieldTrackCaps=" + unordered(circleTexts(l.fieldTrackCaps));
     }
 
-    // The static layer's arrays in sorted order: their elements never
+    // The static layer's arrays in sorted order (except the bezel ticks,
+    // whose index is their position on the ring): their elements never
     // overlap, so the order they are drawn in does not change a pixel, and
     // the spec keeps tests independent of it.
     function unordered(items as Array<String>) as String {
@@ -247,6 +245,10 @@ module FrameEquality {
     function line(l as Line) as String {
         return "L(" + l.x1 + "," + l.y1 + "," + l.x2 + "," + l.y2 + "," + l.pen + ","
             + color(l.color) + ")";
+    }
+
+    function optionalLine(l as Line?) as String {
+        return l == null ? "none" : line(l);
     }
 
     function color(value as Number) as String {

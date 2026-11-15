@@ -1,4 +1,5 @@
 import Toybox.Lang;
+import Toybox.Math;
 
 // The fields, named by position (Q29). The bezel ring counts as a field: it
 // shows a goal metric.
@@ -76,6 +77,48 @@ class RoundField {
         self.iconY = iconY;
         self.numberY = numberY;
         self.largeNumber = largeNumber;
+    }
+}
+
+// The three tiers of bezel ticks, each with its own length, pen and unlit
+// color.
+enum TickTier {
+    TICK_ORDINARY,
+    // Every 5th tick.
+    TICK_FIFTH,
+    // The ticks at 12, 3, 6 and 9 o'clock.
+    TICK_QUARTER
+}
+
+// One bezel tick's fixed geometry, in whole pixels: the line from its inner
+// end (x1, y1) to its outer end (x2, y2) on the screen's edge, the inner end
+// it has as the lead tick, its pen and its tier.
+class BezelTick {
+    public var x1 as Number;
+    public var y1 as Number;
+    public var x2 as Number;
+    public var y2 as Number;
+    public var leadX as Number;
+    public var leadY as Number;
+    public var pen as Number;
+    public var tier as TickTier;
+
+    function initialize(x1 as Number, y1 as Number, x2 as Number, y2 as Number,
+            leadX as Number, leadY as Number, pen as Number, tier as TickTier) {
+        self.x1 = x1;
+        self.y1 = y1;
+        self.x2 = x2;
+        self.y2 = y2;
+        self.leadX = leadX;
+        self.leadY = leadY;
+        self.pen = pen;
+        self.tier = tier;
+    }
+
+    // The tick as a line in `color`, as drawn unlit or lit (not as the lead
+    // tick).
+    function line(color as Number) as Line {
+        return new Line(x1, y1, x2, y2, pen, color);
     }
 }
 
@@ -200,16 +243,73 @@ module Layout {
             CENTER_NUMBER_Y, true);
     }
 
-    // The bezel ring, on the screen's edge.
-    const BEZEL_RADIUS = 204;
-    const BEZEL_PEN = 8;
-    // The dot at the head of the goal metric's progress, centered on the ring.
-    const BEZEL_HEAD_RADIUS = 4;
-    // Notches across the ring at 3, 6 and 9 o'clock, in design degrees.
-    const BEZEL_NOTCHES = [90, 180, 270] as Array<Number>;
-    const BEZEL_NOTCH_INNER = 198;
-    const BEZEL_NOTCH_OUTER = 210;
-    const BEZEL_NOTCH_PEN = 3;
+    // The bezel ring: 60 bezel ticks, tick i at i x BEZEL_TICK_STEP design
+    // degrees (0 = 12 o'clock, clockwise), each a flat-ended line from its
+    // inner radius out to BEZEL_OUTER, in three tiers like a watch's minute
+    // track: ordinary, every 5th, and at 12/3/6/9 o'clock (0/25/50/75% of
+    // the goal). The lead tick reaches in to BEZEL_LEAD_INNER, with a pen of
+    // at least BEZEL_LEAD_MIN_PEN.
+    const BEZEL_TICKS = 60;
+    const BEZEL_TICK_STEP = 6;
+    const BEZEL_OUTER = 208;
+    const BEZEL_INNER = 201;
+    const BEZEL_PEN = 3;
+    const BEZEL_FIFTH_INNER = 198;
+    const BEZEL_FIFTH_PEN = 4;
+    const BEZEL_QUARTER_INNER = 196;
+    const BEZEL_QUARTER_PEN = 5;
+    const BEZEL_LEAD_INNER = 195;
+    const BEZEL_LEAD_MIN_PEN = 4;
+
+    // The edge mask: a black ring over r 194-208, drawn after the background
+    // and before the bezel ticks, so nothing on the background (the contour
+    // texture) runs under the ticks.
+    const EDGE_MASK_RADIUS = 201;
+    const EDGE_MASK_PEN = 14;
+
+    // The bezel tick table, built on first use, then kept.
+    var _bezelTicks as Array<BezelTick>? = null;
+
+    // The 60 bezel ticks, tick i at index i. Shared: never change them.
+    function bezelTicks() as Array<BezelTick> {
+        var ticks = _bezelTicks;
+        if (ticks == null) {
+            ticks = new Array<BezelTick>[BEZEL_TICKS];
+            for (var i = 0; i < BEZEL_TICKS; i++) {
+                ticks[i] = bezelTick(i);
+            }
+            _bezelTicks = ticks;
+        }
+        return ticks;
+    }
+
+    // Tick i of the bezel ring.
+    function bezelTick(i as Number) as BezelTick {
+        var tier = i % 15 == 0 ? TICK_QUARTER : (i % 5 == 0 ? TICK_FIFTH : TICK_ORDINARY);
+        var inner = tier == TICK_QUARTER ? BEZEL_QUARTER_INNER
+            : (tier == TICK_FIFTH ? BEZEL_FIFTH_INNER : BEZEL_INNER);
+        var pen = tier == TICK_QUARTER ? BEZEL_QUARTER_PEN
+            : (tier == TICK_FIFTH ? BEZEL_FIFTH_PEN : BEZEL_PEN);
+        // Double precision, so the exact halves of the design's geometry
+        // (305.5 at r 195 and 30 deg, for one) stay halves.
+        var angle = Math.toRadians((i * BEZEL_TICK_STEP).toDouble());
+        var sin = Math.sin(angle);
+        var cos = Math.cos(angle);
+        return new BezelTick(
+            wholePixel(CENTER_X + inner * sin), wholePixel(CENTER_Y - inner * cos),
+            wholePixel(CENTER_X + BEZEL_OUTER * sin), wholePixel(CENTER_Y - BEZEL_OUTER * cos),
+            wholePixel(CENTER_X + BEZEL_LEAD_INNER * sin),
+            wholePixel(CENTER_Y - BEZEL_LEAD_INNER * cos),
+            pen, tier);
+    }
+
+    // A coordinate rounded half up to a whole pixel. drawLine drops the
+    // fraction of its endpoints (checked in the simulator, SDK 9.3.0), so
+    // the face rounds them itself. The 1e-6 keeps an exact half that double
+    // precision puts just below it (110.49999999999997 for 110.5) a half.
+    function wholePixel(value as Decimal) as Number {
+        return Math.floor(value + 0.5d + 1e-6d).toNumber();
+    }
 
     // The background disc.
     const DISC_RADIUS = 194;

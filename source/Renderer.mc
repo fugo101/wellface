@@ -13,7 +13,6 @@ import Toybox.Lang;
 // build").
 class Renderer {
     private var _layer as StaticLayer = new StaticLayer();
-    private var _notches as Array<Line> = [] as Array<Line>;
     private var _fonts as Fonts;
     // The reference and the bitmap it returned. Holding the bitmap keeps it
     // locked in the graphics pool, so it is drawn once and never purged
@@ -26,11 +25,10 @@ class Renderer {
         _fonts = fonts;
     }
 
-    // The static layer and bezel notches of a newly applied face config. The
-    // buffer is kept and repainted once, on the next high-power update.
-    function setStatic(layer as StaticLayer, notches as Array<Line>) as Void {
+    // The static layer of a newly applied face config. The buffer is kept
+    // and repainted once, on the next high-power update.
+    function setStatic(layer as StaticLayer) as Void {
         _layer = layer;
-        _notches = notches;
         // Dropping the bitmap makes staticBitmap get it again from the
         // reference and paint the new layer into it.
         _bitmap = null;
@@ -47,15 +45,12 @@ class Renderer {
             paintStatic(dc, _layer);
         }
 
-        // The notches go over the progress so the quarters stay readable,
-        // and the head dot over both.
-        drawArc(dc, frame.bezelProgress);
-        for (var i = 0; i < _notches.size(); i++) {
-            drawLine(dc, _notches[i]);
-        }
-        var head = frame.bezelHead;
-        if (head != null) {
-            fillCircle(dc, head);
+        // The lit bezel ticks over the unlit ones in the buffer, the lead
+        // tick last.
+        drawLines(dc, frame.bezelLit);
+        var lead = frame.bezelLead;
+        if (lead != null) {
+            drawLine(dc, lead);
         }
 
         var lit = frame.batteryLit;
@@ -182,10 +177,11 @@ class Renderer {
     private function paintStatic(dc as Dc, layer as StaticLayer) as Void {
         Timing.start(TIMING_STATIC);
         clear(dc);
-        drawArc(dc, layer.bezelTrack);
 
         dc.setColor(layer.backgroundColor, layer.backgroundColor);
         dc.fillCircle(Layout.CENTER_X, Layout.CENTER_Y, Layout.DISC_RADIUS);
+        drawArc(dc, layer.edgeMask);
+        drawLines(dc, layer.bezelTicks);
 
         fillRoundedRect(dc, layer.timeBandRim);
         for (var i = 0; i < layer.fieldRims.size(); i++) {
@@ -219,6 +215,26 @@ class Renderer {
     private function fillCircle(dc as Dc, circle as Circle) as Void {
         dc.setColor(circle.color, circle.color);
         dc.fillCircle(circle.x, circle.y, circle.radius);
+    }
+
+    // Lines in order, setting the pen and the color only when they change
+    // (bezel ticks come in runs of the same pen, and once the goal is
+    // reached all lit ticks share the accent).
+    private function drawLines(dc as Dc, lines as Array<Line>) as Void {
+        var pen = -1;
+        var color = -1;
+        for (var i = 0; i < lines.size(); i++) {
+            var line = lines[i];
+            if (line.pen != pen) {
+                pen = line.pen;
+                dc.setPenWidth(pen);
+            }
+            if (line.color != color) {
+                color = line.color;
+                dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+            }
+            dc.drawLine(line.x1, line.y1, line.x2, line.y2);
+        }
     }
 
     private function drawLine(dc as Dc, line as Line) as Void {

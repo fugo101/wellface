@@ -210,7 +210,16 @@ module RefreshPlanTest {
         long.setValue(METRIC_STRESS, -1);
         var lowZones = typical();
         lowZones.heartRateZones = [60, 70, 80, 90, 100, 192] as Array<Number>;
-        return [typical(), missing, warning, reached, long, lowZones] as Array<Snapshot>;
+        // The bezel ring: the same lit count as typical (23), one more (24),
+        // all 60 lit one step short of the goal, and steps only.
+        var sameTicks = typical();
+        sameTicks.setValue(METRIC_STEPS, 1150);
+        var moreTicks = typical();
+        moreTicks.setValue(METRIC_STEPS, 1200);
+        var lastStep = typical();
+        lastStep.setValue(METRIC_STEPS, 3109);
+        return [typical(), missing, warning, reached, long, lowZones, sameTicks, moreTicks,
+            lastStep] as Array<Snapshot>;
     }
 
     function withHeartRate(heartRate as Number?) as Snapshot {
@@ -281,6 +290,29 @@ module RefreshPlanTest {
                 FrameEquality.describeFrame(FaceModel.compute(snapshots[i], defaultConfig())),
                 "snapshot " + i);
         }
+        return true;
+    }
+
+    // The lit bezel ticks are recomputed only when their count changes (or
+    // the goal is reached): 1.150 steps light the same 23 ticks as 1.147,
+    // so the update keeps them; 1.200 light 24, so they are new.
+    (:test)
+    function litBezelTicksAreRecomputedOnlyWhenTheirCountChanges(logger as Test.Logger)
+            as Boolean {
+        var config = defaultConfig();
+        var previous = FaceModel.compute(typical(), config);
+        var ticks = previous.bezelLit;
+        var lead = previous.bezelLead;
+        var same = typical();
+        same.setValue(METRIC_STEPS, 1150);
+        var updated = FaceModel.update(previous, same, config, CHANGE_MINUTE_DATA);
+        Test.assert(updated.bezelLit == ticks);
+        Test.assert(updated.bezelLead == lead);
+        var more = typical();
+        more.setValue(METRIC_STEPS, 1200);
+        updated = FaceModel.update(updated, more, config, CHANGE_MINUTE_DATA);
+        Test.assert(updated.bezelLit != ticks);
+        Test.assertEqual(23, updated.bezelLit.size());
         return true;
     }
 

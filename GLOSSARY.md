@@ -96,6 +96,14 @@ _Avoid_: Notch, mark, segment
 The white, longer tick at the front of the lit bezel ticks. There is none before any progress or once the goal is reached.
 _Avoid_: Head, head dot, cursor
 
+**Comet**:
+The lit bezel ticks before the lead tick, dim at 12 o'clock and brighter toward the lead tick: each is the accent scaled by a factor from 0.45 (the comet base) up to 1.
+_Avoid_: Gradient, trail, fade
+
+**Edge mask**:
+The black ring over the edge of the background disc, under the bezel ticks, so nothing on the background runs under them.
+_Avoid_: Bezel track, border, vignette
+
 **Face config**:
 The choices that set up the face: the active theme and the metric shown in each field. There is a built-in default; settings will later produce other face configs.
 _Avoid_: Settings, preferences, profile, layout

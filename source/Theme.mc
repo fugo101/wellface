@@ -1,4 +1,5 @@
 import Toybox.Lang;
+import Toybox.Math;
 
 // A theme (glossary): one accent, from which every themed color is derived
 // on construction (Q42), plus the colors that stay the same in every theme.
@@ -8,8 +9,8 @@ import Toybox.Lang;
 class Theme {
     // --- Themed roles: the accent and the colors derived from it. ---
 
-    // Time band, gauges and bezel progress, lit battery segments,
-    // goal-reached field.
+    // Time band, gauges, lit battery segments, lit bezel ticks once the goal
+    // is reached (and the bright end of the comet), goal-reached field.
     public var accent as Number;
     // The background disc: accent x 0.24.
     public var background as Number;
@@ -27,14 +28,13 @@ class Theme {
 
     // Gauge tracks, unlit zone segments, unlit battery segments.
     public var gaugeTrack as Number = 0x2E3330;
-    // Unlit bezel ticks: ordinary, every 5th, and at 12/3/6/9 o'clock. The
-    // ordinary color also draws the bezel ring track for now.
+    // Unlit bezel ticks: ordinary, every 5th, and at 12/3/6/9 o'clock.
     public var tickUnlit as Number = 0x343B37;
     public var tickUnlitFifth as Number = 0x4A524D;
     public var tickUnlitQuarter as Number = 0x69736D;
-    // Wells, time digits, notches, date pill and bottom field fill.
+    // Wells, edge mask, time digits, date pill and bottom field fill.
     public var ink as Number = 0x000000;
-    // Numbers, date text, bezel head dot.
+    // Numbers, date text, the lead tick, the Body Battery end dot.
     public var text as Number = 0xFFFFFF;
     // Icons without a warning, "/ goal", "--".
     public var secondary as Number = 0x8C8C8C;
@@ -105,5 +105,28 @@ module Themes {
             shaded |= ((channel * percent + 50) / 100) << shift;
         }
         return shaded;
+    }
+
+    // A lit bezel tick's comet color (Q10): each channel of the accent x k,
+    // k = 0.45 + 0.55 x (i + 1) / n for lit tick i of n, from the comet base
+    // (0.45) toward the accent. Computed in double precision in the
+    // design's order (0.55 x (i + 1), then / n, then + 0.45, then x
+    // channel) and rounded half up exactly like the design's Math.round:
+    // integer math would be 1 higher in one channel in 7 exact-half cases.
+    function cometColor(accent as Number, i as Number, n as Number) as Number {
+        var k = 0.45d + 0.55d * (i + 1) / n;
+        var shaded = 0;
+        for (var shift = 16; shift >= 0; shift -= 8) {
+            shaded |= roundHalfUp(((accent >> shift) & 0xFF) * k) << shift;
+        }
+        return shaded;
+    }
+
+    // The nearest whole number, an exact half rounded up, like JavaScript's
+    // Math.round. value - floor(value) is exact in double precision, so a
+    // value just below a half is never pushed over it by adding 0.5.
+    function roundHalfUp(value as Double) as Number {
+        var whole = Math.floor(value) as Double;
+        return (value - whole >= 0.5d ? whole + 1 : whole).toNumber();
     }
 }

@@ -93,12 +93,14 @@ class Frame {
     // The lit battery segments only, leftmost first. The static layer holds
     // all ten unlit ones underneath.
     public var batteryLit as Array<Arc> = [] as Array<Arc>;
-    // The bezel ring's goal metric's progress, over the static track. Sweep
-    // 0 when there is no progress to show.
-    public var bezelProgress as Arc = new Arc(0, 0, 0, 0, 0, 0, 0, 0);
-    // The dot at the head of the progress, null when there is no goal to
-    // show progress toward or the value is missing.
-    public var bezelHead as Circle? = null;
+    // The lit bezel ticks drawn over the unlit ones of the static layer,
+    // tick 0 first: before the goal, ticks 0...n-2 in the comet colors (the
+    // lead tick is bezelLead); once the goal is reached, all 60 in the
+    // accent. Empty when nothing is lit.
+    public var bezelLit as Array<Line> = [] as Array<Line>;
+    // The lead tick (tick n-1, white and longer), null when nothing is lit
+    // or the goal is reached.
+    public var bezelLead as Line? = null;
     // The bottom field's goal reached: the goal is above 0, the value is
     // known and at least the goal. The bottom field switches style on it.
     public var bottomGoalReached as Boolean = false;
@@ -216,15 +218,20 @@ class FieldFrame {
 }
 
 // The parts of the face that depend only on the face config, drawn once into
-// a buffer by the renderer, back to front: bezel track, background disc, well
-// rims, battery well and track, time band well and band, field wells,
-// tracks and track caps. They depend on both the theme and the field
+// a buffer by the renderer, back to front: background disc, edge mask,
+// unlit bezel ticks, well rims, battery well and track, time band well and
+// band, field wells, tracks and track caps. They depend on both the theme and the field
 // mapping: the metric each round field shows decides its track. So the whole
 // layer is rebuilt whenever a face config is applied
 // (WellfaceView.applyConfig), never for a theme change alone. The disc's
 // geometry is in Layout.
 class StaticLayer {
     public var backgroundColor as Number = 0;
+    // The black ring over the disc's edge, before the bezel ticks.
+    public var edgeMask as Arc = new Arc(0, 0, 0, 0, 0, 0, 0, 0);
+    // The 60 bezel ticks, all unlit, tick i at index i. The frame's lit
+    // ticks are drawn over them.
+    public var bezelTicks as Array<Line> = [] as Array<Line>;
     // The well rims (Q39): around the time band's well, around each round
     // field's well (same order as fieldWells) and around the bottom field's
     // pill, which is its own well and is drawn over the rim on every update.
@@ -234,7 +241,6 @@ class StaticLayer {
     // The time band's black well and the band itself.
     public var timeBandWell as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
     public var timeBand as RoundedRect = new RoundedRect(0, 0, 0, 0, 0, 0);
-    public var bezelTrack as Arc = new Arc(0, 0, 0, 0, 0, 0, 0, 0);
     public var batteryWell as Arc = new Arc(0, 0, 0, 0, 0, 0, 0, 0);
     // The round ends of the battery well, left first.
     public var batteryCaps as Array<Circle> = [] as Array<Circle>;
@@ -427,12 +433,8 @@ module FaceModel {
             var bezelMetric = config.metricOf(FIELD_BEZEL_RING);
             var bezelValue = metricValue(bezelMetric, snapshot);
             var bezelGoal = goalOf(bezelMetric, snapshot);
-            var sweep = bezelSweep(bezelValue, bezelGoal);
-            frame.bezelProgress = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.BEZEL_RADIUS,
-                Layout.BEZEL_PEN, 0, sweep, theme.accent);
-            frame.bezelHead = hasGoalProgress(bezelValue, bezelGoal)
-                ? circleAt(sweep, Layout.BEZEL_RADIUS, Layout.BEZEL_HEAD_RADIUS, theme.text)
-                : null;
+            setBezelTicks(frame, bezelLitCount(bezelValue, bezelGoal),
+                goalReached(bezelValue, bezelGoal), theme);
         }
         if ((parts & PART_BOTTOM) != 0) {
             var bottomMetric = config.metricOf(FIELD_BOTTOM);
@@ -888,6 +890,14 @@ module FaceModel {
         var theme = config.theme;
         var layer = new StaticLayer();
         layer.backgroundColor = theme.background;
+        layer.edgeMask = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.EDGE_MASK_RADIUS,
+            Layout.EDGE_MASK_PEN, 0, 360, theme.ink);
+        var ticks = Layout.bezelTicks();
+        var unlit = new Array<Line>[ticks.size()];
+        for (var i = 0; i < ticks.size(); i++) {
+            unlit[i] = ticks[i].line(unlitTickColor(ticks[i].tier, theme));
+        }
+        layer.bezelTicks = unlit;
         var band = new RoundedRect(Layout.BAND_X, Layout.BAND_Y, Layout.BAND_W, Layout.BAND_H,
             Layout.BAND_RADIUS, theme.accent);
         layer.timeBand = band;
@@ -896,8 +906,6 @@ module FaceModel {
         layer.bottomFieldRim = inset(new RoundedRect(Layout.BOTTOM_X, Layout.BOTTOM_Y,
             Layout.BOTTOM_W, Layout.BOTTOM_H, Layout.BOTTOM_RADIUS, theme.ink),
             -Layout.WELL_RIM, theme.wellRim);
-        layer.bezelTrack = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.BEZEL_RADIUS,
-            Layout.BEZEL_PEN, 0, 360, theme.tickUnlit);
 
         var half = Layout.BATTERY_WELL_HALF;
         layer.batteryWell = arc(Layout.CENTER_X, Layout.CENTER_Y, Layout.BATTERY_RADIUS,
@@ -963,32 +971,56 @@ module FaceModel {
         return segments;
     }
 
-    // min(value, goal) x 360 / goal, multiplication first and rounded down,
-    // so the ring closes only when the goal is reached.
-    function bezelSweep(value as Number?, goal as Number?) as Number {
-        // The null checks repeat hasGoalProgress for the type checker.
-        if (value == null || goal == null || !hasGoalProgress(value, goal)) {
-            return 0;
+    // The theme's unlit color for a bezel tick's tier.
+    function unlitTickColor(tier as TickTier, theme as Theme) as Number {
+        if (tier == TICK_QUARTER) {
+            return theme.tickUnlitQuarter;
         }
-        return (value < goal ? value : goal) * 360 / goal;
+        return tier == TICK_FIFTH ? theme.tickUnlitFifth : theme.tickUnlit;
     }
 
-    // The black notches across the bezel ring at 3, 6 and 9 o'clock (one per
-    // design angle in Layout.BEZEL_NOTCHES), from the inner to the outer
-    // radius. Of the face config they depend only on the theme, so the
-    // renderer gets them with the static layer when a face config is
-    // applied; unlike the static layer they are drawn on every update, over
-    // the progress (they are not in the buffer).
-    function bezelNotches(config as ResolvedFaceConfig) as Array<Line> {
-        var angles = Layout.BEZEL_NOTCHES;
-        var notches = new Array<Line>[angles.size()];
-        for (var i = 0; i < angles.size(); i++) {
-            var inner = pointAt(angles[i], Layout.BEZEL_NOTCH_INNER);
-            var outer = pointAt(angles[i], Layout.BEZEL_NOTCH_OUTER);
-            notches[i] = new Line(inner[0], inner[1], outer[0], outer[1],
-                Layout.BEZEL_NOTCH_PEN, config.theme.ink);
+    // The number of lit bezel ticks n (Q10): 0 when the value or the goal is
+    // missing, the goal is 0 or the value is 0; else min(60,
+    // floor(value x 60 / goal) + 1), so tick i lights once the value reaches
+    // i/60 of the goal. In Long, clamped before it is a Number again, so a
+    // huge value cannot overflow.
+    function bezelLitCount(value as Number?, goal as Number?) as Number {
+        // The null checks repeat hasGoalProgress for the type checker.
+        if (value == null || goal == null || !hasGoalProgress(value, goal) || value == 0) {
+            return 0;
         }
-        return notches;
+        var n = value.toLong() * Layout.BEZEL_TICKS / goal + 1;
+        return n < Layout.BEZEL_TICKS ? n.toNumber() : Layout.BEZEL_TICKS;
+    }
+
+    // The frame's lit bezel ticks for n lit ticks: before the goal, ticks
+    // 0...n-2 in the comet colors and tick n-1 as the lead tick; once the
+    // goal is reached, all 60 in the accent and no lead tick. They depend
+    // only on n, the goal reached and the theme, and a frame keeps its
+    // theme (a new face config computes a new frame), so ticks the frame
+    // already holds for the same n and goal reached are kept: the comet
+    // colors are recomputed only when n or the theme changes.
+    function setBezelTicks(frame as Frame, n as Number, reached as Boolean, theme as Theme)
+            as Void {
+        var count = reached ? Layout.BEZEL_TICKS : (n > 0 ? n - 1 : 0);
+        var hasLead = !reached && n > 0;
+        // The count and the lead tick tell n and the goal reached apart:
+        // 60 lit ticks and no lead tick only once the goal is reached.
+        if (frame.bezelLit.size() == count && (frame.bezelLead != null) == hasLead) {
+            return;
+        }
+        var ticks = Layout.bezelTicks();
+        var lit = new Array<Line>[count];
+        for (var i = 0; i < count; i++) {
+            lit[i] = ticks[i].line(reached ? theme.accent : Themes.cometColor(theme.accent, i, n));
+        }
+        frame.bezelLit = lit;
+        frame.bezelLead = null;
+        if (hasLead) {
+            var tick = ticks[n - 1];
+            var pen = tick.pen > Layout.BEZEL_LEAD_MIN_PEN ? tick.pen : Layout.BEZEL_LEAD_MIN_PEN;
+            frame.bezelLead = new Line(tick.leadX, tick.leadY, tick.x2, tick.y2, pen, theme.text);
+        }
     }
 
     // goal > 0, value known and value >= goal.

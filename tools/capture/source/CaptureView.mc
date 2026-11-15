@@ -19,7 +19,7 @@ class CaptureView extends WatchUi.WatchFace {
         config.themeName = CaptureScenario.THEME;
         _config = FaceModel.resolve(config);
         _renderer = new Renderer(new Fonts());
-        _renderer.setStatic(FaceModel.staticLayer(_config), FaceModel.bezelNotches(_config));
+        _renderer.setStatic(FaceModel.staticLayer(_config));
     }
 
     function onUpdate(dc as Dc) as Void {

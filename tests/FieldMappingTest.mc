@@ -270,7 +270,7 @@ module FieldMappingTest {
 
     // Story 35: a negative reading of any metric shows as missing in every
     // field kind it can go to: "--" in gray with no lit arc in each round
-    // field, and an empty bezel ring, no head dot, no goal reached and "--"
+    // field, and no lit bezel tick, no lead tick, no goal reached and "--"
     // in the bottom field for a goal metric.
     (:test)
     function negativeReadingShowsAsMissingInEveryFieldKind(logger as Test.Logger) as Boolean {
@@ -296,8 +296,8 @@ module FieldMappingTest {
         Test.assertEqual("--", goalFrame.bottomField.number);
         Test.assertEqual(GRAY, goalFrame.bottomField.numberColor);
         Test.assertEqual("/ 3.110", goalFrame.bottomField.goal);
-        Test.assertEqual(0, goalFrame.bezelProgress.sweep);
-        Test.assert(goalFrame.bezelHead == null);
+        Test.assertEqual(0, goalFrame.bezelLit.size());
+        Test.assert(goalFrame.bezelLead == null);
         Test.assert(!goalFrame.bottomGoalReached);
         return true;
     }
@@ -311,8 +311,8 @@ module FieldMappingTest {
         var frame = FaceModel.compute(s, FaceModel.resolve(FaceConfigs.defaultConfig()));
         Test.assertEqual("1.147", frame.bottomField.number);
         Test.assertEqual("", frame.bottomField.goal);
-        Test.assertEqual(0, frame.bezelProgress.sweep);
-        Test.assert(frame.bezelHead == null);
+        Test.assertEqual(0, frame.bezelLit.size());
+        Test.assert(frame.bezelLead == null);
         return true;
     }
 

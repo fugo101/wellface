@@ -38,16 +38,16 @@ class WellfaceView extends WatchUi.WatchFace {
     }
 
     // The apply-config path, the only place a face config takes effect:
-    // resolves it, hands the renderer the static layer and bezel notches
-    // built for it (the buffer is repainted once), drops both cached frames
-    // (a config change counts as every change kind) and gives the reader the
-    // config's read plan, which makes its next high-power update count as a
+    // resolves it, hands the renderer the static layer built for it (the
+    // buffer is repainted once), drops both cached frames (a config change
+    // counts as every change kind) and gives the reader the config's read
+    // plan, which makes its next high-power update count as a
     // wake, so every metric it shows (and the zones, if needed) is read
     // before the next frame. Returns the resolved config for the caller to
     // keep in _config.
     private function apply(config as FaceConfig) as ResolvedFaceConfig {
         var resolved = FaceModel.resolve(config);
-        _renderer.setStatic(FaceModel.staticLayer(resolved), FaceModel.bezelNotches(resolved));
+        _renderer.setStatic(FaceModel.staticLayer(resolved));
         _frame = null;
         _aodFrame = null;
         _frameChanges = CHANGE_ALL;
