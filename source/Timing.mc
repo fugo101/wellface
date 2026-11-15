@@ -39,6 +39,12 @@ enum TimingKind {
     TIMING_AOD_FRAME,
     // The static layer paint (Renderer.paintStatic).
     TIMING_STATIC,
+    // A rebuild of the minute layer: the static buffer copied into the
+    // minute buffer, then every part that changes at most once a minute.
+    TIMING_MINUTE,
+    // A high-power update while the face sleeps (after onEnterSleep, the
+    // screen still lit, once a minute). Never filed under another kind.
+    TIMING_ASLEEP,
 }
 
 (:notiming)
@@ -57,7 +63,7 @@ module Timing {
 module Timing {
     // The one-letter code printed before each reading's milliseconds, in
     // TimingKind order (tools/timing/summary.py has the same table).
-    const CODES = ["u", "a", "F", "A", "w", "h", "f", "d", "s"];
+    const CODES = ["u", "a", "F", "A", "w", "h", "f", "d", "s", "m", "i"];
     // Readings kept before a flush; an update adds at most three.
     const CAPACITY = 240;
     // Readings per printed line.

@@ -8,9 +8,11 @@ class Snapshot {
     // 0-23, whatever the watch's 12/24 h setting is (Q22).
     public var hour as Number;
     public var minute as Number;
-    // 0-59, from the clock reading made on every update, in high power only
-    // (seconds, Q41): in Always On it keeps its last value.
-    public var second as Number = 0;
+    // 0-59, from the clock reading made on every update while the face gets
+    // per-second updates (seconds, Q41); null while it sleeps with the
+    // screen still lit (no seconds then). In Always On it keeps its last
+    // value.
+    public var second as Number? = 0;
     // Day of month, 1-31, and month, 1-12.
     public var day as Number = 1;
     public var month as Number = 1;
@@ -74,8 +76,9 @@ class Frame {
     public var timeY as Number = 0;
     public var timeColor as Number = 0;
     // The seconds after the minutes (Q41), two digits from FaceModel.SECONDS
-    // (no allocation), drawn in FaceModel.SECONDS_FONT from this top-left
-    // corner (left-justified, line top), so the time never moves.
+    // (no allocation), or none ("") while the face sleeps, drawn in
+    // FaceModel.SECONDS_FONT from this top-left corner (left-justified, line
+    // top), so the time never moves.
     public var seconds as String = "";
     public var secondsX as Number = 0;
     public var secondsY as Number = 0;
@@ -629,6 +632,19 @@ module FaceModel {
     // other one (FramePart bits).
     function everyMinuteParts(config as ResolvedFaceConfig) as Number {
         return HIGH_POWER_PARTS & ~everySecondParts(config);
+    }
+
+    // Whether a set of change kinds (ChangeKind bits) makes a part of the
+    // minute layer stale (everyMinuteParts), so the renderer must rebuild
+    // it (Q44). A second or a per-second metric never does.
+    function minuteLayerChanged(changes as Number, config as ResolvedFaceConfig) as Boolean {
+        // The per-second change kinds invalidate only the every-second parts
+        // (that is how those are defined), so the update of every second
+        // answers without working out the parts.
+        if ((changes & ~(CHANGE_SECOND | CHANGE_PER_SECOND)) == 0) {
+            return false;
+        }
+        return (invalidated(changes, config) & everyMinuteParts(config)) != 0;
     }
 
     // Whether any field of the config shows the metric.
@@ -1316,8 +1332,12 @@ module FaceModel {
     }
 
     // The seconds as two digits, from the fixed table; a second outside
-    // 0-59 is clamped to it.
-    function secondsText(second as Number) as String {
+    // 0-59 is clamped to it. None ("") for an unknown second: the face
+    // sleeps and gets no per-second updates (Q41).
+    function secondsText(second as Number?) as String {
+        if (second == null) {
+            return "";
+        }
         return SECONDS[clamp(second, 0, SECONDS.size() - 1)];
     }
 

@@ -45,38 +45,33 @@ module SecondsTest {
         return true;
     }
 
-    // ---- Refresh plan ----
-
-    // Every face config the fields accept: each round field showing each
-    // metric it accepts, the bottom field and the bezel ring their goal
-    // metric.
-    function acceptedConfigs() as Array<ResolvedFaceConfig> {
-        var configs = [] as Array<ResolvedFaceConfig>;
-        var left = FaceModel.acceptedMetrics(FIELD_LEFT);
-        var center = FaceModel.acceptedMetrics(FIELD_CENTER);
-        var right = FaceModel.acceptedMetrics(FIELD_RIGHT);
-        var bottom = FaceModel.acceptedMetrics(FIELD_BOTTOM);
-        var bezel = FaceModel.acceptedMetrics(FIELD_BEZEL_RING);
-        for (var l = 0; l < left.size(); l++) {
-            for (var c = 0; c < center.size(); c++) {
-                for (var r = 0; r < right.size(); r++) {
-                    for (var b = 0; b < bottom.size(); b++) {
-                        for (var z = 0; z < bezel.size(); z++) {
-                            configs.add(FaceModel.resolve(new FaceConfig(Themes.MINT, left[l],
-                                center[c], right[r], bottom[b], bezel[z])));
-                        }
-                    }
-                }
-            }
-        }
-        return configs;
+    // Q41: no seconds while the face sleeps. The FR265 stops the per-second
+    // updates about 10 s after a wake (onEnterSleep) even when a tap keeps
+    // the screen lit, so the reader reports the second as unknown then, and
+    // the seconds are hidden rather than left frozen (ticket 08's wear).
+    (:test)
+    function noSecondsWhileTheFaceSleeps(logger as Test.Logger) as Boolean {
+        var asleep = at(0);
+        asleep.second = null;
+        Test.assertEqual("", FaceModel.compute(asleep, config()).seconds);
+        // A second change to unknown takes the seconds' fast path and still
+        // equals a full compute; and back again on the next wake.
+        var frame = FaceModel.compute(at(37), config());
+        frame = FaceModel.update(frame, asleep, config(), CHANGE_SECOND);
+        Test.assertEqual(FrameEquality.describeFrame(FaceModel.compute(asleep, config())),
+            FrameEquality.describeFrame(frame));
+        frame = FaceModel.update(frame, at(12), config(), CHANGE_SECOND);
+        Test.assertEqual("12", frame.seconds);
+        return true;
     }
+
+    // ---- Refresh plan ----
 
     // The new change kind invalidates exactly the seconds: never the time,
     // the date, a field or the AOD frame.
     (:test)
     function aSecondChangeInvalidatesOnlyTheSeconds(logger as Test.Logger) as Boolean {
-        var configs = acceptedConfigs();
+        var configs = TestConfigs.accepted();
         for (var i = 0; i < configs.size(); i++) {
             Test.assertEqual(PART_SECONDS, FaceModel.invalidated(CHANGE_SECOND, configs[i]));
         }
@@ -176,7 +171,7 @@ module SecondsTest {
         var all = RefreshPlanTest.HIGH_POWER_PARTS;
         var fieldParts = [PART_LEFT, PART_CENTER, PART_RIGHT] as Array<Number>;
         var round = [FIELD_LEFT, FIELD_CENTER, FIELD_RIGHT] as Array<Field>;
-        var configs = acceptedConfigs();
+        var configs = TestConfigs.accepted();
         for (var i = 0; i < configs.size(); i++) {
             var everySecond = FaceModel.everySecondParts(configs[i]);
             var everyMinute = FaceModel.everyMinuteParts(configs[i]);

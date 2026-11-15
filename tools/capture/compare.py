@@ -26,7 +26,10 @@ def differing_pixels(before: Path, after: Path) -> int:
         return a.width * a.height
     top, bottom = int(a.height * TOP), int(a.height * (1 - BOTTOM))
     box = (0, top, a.width, bottom)
-    diff = ImageChops.difference(a.crop(box), b.crop(box)).convert("L")
+    # The largest difference of the three channels: a grayscale conversion
+    # would hide a small difference in blue (weighted 0.114) or red.
+    red, green, blue = ImageChops.difference(a.crop(box), b.crop(box)).split()
+    diff = ImageChops.lighter(ImageChops.lighter(red, green), blue)
     return sum(diff.histogram()[1:])  # every pixel whose difference is not 0
 
 

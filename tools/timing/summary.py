@@ -17,17 +17,22 @@ line per reading; they are read too.
 
 Kinds (code): update (u, a high-power update; those below are filed under
 their own kinds), first (F) and firstAod (A, the first update after a face
-start, in high power or AOD), show (h, the first high-power update after the
+start, in high power or AOD), asleep (i, a high-power update while the face
+sleeps: the screen still lit after its per-second updates stopped), show (h, the first high-power update after the
 view was hidden and shown again without a restart), wake (w, the first
 high-power update after AOD), aod (a, an AOD update), frame (f,
 FaceModel.update), aodFrame (d, FaceModel.updateAod), static (s, the static
-layer paint). An update's time includes the frame and static readings taken
-inside it. Before the show kind existed, a show was filed as first.
+layer paint), minute (m, a rebuild of the minute layer: the static buffer
+copied into it, then the parts that change at most once a minute). An update's time includes the frame, static and minute readings
+taken inside it. Before the show kind existed, a show was filed as first.
 
 Prints, for each log and, with several logs, for all of them pooled: per
 kind the count, median, 10th and 90th percentile, minimum, maximum and mean
 in ms, the high-power updates also split by whether the frame was
-recomputed in them (update+frame, update-frame); the flushes per reason; and a warning when readings are missing (a
+recomputed in them (update+frame, update-frame) and those that rebuilt the
+minute layer (update+minute); the summed high-power update time of each
+time awake (perWake: a wake and the updates after it, up to the sleep flush
+that ends them); the flushes per reason; and a warning when readings are missing (a
 flush with fewer readings than its header says, or readings before the first
 header: the start of the log was moved away, see WELLFACE.BAK).
 """
@@ -42,13 +47,23 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 CODES = {"u": "update", "a": "aod", "F": "first", "A": "firstAod", "w": "wake",
-         "h": "show", "f": "frame", "d": "aodFrame", "s": "static"}
-KINDS = ["update", "wake", "show", "first", "firstAod", "aod", "frame", "aodFrame", "static"]
+         "h": "show", "f": "frame", "d": "aodFrame", "s": "static", "m": "minute", "i": "asleep"}
+KINDS = ["update", "wake", "show", "first", "firstAod", "aod", "asleep", "frame", "aodFrame",
+         "static", "minute"]
+# Every kind that times a whole update; the other kinds are timed inside
+# one and logged before it.
+UPDATES = {"update", "wake", "show", "first", "firstAod", "aod", "asleep"}
+HIGH_POWER = {"update", "wake", "show", "first"}
+# The summed high-power update time of each time awake: from a wake to the
+# sleep flush that ends it (a flush of reason sleep holding a wake reading).
+PER_WAKE = "perWake"
 # High-power updates split by whether the frame was recomputed in them (a
-# frame reading comes just before its update's reading). The two groups sit
+# frame reading comes before its update's reading). The two groups sit
 # about 4 ms apart on the watch, so the plain update median jumps between
-# them with the mix; compare each group's median, or the mean.
-SPLIT = ["update+frame", "update-frame"]
+# them with the mix; compare each group's median, or the mean. Updates that
+# rebuilt the minute layer (a minute reading inside them) are also listed
+# on their own (update+minute); they are in one of the first two groups too.
+SPLIT = ["update+frame", "update-frame", "update+minute"]
 READING = re.compile(r"^([A-Za-z])(\d+)$")
 
 
@@ -73,14 +88,32 @@ def read(path: Path) -> Log:
     log = Log()
     expected: int | None = None   # readings still due in the current flush
 
-    last = ""
+    inside: set[str] = set()   # kinds read since the last update reading
+    # The current flush: its reason, whether it holds a wake, and the sum of
+    # its high-power updates.
+    flush_reason = ""
+    flush_wake = False
+    flush_awake = 0
+
+    def end_flush() -> None:
+        # A sleep flush that holds a wake covers one whole time awake.
+        if flush_reason == "sleep" and flush_wake:
+            log.readings[PER_WAKE].append(flush_awake)
 
     def reading(kind: str, ms: int) -> None:
-        nonlocal expected, last
+        nonlocal expected, flush_wake, flush_awake
         log.readings[kind].append(ms)
+        if kind in HIGH_POWER:
+            flush_awake += ms
+            flush_wake = flush_wake or kind == "wake"
         if kind == "update":
-            log.readings[SPLIT[0] if last == "frame" else SPLIT[1]].append(ms)
-        last = kind
+            log.readings[SPLIT[0] if "frame" in inside else SPLIT[1]].append(ms)
+            if "minute" in inside:
+                log.readings[SPLIT[2]].append(ms)
+        if kind in UPDATES:
+            inside.clear()
+        else:
+            inside.add(kind)
         if expected is None:
             log.orphans += 1
         else:
@@ -93,9 +126,11 @@ def read(path: Path) -> Log:
         if parts[1] == "flush" and len(parts) == 4:
             if expected:
                 log.missing += max(0, expected)
+            end_flush()
+            flush_reason, flush_wake, flush_awake = parts[2], False, 0
             expected = int(parts[3])
             log.flushes[parts[2]] += 1
-            last = ""
+            inside.clear()
         elif len(parts) == 3 and parts[1] in KINDS and parts[2].isdigit():
             reading(parts[1], int(parts[2]))
         else:
@@ -105,6 +140,7 @@ def read(path: Path) -> Log:
                     reading(CODES[match.group(1)], int(match.group(2)))
     if expected:
         log.missing += max(0, expected)
+    end_flush()
     return log
 
 
@@ -118,7 +154,7 @@ def percentile(values: list[int], p: float) -> float:
 def report(title: str, log: Log) -> None:
     print(f"== {title}")
     print(f"{'kind':<12} {'n':>5} {'median':>7} {'p10':>6} {'p90':>6} {'min':>5} {'max':>5} {'mean':>7}")
-    for kind in KINDS[:1] + SPLIT + KINDS[1:]:
+    for kind in KINDS[:1] + SPLIT + KINDS[1:] + [PER_WAKE]:
         values = log.readings.get(kind)
         if not values:
             continue

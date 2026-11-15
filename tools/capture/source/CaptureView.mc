@@ -10,6 +10,12 @@ import Toybox.WatchUi;
 class CaptureView extends WatchUi.WatchFace {
     private var _config as ResolvedFaceConfig;
     private var _renderer as Renderer;
+    // The frame painted last and the step of the per-second sequence.
+    private var _frame as Frame? = null;
+    private var _step as Number = 0;
+    // Repaints spent waiting for the minute layer, at most MAX_SETTLING.
+    private var _settling as Number = 0;
+    const MAX_SETTLING = 5;
 
     // The built-in face config with the scenario's theme
     // (CaptureScenario.THEME), set up as WellfaceView.applyConfig does.
@@ -19,7 +25,9 @@ class CaptureView extends WatchUi.WatchFace {
         config.themeName = CaptureScenario.THEME;
         _config = FaceModel.resolve(config);
         _renderer = new Renderer(new Fonts());
-        _renderer.setStatic(FaceModel.staticLayer(_config));
+        _renderer.forceFullRepaint = CaptureScenario.FULL_REPAINT;
+        _renderer.setStatic(FaceModel.staticLayer(_config), FaceModel.everySecondParts(_config),
+            FaceModel.everyMinuteParts(_config));
     }
 
     function onUpdate(dc as Dc) as Void {
@@ -29,7 +37,57 @@ class CaptureView extends WatchUi.WatchFace {
             _renderer.paintAod(dc, FaceModel.computeAod(frame1(), _config));
             return;
         }
-        _renderer.paint(dc, FaceModel.compute(snapshot(name), _config));
+        // The per-second path, through the same renderer calls as the face:
+        // a frame with the second and heart rate before the scenario's,
+        // repainted until the renderer has built its minute layer from it
+        // (the first frames are drawn straight on the screen); then a
+        // seconds-only update and a heart-rate-only update to the
+        // scenario's data. Later updates repaint that frame. With
+        // FULL_REPAINT every one of them is a full repaint.
+        var frame = _frame;
+        var target = snapshot(name);
+        if (frame == null) {
+            var before = snapshot(name);
+            before.second = ((target.second as Number) + 59) % 60;
+            before.setValue(METRIC_HEART_RATE, otherHeartRate(target));
+            frame = FaceModel.compute(before, _config);
+            _renderer.paint(dc, frame, true);
+        } else if (_step == 1) {
+            _renderer.paint(dc, frame, false);
+            if (!_renderer.minuteLayerReady() && !CaptureScenario.FULL_REPAINT) {
+                // Stay on this step until the minute layer is built; never
+                // capture a full repaint as the per-second path.
+                if (_settling >= MAX_SETTLING) {
+                    throw new Lang.InvalidValueException("no minute layer after "
+                        + MAX_SETTLING + " repaints");
+                }
+                _settling++;
+                WatchUi.requestUpdate();
+                return;
+            }
+        } else if (_step == 2) {
+            var secondOnly = snapshot(name);
+            secondOnly.setValue(METRIC_HEART_RATE, otherHeartRate(target));
+            frame = FaceModel.update(frame, secondOnly, _config, CHANGE_SECOND);
+            _renderer.paint(dc, frame, FaceModel.minuteLayerChanged(CHANGE_SECOND, _config));
+        } else if (_step == 3) {
+            frame = FaceModel.update(frame, target, _config, CHANGE_PER_SECOND);
+            _renderer.paint(dc, frame, FaceModel.minuteLayerChanged(CHANGE_PER_SECOND, _config));
+        } else {
+            _renderer.paint(dc, frame, false);
+        }
+        _frame = frame;
+        if (_step < 4) {
+            _step++;
+            WatchUi.requestUpdate();
+        }
+    }
+
+    // A heart rate other than the scenario's, in another zone, so the
+    // heart-rate-only update changes the field's number and segments.
+    private function otherHeartRate(s as Snapshot) as Number {
+        var heartRate = s.value(METRIC_HEART_RATE);
+        return heartRate != null && heartRate >= 140 ? 70 : 150;
     }
 
     // The design's frame 1 (its 2026-11-14 update, NORMAL in its source):

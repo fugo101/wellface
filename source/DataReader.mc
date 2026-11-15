@@ -50,10 +50,11 @@ class DataReader {
     // so a change of watch language is followed within a minute.
     //
     // The clock's second, in high power only (Q41): taken from the same
-    // clock reading, and a change of it is CHANGE_SECOND. In AOD the
-    // snapshot keeps its last second, so the first update after a wake
-    // reports CHANGE_SECOND unless the clock is on that same second again
-    // (then the frame already shows it).
+    // clock reading while the face gets per-second updates (`ticking`), and
+    // null while it sleeps with the screen still lit; a change of it is
+    // CHANGE_SECOND. In AOD the snapshot keeps its last second, so the first
+    // update after a wake reports CHANGE_SECOND unless the clock is on that
+    // same second again (then the frame already shows it).
     //
     // The sensors, in high power only (nothing is read in AOD, Q36): the
     // battery and the plan's once-a-minute metrics when the minute changed
@@ -62,7 +63,7 @@ class DataReader {
     // start or a new read plan counts as one), the zones on a wake when the
     // plan needs them, and the plan's every-second metrics (heart rate) on
     // every high-power update. A value read again unchanged is no change.
-    function update(highPower as Boolean) as Number {
+    function update(highPower as Boolean, ticking as Boolean) as Number {
         var changes = 0;
         var clock = System.getClockTime();
         if (!_clockRead || clock.hour != _snapshot.hour || clock.min != _snapshot.minute) {
@@ -70,8 +71,9 @@ class DataReader {
         }
 
         if (highPower) {
-            if (clock.sec != _snapshot.second) {
-                _snapshot.second = clock.sec;
+            var second = ticking ? clock.sec : null;
+            if (second != _snapshot.second) {
+                _snapshot.second = second;
                 changes |= CHANGE_SECOND;
             }
             var wake = !_wasHighPower;

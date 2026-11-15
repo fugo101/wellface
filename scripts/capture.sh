@@ -37,6 +37,10 @@ fi
 THEME="${CAPTURE_THEME:-mint}"
 grep -q "^    const [A-Z]* = \"$THEME\";" "$ROOT/source/Theme.mc" \
     || die "unknown theme \"$THEME\" in CAPTURE_THEME (theme names are lowercase, as in source/Theme.mc)"
+# CAPTURE_FULL_REPAINT=1 forces the renderer's full repaint (its fallback
+# when the graphics pool has no room) instead of the per-second path.
+FULL_REPAINT=false
+[[ "${CAPTURE_FULL_REPAINT:-}" == "1" ]] && FULL_REPAINT=true
 mkdir -p "$OUT" "$SCENARIO_DIR"
 
 "$CIQ_SDK/bin/connectiq"   # starts the simulator, or focuses it if running
@@ -59,8 +63,8 @@ window_id() {
 }
 
 for scenario in "${SCENARIOS[@]}"; do
-    printf 'module CaptureScenario {\n    const NAME = "%s";\n    const THEME = "%s";\n}\n' \
-        "$scenario" "$THEME" >"$SCENARIO_DIR/Scenario.mc"
+    printf 'module CaptureScenario {\n    const NAME = "%s";\n    const THEME = "%s";\n    const FULL_REPAINT = %s;\n}\n' \
+        "$scenario" "$THEME" "$FULL_REPAINT" >"$SCENARIO_DIR/Scenario.mc"
     compile "$PRG" >/dev/null
     log="$(mktemp)"
     loaded=0

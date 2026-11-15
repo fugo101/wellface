@@ -1,86 +1,233 @@
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.System;
 
 // Paints FaceModel output as-is. No display rules live here.
 //
-// The static layer is drawn once into a full-color buffer and copied to the
-// screen on every high-power update. It depends on the theme and the field
-// mapping (the metric each round field shows decides its track), so a new
-// one comes with every applied face config (setStatic) and the buffer is
-// repainted once then. The face is started again after a widget opened in
-// full, so the buffer is rebuilt then too; a return from the widget loop
-// only hides and shows the view and keeps it (docs/build.md, "Timing
-// build").
+// Two full-screen buffers (Q44, ticket 08). The static layer is drawn once
+// into the first. It depends on the theme and the field mapping (the metric
+// each round field shows decides its track), so a new one comes with every
+// applied face config (setStatic) and the buffer is repainted once then.
+// The minute layer is the second: the static layer and every frame part
+// that changes at most once a minute, rebuilt only when one of them changes
+// (FaceModel.minuteLayerChanged), after a new static layer, or when the
+// buffer is new. Each second it is copied to the screen and only the parts
+// that change every second (the seconds, the field showing heart rate) are drawn
+// over it.
+//
+// Drawing into a buffer is about 2.5 times slower than drawing on the
+// screen on the FR265 (ticket 08), so a frame whose minute layer is stale
+// (a wake, a new minute, a face start) is first drawn straight on the
+// screen, as fast as a full repaint, and the buffers are painted on the
+// updates after it, at most one per update. The face is started again
+// after a widget opened in full, so both buffers are rebuilt then; a return
+// from the widget loop only hides and shows the view and keeps them
+// (docs/build.md, "Timing build"). When the graphics pool has no room for a
+// buffer, every update is a full repaint (logged once).
 class Renderer {
     private var _layer as StaticLayer = new StaticLayer();
     private var _fonts as Fonts;
-    // The reference and the bitmap it returned. Holding the bitmap keeps it
-    // locked in the graphics pool, so it is drawn once and never purged
+    // Each buffer's reference and the bitmap it returned. Holding the
+    // bitmap keeps it locked in the graphics pool, so it is never purged
     // (Garmin's graphics pool guide).
     private var _reference as BufferedBitmapReference?;
     private var _bitmap as BufferedBitmap?;
+    private var _minuteReference as BufferedBitmapReference?;
+    private var _minuteBitmap as BufferedBitmap?;
+    // The frame parts (FramePart bits) that change every second and those
+    // that change at most once a minute (FaceModel.everySecondParts,
+    // everyMinuteParts), for the applied face config.
+    private var _everySecond as Number = 0;
+    private var _everyMinute as Number = 0;
+    // The minute layer no longer matches the frame (or there is none yet).
+    private var _minuteStale as Boolean = true;
+    // A stale frame was drawn straight on the screen; the buffers are
+    // painted from the next update on.
+    private var _rebuildDue as Boolean = false;
+    // A full repaint replaced the minute layer since it last worked; logged
+    // once each time it starts.
+    private var _fallingBack as Boolean = false;
+    // The graphics pool had no room for a buffer: full repaints, without
+    // asking for a buffer again until the next wake, show or face config.
+    private var _noRoom as Boolean = false;
+
+    // Always repaint in full, as when the graphics pool has no room for the
+    // minute layer (the capture face forces it to compare the two).
+    public var forceFullRepaint as Boolean = false;
 
     // Nothing is painted before the first setStatic.
     function initialize(fonts as Fonts) {
         _fonts = fonts;
     }
 
-    // The static layer of a newly applied face config. The buffer is kept
-    // and repainted once, on the next high-power update.
-    function setStatic(layer as StaticLayer) as Void {
+    // The static layer of a newly applied face config, and the frame parts
+    // that change every second and at most once a minute for it. Both
+    // buffers are kept and repainted on the next high-power updates.
+    function setStatic(layer as StaticLayer, everySecond as Number, everyMinute as Number)
+            as Void {
         _layer = layer;
+        _everySecond = everySecond;
+        _everyMinute = everyMinute;
         // Dropping the bitmap makes staticBitmap get it again from the
         // reference and paint the new layer into it.
         _bitmap = null;
+        _minuteStale = true;
+        _rebuildDue = false;
+        _noRoom = false;
     }
 
-    // A full high-power frame. The screen is not guaranteed to keep its
-    // previous contents, so every call repaints everything.
-    function paint(dc as Dc, frame as Frame) as Void {
-        var bitmap = staticBitmap(dc.getWidth(), dc.getHeight());
+    // The next frame is to be shown at once: the first after a wake or a
+    // show, or one while the face sleeps (no per-second updates follow, so
+    // a rebuild would be wasted). If the minute layer is stale, that frame
+    // is drawn straight on the screen even when a rebuild was already due.
+    // A buffer the pool had no room for is asked for again.
+    function showAtOnce() as Void {
+        _rebuildDue = false;
+        _noRoom = false;
+    }
+
+    // Whether the next frame is copied from the minute layer, which is then
+    // built and current (the capture face waits for it).
+    function minuteLayerReady() as Boolean {
+        return !_minuteStale && _minuteBitmap != null && !forceFullRepaint;
+    }
+
+    // A high-power frame. `minuteChanged` says whether the changes since the
+    // previous one made a part of the minute layer stale
+    // (FaceModel.minuteLayerChanged). The screen is not guaranteed to keep
+    // its previous contents, so the screen itself is always repainted in
+    // full.
+    function paint(dc as Dc, frame as Frame, minuteChanged as Boolean) as Void {
+        if (minuteChanged) {
+            _minuteStale = true;
+        }
+        var width = dc.getWidth();
+        var height = dc.getHeight();
+        if (forceFullRepaint) {
+            fallBack("minute layer (forced)");
+        } else if (!_minuteStale) {
+            copyMinuteLayer(dc, frame);
+            return;
+        } else if (!_rebuildDue) {
+            // Shown at once, straight on the screen; the buffers follow.
+            _rebuildDue = true;
+            var held = _bitmap;
+            if (held != null) {
+                dc.drawBitmap(0, 0, held);
+            } else {
+                paintStatic(dc, _layer);
+            }
+            paintParts(dc, frame, _everySecond | _everyMinute);
+            return;
+        } else if (_noRoom) {
+            // A full repaint, as on the update the pool had no room.
+        } else if (_bitmap == null) {
+            // The static buffer this update, the minute layer on the next.
+            if (staticBitmap(width, height) == null) {
+                noRoom("static buffer");
+            }
+        } else if (minuteBitmap(width, height) != null) {
+            rebuildMinuteLayer(frame);
+            copyMinuteLayer(dc, frame);
+            return;
+        } else {
+            noRoom("minute layer");
+        }
+        // A full repaint: the static layer from its buffer when there is
+        // one (the forced one asks for it), then every part.
+        var bitmap = _noRoom ? _bitmap : staticBitmap(width, height);
         if (bitmap != null) {
             dc.drawBitmap(0, 0, bitmap);
         } else {
-            // No room in the graphics pool: draw the layer straight on screen.
             paintStatic(dc, _layer);
         }
+        paintParts(dc, frame, _everySecond | _everyMinute);
+    }
 
-        // The lit bezel ticks over the unlit ones in the buffer, the lead
-        // tick last.
-        drawLines(dc, frame.bezelLit);
-        var lead = frame.bezelLead;
-        if (lead != null) {
-            drawLine(dc, lead);
+    // The minute layer to the screen, then the every-second parts.
+    private function copyMinuteLayer(dc as Dc, frame as Frame) as Void {
+        dc.drawBitmap(0, 0, _minuteBitmap as BufferedBitmap);
+        paintParts(dc, frame, _everySecond);
+    }
+
+    // The static layer and the minute parts into the minute buffer.
+    private function rebuildMinuteLayer(frame as Frame) as Void {
+        Timing.start(TIMING_MINUTE);
+        var minuteDc = (_minuteBitmap as BufferedBitmap).getDc();
+        minuteDc.setAntiAlias(true);
+        minuteDc.drawBitmap(0, 0, _bitmap as BufferedBitmap);
+        paintParts(minuteDc, frame, _everyMinute);
+        _minuteStale = false;
+        _rebuildDue = false;
+        _fallingBack = false;
+        Timing.stop(TIMING_MINUTE);
+    }
+
+    // No room in the graphics pool for a buffer: full repaints until the
+    // next wake, show or face config.
+    private function noRoom(what as String) as Void {
+        _noRoom = true;
+        fallBack(what);
+    }
+
+    // Logs the start of a full repaint in place of the minute layer.
+    private function fallBack(what as String) as Void {
+        if (!_fallingBack) {
+            _fallingBack = true;
+            System.println("wellface: no room for the " + what + ", full repaint");
         }
+    }
 
-        var lit = frame.batteryLit;
-        for (var i = 0; i < lit.size(); i++) {
-            drawArc(dc, lit[i]);
+    // The frame parts in `parts` (FramePart bits), back to front. Parts that
+    // change every second never overlap a later part, so drawing them after
+    // the minute content gives the same pixels as drawing all in this order.
+    private function paintParts(dc as Dc, frame as Frame, parts as Number) as Void {
+        if ((parts & PART_BEZEL_RING) != 0) {
+            // The lit bezel ticks over the unlit ones in the buffer, the
+            // lead tick last.
+            drawLines(dc, frame.bezelLit);
+            var lead = frame.bezelLead;
+            if (lead != null) {
+                drawLine(dc, lead);
+            }
         }
-
-        paintField(dc, frame.leftField);
-        paintField(dc, frame.centerField);
-        paintField(dc, frame.rightField);
-        paintBottomField(dc, frame.bottomField);
-
-        // FaceModel places the time by its measured width and the font's base.
-        dc.setColor(frame.timeColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(frame.timeX, frame.timeY, _fonts.get(FONT_TIME), frame.time,
-            Graphics.TEXT_JUSTIFY_LEFT);
-        // The seconds, at a fixed place after the minutes (high power only:
-        // the Always On frame has none).
-        dc.setColor(frame.secondsColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(frame.secondsX, frame.secondsY, _fonts.get(FaceModel.SECONDS_FONT),
-            frame.seconds, Graphics.TEXT_JUSTIFY_LEFT);
-
-        // The pill's width follows the text, so it is not in the static layer.
-        fillRoundedRect(dc, frame.datePill);
-        var dateFont = _fonts.get(FONT_DATE);
-        dc.setColor(frame.weekdayColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(frame.dateX, frame.dateY, dateFont, frame.weekday, Graphics.TEXT_JUSTIFY_LEFT);
-        dc.setColor(frame.dayMonthColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(frame.dayMonthX, frame.dateY, dateFont, frame.dayMonth,
-            Graphics.TEXT_JUSTIFY_LEFT);
+        if ((parts & PART_BATTERY) != 0) {
+            var lit = frame.batteryLit;
+            for (var i = 0; i < lit.size(); i++) {
+                drawArc(dc, lit[i]);
+            }
+        }
+        if ((parts & PART_LEFT) != 0) {
+            paintField(dc, frame.leftField);
+        }
+        if ((parts & PART_CENTER) != 0) {
+            paintField(dc, frame.centerField);
+        }
+        if ((parts & PART_RIGHT) != 0) {
+            paintField(dc, frame.rightField);
+        }
+        if ((parts & PART_BOTTOM) != 0) {
+            paintBottomField(dc, frame.bottomField);
+        }
+        if ((parts & PART_TIME) != 0) {
+            // FaceModel places the time by its measured width and the
+            // font's base.
+            drawText(dc, frame.timeX, frame.timeY, FONT_TIME, frame.time, frame.timeColor);
+        }
+        if ((parts & PART_SECONDS) != 0) {
+            // The seconds, at a fixed place after the minutes (high power
+            // only: the Always On frame has none).
+            drawText(dc, frame.secondsX, frame.secondsY, FaceModel.SECONDS_FONT, frame.seconds,
+                frame.secondsColor);
+        }
+        if ((parts & PART_DATE) != 0) {
+            // The pill's width follows the text, so it is not in the static
+            // layer.
+            fillRoundedRect(dc, frame.datePill);
+            drawText(dc, frame.dateX, frame.dateY, FONT_DATE, frame.weekday, frame.weekdayColor);
+            drawText(dc, frame.dayMonthX, frame.dateY, FONT_DATE, frame.dayMonth,
+                frame.dayMonthColor);
+        }
     }
 
     // A field's arcs, their round caps and the gauge's end dot, its icon and
@@ -96,12 +243,9 @@ class Renderer {
         if (dot != null) {
             fillCircle(dc, dot);
         }
-        dc.setColor(field.iconColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(field.iconX, field.iconY, _fonts.get(FONT_ICONS), field.icon,
-            Graphics.TEXT_JUSTIFY_LEFT);
-        dc.setColor(field.numberColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(field.numberX, field.numberY, _fonts.get(field.numberFont), field.number,
-            Graphics.TEXT_JUSTIFY_LEFT);
+        drawText(dc, field.iconX, field.iconY, FONT_ICONS, field.icon, field.iconColor);
+        drawText(dc, field.numberX, field.numberY, field.numberFont, field.number,
+            field.numberColor);
     }
 
     // The pill (its own well), then the icon if shown, the number and
@@ -109,17 +253,12 @@ class Renderer {
     private function paintBottomField(dc as Dc, field as BottomFieldFrame) as Void {
         fillRoundedRect(dc, field.pill);
         if (field.icon.length() > 0) {
-            dc.setColor(field.iconColor, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(field.iconX, field.iconY, _fonts.get(FONT_ICONS), field.icon,
-                Graphics.TEXT_JUSTIFY_LEFT);
+            drawText(dc, field.iconX, field.iconY, FONT_ICONS, field.icon, field.iconColor);
         }
-        dc.setColor(field.numberColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(field.numberX, field.numberY, _fonts.get(field.numberFont), field.number,
-            Graphics.TEXT_JUSTIFY_LEFT);
+        drawText(dc, field.numberX, field.numberY, field.numberFont, field.number,
+            field.numberColor);
         if (field.goal.length() > 0) {
-            dc.setColor(field.goalColor, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(field.goalX, field.goalY, _fonts.get(FONT_GOAL_15), field.goal,
-                Graphics.TEXT_JUSTIFY_LEFT);
+            drawText(dc, field.goalX, field.goalY, FONT_GOAL_15, field.goal, field.goalColor);
         }
     }
 
@@ -128,17 +267,13 @@ class Renderer {
     // text on black.
     function paintAod(dc as Dc, frame as AodFrame) as Void {
         clear(dc);
-        dc.setColor(frame.timeColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(frame.timeX, frame.timeY, _fonts.get(FONT_TIME), frame.time,
-            Graphics.TEXT_JUSTIFY_LEFT);
-
+        drawText(dc, frame.timeX, frame.timeY, FONT_TIME, frame.time, frame.timeColor);
         fillRoundedRect(dc, frame.datePill);
         fillRoundedRect(dc, frame.datePillInner);
-
-        dc.setColor(frame.dateColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(frame.dateX, frame.dateY, _fonts.get(FONT_DATE), frame.date,
-            Graphics.TEXT_JUSTIFY_LEFT);
+        drawText(dc, frame.dateX, frame.dateY, FONT_DATE, frame.date, frame.dateColor);
     }
+
+    // ---- Buffers ----
 
     // The whole screen black.
     private function clear(dc as Dc) as Void {
@@ -174,6 +309,26 @@ class Renderer {
         bufferDc.setAntiAlias(true);
         paintStatic(bufferDc, _layer);
         _bitmap = bitmap;
+        return bitmap;
+    }
+
+    // The minute buffer, null if the graphics pool has no room for it.
+    private function minuteBitmap(width as Number, height as Number) as BufferedBitmap? {
+        var bitmap = _minuteBitmap;
+        if (bitmap != null) {
+            return bitmap;
+        }
+        try {
+            var reference = _minuteReference;
+            if (reference == null) {
+                reference = Graphics.createBufferedBitmap({ :width => width, :height => height });
+                _minuteReference = reference;
+            }
+            bitmap = reference.get() as BufferedBitmap?;
+        } catch (e instanceof Graphics.OutOfGraphicsMemoryException) {
+            return null;
+        }
+        _minuteBitmap = bitmap;
         return bitmap;
     }
 
@@ -215,6 +370,14 @@ class Renderer {
             fillCircle(dc, layer.fieldTrackCaps[i]);
         }
         Timing.stop(TIMING_STATIC);
+    }
+
+    // ---- Primitives ----
+
+    private function drawText(dc as Dc, x as Number, y as Number, font as FontId,
+            text as String, color as Number) as Void {
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(x, y, _fonts.get(font), text, Graphics.TEXT_JUSTIFY_LEFT);
     }
 
     private function fillCircle(dc as Dc, circle as Circle) as Void {
