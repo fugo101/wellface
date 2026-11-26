@@ -6,23 +6,23 @@ The final design is `design/claude-design/FR265 Watch Face.dc.html` (Claude Desi
 
 | Element | Design | Built face | Source |
 |---|---|---|---|
-| Bottom field from 100.000 steps | Always hides the foot and drops `/ goal`, number centered on x 208 | Drops `/ goal` only when number + 5 px + `/ goal` is still wider than 136 px. With a short goal it stays: `100.000 / 3.110` and `123.456 / 10.000` keep `/ goal` centered; `100.000 / 200.000` drops it | Q34, ticket 10 |
-| Gauge end (round cap, Body Battery dot) | At value × 3.6° exactly | At the whole-degree end of the gauge arc, up to 1° behind (at most about 0.9 px on the center ring, 0.6 px on the side rings), centers in whole pixels; cap and dot always sit on the drawn arc's end. Body Battery 56: design (188.12, 312.21), face (189, 312) | second design update ticket 05 |
+| Bottom field from 100.000 steps | Always hides the foot and drops `/ goal`, number centered on x 208 | Drops `/ goal` only when number + 5 px + `/ goal` is still wider than 136 px. With a short goal it stays: `100.000 / 3.110` and `123.456 / 10.000` keep `/ goal` centered; `100.000 / 200.000` drops it | Q34 |
+| Gauge end (round cap, Body Battery dot) | At value × 3.6° exactly | At the whole-degree end of the gauge arc, up to 1° behind (at most about 0.9 px on the center ring, 0.6 px on the side rings), centers in whole pixels; cap and dot always sit on the drawn arc's end. Body Battery 56: design (188.12, 312.21), face (189, 312) | second design update |
 | Text widths | Measured with the browser's Manrope, so pill widths and centered groups can differ by about 1 px | Measured with the glyph widths of the generated bitmap fonts (the font catalog) | spec |
-| Date fallback | Not shown | A weekday name that needs a pill wider than 272 px, or has letters the date font lacks (Cyrillic, CJK), falls back to the English abbreviation (`THU 12/11`) | Q21, Q33, Q38, ticket 05 |
-| Two-color date, weekday with a space | Splits the date at its first space, so only the first word of a weekday name with a space is in the accent | The whole weekday (everything before the day/month) is in the accent. Seen only in languages whose folded weekday name keeps a space; Vietnamese names are shortened to T2–T7 and CN first | Q21, Q38, second design update ticket 04 |
-| Bezel tick endpoints | Fractional, `polar` rounded to 0.01 px | Whole pixels: the exact position (208 + r·sin, 208 − r·cos) rounded half up, because `drawLine` drops the fraction of its endpoints (simulator, SDK 9.3.0). Four ordinary ticks (i = 7, 22, 23, 38) have one inner-end coordinate at 342.495: the face draws 342, where rounding the design's 342.50 would give 343 | second design update ticket 06 |
-| Lit bezel ticks | Each tick drawn once, lit or unlit | Unlit ticks sit in the static layer and lit ticks are drawn over them, so their anti-aliased edges can differ slightly from the design; the lead tick, longer and at least pen 4, covers its unlit tick | second design update ticket 06 |
-| Time position | `08:42` starts at x 113.5 | Whole pixels: starts at x 114 (208 − 189 / 2 in integer math), half a pixel to the right | Q8/Q16, second design update ticket 03 |
-| Long-press targets | "Vùng giữ tay": the three round wells (R + 6), the bottom field's pill and the bezel ring; holding opens the matching Garmin page | The bezel ring is no target, and the bottom field's target is its pill padded 10 px left, right and below and 4 px above (116, 332, 184, 54, half-circle ends): both were too hard to hold on the watch | Q45, second design update ticket 11 |
-| Contour line joins | Each contour line one polyline with round joins | Each segment a separate flat-ended `drawLine`, so the lines meet at mitred joins (a small notch or overlap where a line turns), and the pen varies a little with the segment's angle (Q43 accepts both) | Q43, second design update ticket 09 |
-| Contour texture | 40 closed lines of 64 points (rounded to 0.1 px), drawn whole under the wells and the edge mask | Lines 1–30 only (the only ones that reach the background disc), cut at build time into 93 pieces (404 segments) that stay at least half a pen inside r 194 and at least a pen (plus 0.75 px for rounding) outside every well rim and the battery well, endpoints in whole pixels; pieces shorter than 3 px dropped. So the lines stop a few pixels short of each rim instead of running under it. Drawn with `drawLine`: filled strips (`fillPolygon`) were tried and were about 6 times slower on the FR265 | Q43, second design update ticket 09 |
+| Date fallback | Not shown | A weekday name that needs a pill wider than 272 px, or has letters the date font lacks (Cyrillic, CJK), falls back to the English abbreviation (`THU 12/11`) | Q21, Q33, Q38 |
+| Two-color date, weekday with a space | Splits the date at its first space, so only the first word of a weekday name with a space is in the accent | The whole weekday (everything before the day/month) is in the accent. Seen only in languages whose folded weekday name keeps a space; Vietnamese names are shortened to T2–T7 and CN first | Q21, Q38 |
+| Bezel tick endpoints | Fractional, `polar` rounded to 0.01 px | Whole pixels: the exact position (208 + r·sin, 208 − r·cos) rounded half up, because `drawLine` drops the fraction of its endpoints (simulator, SDK 9.3.0). Four ordinary ticks (i = 7, 22, 23, 38) have one inner-end coordinate at 342.495: the face draws 342, where rounding the design's 342.50 would give 343 | second design update |
+| Lit bezel ticks | Each tick drawn once, lit or unlit | Unlit ticks sit in the static layer and lit ticks are drawn over them, so their anti-aliased edges can differ slightly from the design; the lead tick, longer and at least pen 4, covers its unlit tick | second design update |
+| Time position | `08:42` starts at x 113.5 | Whole pixels: starts at x 114 (208 − 189 / 2 in integer math), half a pixel to the right | Q8/Q16 |
+| Long-press targets | "Hold zones": the three round wells (R + 6), the bottom field's pill and the bezel ring; holding opens the matching Garmin page | The bezel ring is no target, and the bottom field's target is its pill padded 10 px left, right and below and 4 px above (116, 332, 184, 54, half-circle ends): both were too hard to hold on the watch | Q45 |
+| Contour line joins | Each contour line one polyline with round joins | Each segment a separate flat-ended `drawLine`, so the lines meet at mitred joins (a small notch or overlap where a line turns), and the pen varies a little with the segment's angle (Q43 accepts both) | Q43 |
+| Contour texture | 40 closed lines of 64 points (rounded to 0.1 px), drawn whole under the wells and the edge mask | Lines 1–30 only (the only ones that reach the background disc), cut at build time into 93 pieces (404 segments) that stay at least half a pen inside r 194 and at least a pen (plus 0.75 px for rounding) outside every well rim and the battery well, endpoints in whole pixels; pieces shorter than 3 px dropped. So the lines stop a few pixels short of each rim instead of running under it. Drawn with `drawLine`: filled strips (`fillPolygon`) were tried and were about 6 times slower on the FR265 | Q43 |
 
 Only the first row changes what the face shows noticeably, and only past 100.000 steps in a day.
 
 ## Resolved
 
-By the design update of 2026-11-13 ("KHỚP MVP 13/11/2026"), which followed the first version of this list:
+By the design update of 2026-11-13, which followed the first version of this list:
 
 - Heart-rate zone segments in their own zone colors (Q37), frame 5.
 - Goal reached without `/ goal`, foot and number centered as a group (Q25), frame 7.
@@ -34,7 +34,7 @@ By the design update of 2026-11-13 ("KHỚP MVP 13/11/2026"), which followed the
 - Always On burn-in shift (12 offsets within ±4 px, Q28) and the hold-zone note for Always On.
 - Frames 4, 6, 8, 9 and 10 marked "after the MVP" (Q14, Q15).
 
-By the second design update of 2026-11-14 ("CẬP NHẬT 14/11/2026"), built in its tickets 05 and 06:
+By the second design update of 2026-11-14, built in two of its steps:
 
-- Bezel head dot: gone with the bezel ticks (ticket 06); the lead tick sits on the tick the progress has reached, as in the design.
+- Bezel head dot: gone with the bezel ticks; the lead tick sits on the tick the progress has reached, as in the design.
 - Center field gauge: centerline r 54 (60 − 12 / 2), pen 12, a whole number, so the face draws it exactly; it was r 56, pen 9, against the design's r 55.5.

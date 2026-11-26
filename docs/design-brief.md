@@ -2,11 +2,11 @@
 
 Records the original intent. The final version differs from this brief (time font, gray background, extra frames beyond the MVP); what was agreed lives in `decisions.md`.
 
-The brief was originally written in Vietnamese; below is an English translation.
+Below is the English translation of the brief, which was first written in another language.
 
 ```
 Design a watch face for the Garmin Forerunner 265: round AMOLED screen, 416×416 px, black background #000000.
-The face is for personal use only and will be programmed in Monkey C (Connect IQ), so it must respect the technical limits below.
+The face will be programmed in Monkey C (Connect IQ), so it must respect the technical limits below.
 
 ## Style
 Combine 2 Garmin faces: "Focus Digital" (7-segment LCD time digits, large solid color blocks) and "Dash PRO"

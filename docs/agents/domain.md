@@ -12,7 +12,7 @@ If any of these files don't exist, **proceed silently**. Don't flag their absenc
 
 ## Wellface: existing decision record
 
-Design decisions and the agreed MVP scope already live in **`docs/decisions.md`** (Q1–Q17). Read it like ADRs before working. Changing any decision there requires asking the user first. If your output contradicts an entry, surface it explicitly (e.g. _Contradicts Q7, but worth reopening because…_).
+Design decisions and the agreed scope already live in **`docs/decisions.md`** (Q1–Q53). Read it like ADRs before working. Only the maintainer changes a decision there, in the same PR as the change that needs it; ask in the issue first. If your output contradicts an entry, surface it explicitly (e.g. _Contradicts Q7, but worth reopening because…_).
 
 ## File structure
 
