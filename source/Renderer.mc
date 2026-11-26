@@ -4,7 +4,7 @@ import Toybox.System;
 
 // Paints FaceModel output as-is. No display rules live here.
 //
-// Two full-screen buffers (Q44, ticket 08). The static layer is drawn once
+// Two full-screen buffers (Q44). The static layer is drawn once
 // into the first. It depends on the theme and the field mapping (the metric
 // each round field shows decides its track), so a new one comes with every
 // applied face config (setStatic) and the buffer is repainted once then.
@@ -16,7 +16,7 @@ import Toybox.System;
 // over it.
 //
 // Drawing into a buffer is about 2.5 times slower than drawing on the
-// screen on the FR265 (ticket 08), so a frame whose minute layer is stale
+// screen on the FR265, so a frame whose minute layer is stale
 // (a wake, a new minute, a face start) is first drawn straight on the
 // screen, as fast as a full repaint, and the buffers are painted on the
 // updates after it, at most one per update. The face is started again
@@ -311,7 +311,7 @@ class Renderer {
     // Null if the graphics pool has no room for it. BufferedBitmap.isCached()
     // is not asked: it only says whether get() restored a released bitmap
     // from the pool, and stays false on a bitmap the face keeps holding, which
-    // made every update repaint the layer (ticket settings-ready 01).
+    // made every update repaint the layer.
     private function staticBitmap(width as Number, height as Number) as BufferedBitmap? {
         var bitmap = _bitmap;
         if (bitmap != null) {

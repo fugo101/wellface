@@ -35,7 +35,7 @@ module FieldMappingTest {
             METRIC_STEPS, METRIC_STEPS);
     }
 
-    // The wearer's zones (ticket 02 of the MVP): lower bounds of zones 1-5, then max.
+    // Sample zones: lower bounds of zones 1-5, then max.
     function zones() as Array<Number> {
         return [96, 115, 134, 154, 173, 192] as Array<Number>;
     }

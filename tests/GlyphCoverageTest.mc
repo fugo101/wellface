@@ -11,7 +11,7 @@ import Toybox.Test;
 // Battery and heart rate in each round field, steps in the bottom field
 // (the bezel ring draws no text).
 //
-// Until a face config can put any metric in any field (ticket 03), the
+// Until a face config can put any metric in any field, the
 // round and bottom fields are built with FaceModel.roundField and
 // bottomField directly, and the date with dateText and foldChar; move them
 // to the entry points then.

@@ -15,8 +15,7 @@ import Toybox.Test;
 // to what is drawn: check the printed value, then put it in GoldenValues.
 (:test)
 module GoldenTest {
-    // The wearer's HR_ZONE_SPORT_GENERIC zones as the FR265 returned them
-    // (ticket 02): indices 0-4 are the lower bounds of zones 1-5, 5 is max.
+    // Sample HR_ZONE_SPORT_GENERIC zones (50-100% of a max HR of 192): 0-4 are the lower bounds of zones 1-5, 5 is max.
     function zones() as Array<Number> {
         return [96, 115, 134, 154, 173, 192] as Array<Number>;
     }

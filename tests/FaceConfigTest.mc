@@ -34,7 +34,7 @@ module FaceConfigTest {
 
     // Stories 1, 24, 53: the built-in default is today's face: stress, Body
     // Battery, heart rate, steps, steps, in a theme the face knows by name
-    // (whichever one the wearer picked there).
+    // (whichever one the user picked there).
     (:test)
     function defaultConfigIsTodaysFace(logger as Test.Logger) as Boolean {
         var defaults = FaceConfigs.defaultConfig();
@@ -279,8 +279,8 @@ module FaceConfigTest {
     (:test)
     function everyColorComesFromTheTheme(logger as Test.Logger) as Boolean {
         var orchid = ThemeTest.ROLES[ThemeTest.ORCHID];
-        // The themed roles drawn today. The contour texture waits for its own
-        // ticket; the comet base is never drawn by itself.
+        // The themed roles drawn today. The contour texture waits for a later change;
+        // the comet base is never drawn by itself.
         var themed = [orchid[ThemeTest.ACCENT], orchid[ThemeTest.BACKGROUND],
             orchid[ThemeTest.WELL_RIM]] as Array<Number>;
         var allowed = themed.slice(0, null);

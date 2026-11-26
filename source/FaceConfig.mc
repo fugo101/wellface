@@ -42,7 +42,7 @@ class ResolvedFaceConfig {
 module FaceConfigs {
     // The built-in face config: today's face (Q29). Its metric in each field
     // is that field's default metric, which a field shows instead of one it
-    // cannot draw (Q40). Its theme is the active theme the wearer picked
+    // cannot draw (Q40). Its theme is the active theme the user picked
     // (Q42: switching it is this one line); the default theme an unknown name
     // falls back to stays Mint (Q9, Themes.mint).
     function defaultConfig() as FaceConfig {

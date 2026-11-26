@@ -7,7 +7,7 @@ pieces that lie between the wells, and writes them as packed numbers:
 - resources/contours/contours.json: the pieces, drawn with drawLine;
 - resources/contours/contours.xml: its jsonData resource.
 
-Filled strips (fillPolygon) were tried as well in ticket 09 and dropped:
+Filled strips (fillPolygon) were tried as well and dropped:
 about six times slower than lines on the FR265.
 
 The field geometry is read from source/Layout.mc, so the face and the table

@@ -223,7 +223,7 @@ class DataReader {
         return null;
     }
 
-    // A complication's value, polled (ticket 02 showed polling refreshes on
+    // A complication's value, polled (polling refreshes on
     // the FR265). Null when there is no id, when it throws or when the value
     // is not a whole number (the API also allows a Float or a String).
     private function readComplication(id as Complications.Id?) as Number? {

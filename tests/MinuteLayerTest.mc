@@ -1,7 +1,7 @@
 import Toybox.Lang;
 import Toybox.Test;
 
-// The minute layer (Q44, ticket 08): everything drawn that changes at most
+// The minute layer (Q44): everything drawn that changes at most
 // once a minute. The renderer rebuilds it only when a set of change kinds
 // makes one of its parts stale; FaceModel answers that, so the rule is
 // tested here and the renderer only follows it.

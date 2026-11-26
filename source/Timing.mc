@@ -67,7 +67,7 @@ module Timing {
 module Timing {
     // The one-letter code printed before each reading's milliseconds, in
     // TimingKind order (tools/timing/summary.py reads them, and also the
-    // codes of ticket 09's strip trial, no longer recorded).
+    // codes of a strip trial, no longer recorded).
     const CODES = ["u", "a", "F", "A", "w", "h", "f", "d", "s", "m", "i", "c", "b"];
     // Readings kept before a flush; an update adds at most three.
     const CAPACITY = 240;

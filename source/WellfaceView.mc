@@ -69,7 +69,7 @@ class WellfaceView extends WatchUi.WatchFace {
         // On the FR265 the face sleeps (onEnterSleep) about 10 s after a
         // wake even while a tap keeps the screen lit in high power: it then
         // gets an update once a minute, so it shows no seconds rather than
-        // frozen ones (Q41; ticket 08's first wear).
+        // frozen ones (Q41).
         var timing = !highPower ? TIMING_AOD : _asleep ? TIMING_ASLEEP : TIMING_UPDATE;
         Timing.start(timing);
         var changes = _reader.update(highPower, !_asleep);
@@ -106,7 +106,7 @@ class WellfaceView extends WatchUi.WatchFace {
             // A change of the second alone is FaceModel.update's fast path
             // (the seconds' text only). It is not timed as a frame, so the
             // timing log still splits updates into those that recomputed
-            // data and those that did not, as in the baseline (ticket 01).
+            // data and those that did not, as in the baseline.
             var timed = frame == null || _frameChanges != CHANGE_SECOND;
             if (timed) {
                 Timing.start(TIMING_FRAME);

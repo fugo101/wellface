@@ -12,7 +12,7 @@ ignored:
                                   sleep, that is entering AOD; hide; stop;
                                   full)
   timing u19 f4 u23 ...           readings: a kind's code, then milliseconds
-The first logs (ticket 01's wears 1 and 2) have one "timing <kind> <ms>"
+The first logs (the first wears) have one "timing <kind> <ms>"
 line per reading; they are read too.
 
 Kinds (code): update (u, a high-power update; those below are filed under
@@ -26,7 +26,7 @@ layer paint), minute (m, a rebuild of the minute layer: the static buffer
 copied into it, then the parts that change at most once a minute), contours
 (c) and contoursBuffer (b, the contour texture alone, drawn with lines on the
 screen and into the static buffer; inside a static reading), strips (C) and
-stripsBuffer (B, the same drawn as filled strips; a trial of ticket 09). An update's time includes the frame, static and minute readings
+stripsBuffer (B, the same drawn as filled strips; a trial). An update's time includes the frame, static and minute readings
 taken inside it. Before the show kind existed, a show was filed as first.
 
 Prints, for each log and, with several logs, for all of them pooled: per
@@ -70,7 +70,7 @@ PER_WAKE = "perWake"
 # on their own (update+minute); they are in one of the first two groups too.
 SPLIT = ["update+frame", "update-frame", "update+minute"]
 # First updates split by how the contour texture painted inside them was
-# drawn: lines or (trial, ticket 09) filled strips.
+# drawn: lines or (trial) filled strips.
 FIRST_SPLIT = ["first+lines", "first+strips"]
 READING = re.compile(r"^([A-Za-z])(\d+)$")
 

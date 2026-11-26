@@ -48,7 +48,7 @@ module FaceModelTest {
         return field == FIELD_CENTER ? frame.centerField : frame.rightField;
     }
 
-    // The round field showing `metric` at `value` (with the wearer's zones).
+    // The round field showing `metric` at `value` (with sample zones).
     function shownWith(metric as Metric, value as Number?) as FieldFrame {
         var snapshot = new Snapshot(8, 42);
         snapshot.setValue(metric, value);
@@ -147,8 +147,7 @@ module FaceModelTest {
         return frameWithSteps(steps, goal).bottomField;
     }
 
-    // The wearer's HR_ZONE_SPORT_GENERIC zones as the FR265 returned them
-    // (ticket 02): indices 0-4 are the lower bounds of zones 1-5, 5 is max.
+    // Sample HR_ZONE_SPORT_GENERIC zones (50-100% of a max HR of 192): 0-4 are the lower bounds of zones 1-5, 5 is max.
     function zones() as Array<Number> {
         return [96, 115, 134, 154, 173, 192] as Array<Number>;
     }
@@ -538,7 +537,7 @@ module FaceModelTest {
         return true;
     }
 
-    // The FR265's real Vietnamese Thursday (ticket 02): "Th", U+1EE9, " 5".
+    // The FR265's real Vietnamese Thursday: "Th", U+1EE9, " 5".
     (:test)
     function vietnamesePrecomposedWeekdayFoldsToBaseLetters(logger as Test.Logger) as Boolean {
         Test.assertEqual("T5 12/11",

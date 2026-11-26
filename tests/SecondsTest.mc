@@ -48,7 +48,7 @@ module SecondsTest {
     // Q41: no seconds while the face sleeps. The FR265 stops the per-second
     // updates about 10 s after a wake (onEnterSleep) even when a tap keeps
     // the screen lit, so the reader reports the second as unknown then, and
-    // the seconds are hidden rather than left frozen (ticket 08's wear).
+    // the seconds are hidden rather than left frozen.
     (:test)
     function noSecondsWhileTheFaceSleeps(logger as Test.Logger) as Boolean {
         var asleep = at(0);
