@@ -28,3 +28,8 @@ tools/capture/scenario/
 
 # Python bytecode caches
 __pycache__/
+
+# Maintainer-local agent instructions and scratch work
+CLAUDE.local.md
+.scratch/
+spikes/
