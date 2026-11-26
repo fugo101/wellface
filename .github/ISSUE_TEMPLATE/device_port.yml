@@ -1,0 +1,51 @@
+name: Device port
+description: Propose or contribute support for another Garmin watch.
+labels: ["device-port", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Only the Forerunner 265 is maintained. Another watch becomes a community device if its owner ports and looks after it. Read "Device support" in `CONTRIBUTING.md` first; the rules are there. Open this issue before you write code.
+
+        A port must not change a single Forerunner 265 pixel. Please do not ask for a port to a watch you do not own.
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: Name and Connect IQ product id, if you know it (for example the id used in `manifest.xml`).
+    validations:
+      required: true
+  - type: input
+    id: screen
+    attributes:
+      label: Screen
+      description: Size, shape and type (AMOLED or MIP), and the Connect IQ API level.
+      placeholder: "e.g. 360x360, round, AMOLED, API 5.2"
+    validations:
+      required: true
+  - type: dropdown
+    id: owner
+    attributes:
+      label: Who will port and maintain it?
+      options:
+        - I own the watch and will port and maintain it
+        - I own the watch but need help with the port
+        - I do not own the watch
+    validations:
+      required: true
+  - type: textarea
+    id: plan
+    attributes:
+      label: Approach
+      description: What has to differ on this device (layout, fonts, data available), and how you plan to keep Forerunner 265 output identical.
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before you submit
+      options:
+        - label: I have read "Device support" in CONTRIBUTING.md.
+          required: true
+        - label: I understand I will be listed in CODEOWNERS for this device and must confirm builds on the real watch, and that an unmaintained device can be removed.
+          required: true
+        - label: This issue contains no developer key, account details or personal data.
+          required: true

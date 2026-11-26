@@ -1,0 +1,87 @@
+name: Bug report
+description: Something in Wellface does not work as documented or designed.
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Do not paste your developer key, Garmin account details, machine paths that contain your name, or health data from your watch.
+
+        For a security problem, do not open an issue. Use the private form linked on the issue chooser page instead (see `SECURITY.md`).
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Where does the problem show up?
+      options:
+        - Display (layout, colors, fonts, themes)
+        - Data (a value is wrong or missing)
+        - Seconds, refresh or battery use
+        - Always On
+        - Long press
+        - Build, test or sideload scripts
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did you see it?
+      options:
+        - On a watch
+        - In the simulator
+        - Only in the code or docs
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the behavior you saw. A screenshot helps.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: If the expectation comes from the design, `docs/spec.md` or `docs/decisions.md`, name the section.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and firmware
+      description: For example "Forerunner 265, firmware 22.xx". Only the Forerunner 265 is maintained.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The release (for example v0.1.0) or the commit hash you ran.
+  - type: input
+    id: sdk
+    attributes:
+      label: Connect IQ SDK version
+      description: Only for build, test or simulator problems.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or output
+      description: Remove anything personal before pasting.
+      render: shell
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before you submit
+      options:
+        - label: This issue contains no developer key, account details or personal data.
+          required: true

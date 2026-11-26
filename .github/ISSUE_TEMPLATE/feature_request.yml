@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an improvement or a new capability.
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Open an issue before you start work on a new metric, field kind, theme or layout change, so the approach can be agreed first. Check `docs/decisions.md` and the open issues to avoid duplicates. For a port to another watch, use the "Device port" form instead.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what gets in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: What would you like Wellface to do? Alternatives you considered are welcome too. A sketch or mock-up helps for anything visual.
+    validations:
+      required: true
+  - type: textarea
+    id: platform
+    attributes:
+      label: Platform notes
+      description: If the idea needs data from the watch, say which one and whether Connect IQ exposes it to a watch face (name the API if you know it). Leave empty otherwise.
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before you submit
+      options:
+        - label: I searched the existing issues and `docs/decisions.md` and did not find a duplicate or a rejected idea.
+          required: true
+        - label: This issue contains no developer key, account details or personal data.
+          required: true

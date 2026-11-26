@@ -1,0 +1,5 @@
+* @fudio101
+
+# A community device: its porter owns the device's files (see CONTRIBUTING.md,
+# "Device support"). Example, to be uncommented when a port is accepted:
+# /devices/fr265s/ @porter-github-login
