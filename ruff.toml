@@ -1,0 +1,10 @@
+# Lint settings for the Python tools in tools/ (CI runs `ruff check tools`).
+# Pinned ruff version: see .github/workflows/lint.yml.
+[lint]
+select = ["E4", "E7", "E9", "F"]
+ignore = [
+    # The contour generator names the design's contour index `l`.
+    "E741",
+    # One short lambda in the profile reader.
+    "E731",
+]

@@ -5,14 +5,20 @@
 #   CIQ_DEV_KEY  path to the developer key (RSA 4096, DER). Never printed.
 #   CIQ_SDK      optional; defaults to the SDK the SDK Manager marked as current.
 #   JUNGLE       optional; the jungle to build, set by the script (default: the face).
+#   CIQ_DEVICE   optional; the device to build for (default: fr265, the maintained device).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DEVICE="fr265"
+DEVICE="${CIQ_DEVICE:-fr265}"
 BIN="$ROOT/bin"
 JUNGLE="${JUNGLE:-$ROOT/monkey.jungle}"
 
 die() { echo "error: $*" >&2; exit 2; }
+
+# manifest_products: the device ids listed in manifest.xml, one per line.
+manifest_products() {
+    grep -o '<iq:product id="[^"]*"' "$ROOT/manifest.xml" | sed 's/^.*id="//; s/"$//'
+}
 
 if [[ -z "${CIQ_SDK:-}" ]]; then
     case "$(uname)" in
@@ -52,6 +58,7 @@ compile() {
     if grep -qi "^WARNING" "$COMPILE_LOG"; then
         die "build produced warnings (the project must build with zero warnings)"
     fi
+    rm -f "$COMPILE_LOG"
 }
 
 # run_in_sim <app.prg>

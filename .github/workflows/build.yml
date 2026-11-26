@@ -1,0 +1,125 @@
+name: Build
+# Compiles the face for every device in manifest.xml, with a throwaway key. It
+# needs a Garmin account for the device files, so it runs on pushes to main and
+# on pull requests from this repository only (fork PRs get no secrets), and it
+# is not a required check. It skips, and reports success, when the repository
+# has no GARMIN_USERNAME / GARMIN_PASSWORD secrets. See docs/research/ci-and-distribution.md.
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    name: Monkey C build (compile only)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Connect IQ SDK 9.3.0 needs Ubuntu 22.04 (its simulator fails on 24.04;
+    # the hosted ubuntu-22.04 runner label retires in 2027-04), so the job runs
+    # in a container. The digest pins the tag; Dependabot does not update it.
+    container:
+      image: ubuntu:22.04@sha256:b000e69a50ff940390233025e7a337fb8469b509e2334fa4d018ac30f3e18cdb
+    env:
+      # Garmin's SDK zip is downloaded from Garmin on every run and never
+      # committed, cached or republished (Connect IQ developer agreement).
+      SDK_ZIP: connectiq-sdk-lin-9.3.0-2026-10-20-95888f262.zip
+      SDK_SHA256: 1653cc98edd70029670a3e3fcd4ad6e746974a8b758a7b736a4e11506dfd8bc8
+      # Unofficial CLI that downloads the device files through Garmin's SDK
+      # Manager API (lindell/connect-iq-sdk-manager-cli, Apache-2.0).
+      CLI_VERSION: 0.8.4
+      CLI_SHA256: 5d57b8f9cfcd02d3b3f48e19d6daca0480e4c6f627926f15d8617ef8a6f57e0b
+      # MD5 of the Connect IQ SDK license and developer agreement the CLI shows
+      # with `connect-iq-sdk-manager agreement view` (2026-11-26). The account
+      # owner reads the agreement at the URL it prints before updating this.
+      AGREEMENT_HASH: CC737BBBA104D7740D5BBCF27D0F6382
+    steps:
+      - name: Check for Garmin credentials
+        id: gate
+        env:
+          GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+        run: |
+          if [ -n "$GARMIN_USERNAME" ] && [ -n "$GARMIN_PASSWORD" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipped: no GARMIN_USERNAME / GARMIN_PASSWORD secrets in this repository."
+          fi
+      - name: Install packages
+        if: steps.gate.outputs.run == 'true'
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          set -euo pipefail
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends ca-certificates curl git openjdk-17-jre-headless openssl perl unzip
+          # GitHub sets HOME=/github/home in containers, and the SDK Manager CLI
+          # writes the device files under $HOME/.Garmin, but monkeyc reads
+          # ~/.Garmin from root's home directory. Link the two.
+          mkdir -p "$HOME/.Garmin/ConnectIQ"
+          [ "$HOME" = /root ] || ln -sfn "$HOME/.Garmin" /root/.Garmin
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.gate.outputs.run == 'true'
+        with:
+          persist-credentials: false
+      - name: Download the SDK
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          curl -fsSL --retry 3 -o sdk.zip "https://developer.garmin.com/downloads/connect-iq/sdks/${SDK_ZIP}"
+          echo "${SDK_SHA256}  sdk.zip" | sha256sum -c -
+          unzip -q sdk.zip -d ciq-sdk
+          rm sdk.zip
+          chmod +x ciq-sdk/bin/*
+          echo "CIQ_SDK=$RUNNER_TEMP/ciq-sdk" >> "$GITHUB_ENV"
+      - name: Download the device files
+        if: steps.gate.outputs.run == 'true'
+        env:
+          GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          curl -fsSL --retry 3 -o cli.tar.gz \
+            "https://github.com/lindell/connect-iq-sdk-manager-cli/releases/download/v${CLI_VERSION}/connect-iq-sdk-manager-cli_${CLI_VERSION}_Linux_x86_64.tar.gz"
+          echo "${CLI_SHA256}  cli.tar.gz" | sha256sum -c -
+          mkdir cli
+          tar -xzf cli.tar.gz -C cli connect-iq-sdk-manager
+          cli/connect-iq-sdk-manager agreement accept --agreement-hash "$AGREEMENT_HASH"
+          # Reads GARMIN_USERNAME and GARMIN_PASSWORD from the environment.
+          cli/connect-iq-sdk-manager login
+          cd "$GITHUB_WORKSPACE"
+          "$RUNNER_TEMP/cli/connect-iq-sdk-manager" device download --manifest manifest.xml
+      - name: Remove the Garmin login token
+        if: always() && steps.gate.outputs.run == 'true'
+        run: rm -f "$HOME/.Garmin/ConnectIQ/token.json"
+      - name: Create a throwaway signing key
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          set -euo pipefail
+          # Only proves the build signs; no release uses this key.
+          openssl genrsa 4096 2>/dev/null \
+            | openssl pkcs8 -topk8 -inform PEM -outform DER -nocrypt -out "$RUNNER_TEMP/ci-key.der"
+          echo "CIQ_DEV_KEY=$RUNNER_TEMP/ci-key.der" >> "$GITHUB_ENV"
+      - name: Release build for every device in manifest.xml
+        if: steps.gate.outputs.run == 'true'
+        # The same flags as scripts/build-release.sh, with warnings as errors,
+        # through scripts/release.sh (which also exercises that script).
+        run: scripts/release.sh 0.0.0-ci
+      - name: Test build for every device in manifest.xml
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        # Compiles the (:test) code, strict typecheck. The tests do not run
+        # here; scripts/run-tests.sh runs them in the simulator.
+        run: |
+          set -euo pipefail
+          while read -r device; do
+            echo "== $device"
+            CIQ_DEVICE="$device" scripts/build-test.sh
+          done < <(grep -o '<iq:product id="[^"]*"' manifest.xml | sed 's/^.*id="//; s/"$//')

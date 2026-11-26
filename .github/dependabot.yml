@@ -1,0 +1,44 @@
+# Dependabot version updates. Security updates are switched on in the repo
+# settings and use these entries too (commit-message, labels, allow).
+# Options: https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference
+#
+# Dependabot cannot bump these; update them by hand when they fall behind:
+# - the Connect IQ SDK zip, the connect-iq-sdk-manager-cli release and the
+#   ubuntu:22.04 digest in .github/workflows/build.yml
+# - the shellcheck, actionlint and ruff versions in .github/workflows/lint.yml
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: deps(actions)
+
+  # Font generator (tools/fontgen/requirements.txt: Pillow, fontTools). A bump
+  # can change the generated bitmap fonts: run scripts/gen-fonts.sh and check
+  # that resources/fonts/ and source/FontCatalog.mc come out unchanged, or
+  # commit the new output in the same PR.
+  - package-ecosystem: pip
+    directory: /tools/fontgen
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      fontgen:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: deps(pip)

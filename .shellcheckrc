@@ -1,0 +1,3 @@
+# Lets shellcheck follow `source "$(dirname "$0")/common.sh"` in scripts/.
+external-sources=true
+source-path=SCRIPTDIR

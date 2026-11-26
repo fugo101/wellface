@@ -71,4 +71,4 @@ set -e
 if [[ $status -eq 0 ]]; then
     echo "unplug the watch: it installs the face and then removes the PRG from GARMIN/Apps"
 fi
-exit $status
+exit "$status"
