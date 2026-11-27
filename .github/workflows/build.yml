@@ -24,6 +24,10 @@ jobs:
     # in a container. The digest pins the tag; Dependabot does not update it.
     container:
       image: ubuntu:22.04@sha256:b000e69a50ff940390233025e7a337fb8469b509e2334fa4d018ac30f3e18cdb
+    # Steps in a container run with sh by default, which lacks pipefail.
+    defaults:
+      run:
+        shell: bash
     env:
       # Garmin's SDK zip is downloaded from Garmin on every run and never
       # committed, cached or republished (Connect IQ developer agreement).
@@ -114,7 +118,6 @@ jobs:
         run: scripts/release.sh 0.0.0-ci
       - name: Test build for every device in manifest.xml
         if: steps.gate.outputs.run == 'true'
-        shell: bash
         # Compiles the (:test) code, strict typecheck. The tests do not run
         # here; scripts/run-tests.sh runs them in the simulator.
         run: |
